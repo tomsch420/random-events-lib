@@ -1,7 +1,7 @@
-#include "SupportsSetOperations.h"
+#include "sigma_algebra.h"
 
 /**
- * Enum for border types of intervals.
+ * Enum for border types of simple_sets.
  */
 enum class BorderType {
 
@@ -41,7 +41,7 @@ class Interval; // Forward declaration
 /**
  * Class that represents an atomic interval.
  */
-struct SimpleInterval {
+struct SimpleInterval : SimpleSetWrapper<Interval, SimpleInterval, float> {
 
     /**
      * The lower value.
@@ -62,6 +62,14 @@ struct SimpleInterval {
      * The right border type.
      */
     BorderType right = BorderType::OPEN;
+
+    /**
+     * Construct an atomic interval.
+     */
+    explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
+                            BorderType right = BorderType::OPEN);
+
+    size_t operator()(const SimpleInterval &interval) const;
 
     /**
      * Intersect this with another simple set.
@@ -133,13 +141,13 @@ struct SimpleInterval {
 };
 
 /**
- * Unique Combinations of atomic intervals within a vector.
- * The unique combinations are pairs of atomic intervals which exclude:
+ * Unique Combinations of atomic simple_sets within a vector.
+ * The unique combinations are pairs of atomic simple_sets which exclude:
  * -  symmetric pairs (A, A)
  * - (A,B) if (B, A) is already visited and.
  *
- * @param elements The vector of atomic intervals.
- * @return The unique combinations of atomic intervals.
+ * @param elements The vector of atomic simple_sets.
+ * @return The unique combinations of atomic simple_sets.
  */
 std::vector<std::tuple<SimpleInterval, SimpleInterval>>
 unique_combinations(const std::vector<SimpleInterval> &elements);
@@ -183,22 +191,21 @@ void extend_vector(std::vector<T> &first, const std::vector<T> &second) {
 
 /**
  * Class that represents a composite interval.
- * An interval is an (automatically simplified) union of simple intervals.
+ * An interval is an (automatically simplified) union of simple simple_sets.
  */
-class Interval : public SupportsSetOperations<Interval> {
+class Interval : public CompositeSetWrapper<Interval, SimpleInterval, float> {
 
 public:
 
-    /**
-     * Construct an interval from a vector of simple sets.
-     * @param simple_intervals The vector of simple sets.
-     */
-    explicit Interval(const std::vector<SimpleInterval> &simple_intervals);
+//    /**
+//     * Construct an interval from a vector of simple sets.
+//     * @param simple_sets The vector of simple sets.
+//     */
+//    explicit Interval(const std::vector<SimpleInterval> &simple_sets);
 
-    /**
-     * Construct an empty composite set.
-     */
-    explicit Interval();
+    explicit Interval(const std::vector<SimpleInterval> &simple_sets = {}) {
+        this->simple_sets = simple_sets;
+    }
 
     /**
      * Create an equal composite  set that contains a disjoint union of simple sets.
@@ -276,11 +283,6 @@ public:
      */
     [[nodiscard]] bool contains(SimpleInterval element) const;
 
-public:
-    /**
-     * The automatically simplified union of atomic intervals.
-     */
-    std::vector<SimpleInterval> intervals;
 };
 
 inline Interval closed(float lower, float upper) {
@@ -304,12 +306,9 @@ inline Interval singleton(float value) {
 }
 
 inline Interval empty() {
-    return Interval();
+    return Interval(std::vector<SimpleInterval>{});
 }
 
-/*
- * The real numbers.
- */
 inline Interval reals() {
     return Interval(std::vector<SimpleInterval>{
             SimpleInterval{-std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),

@@ -15,7 +15,7 @@ SimpleInterval SimpleInterval::intersection_with(const SimpleInterval &other) co
 
     // return the empty interval if the new lower bound is greater than the new upper bound
     if (new_lower > new_upper) {
-        return {};
+        return SimpleInterval();
     }
 
     // initialize the new borders
@@ -39,8 +39,7 @@ SimpleInterval SimpleInterval::intersection_with(const SimpleInterval &other) co
         new_right = upper == new_upper ? right : other.right;
     }
 
-
-    return {new_lower, new_upper, new_left, new_right};
+    return SimpleInterval{new_lower, new_upper, new_left, new_right};
 }
 
 Interval SimpleInterval::complement() {
@@ -66,7 +65,7 @@ bool SimpleInterval::operator==(const SimpleInterval &other) const {
 
 Interval SimpleInterval::difference_with(const SimpleInterval &other) const {
 
-    // get the intersection of both atomic intervals
+    // get the intersection of both atomic simple_sets
     SimpleInterval intersection = intersection_with(other);
 
     // if the intersection is empty, return the current atomic interval as interval
@@ -81,7 +80,7 @@ Interval SimpleInterval::difference_with(const SimpleInterval &other) const {
     std::vector<SimpleInterval> difference;
 
     // for every interval in the complement of the intersection
-    for (auto interval: complement_of_intersection.intervals) {
+    for (auto interval: complement_of_intersection.simple_sets) {
 
         // intersect this with the current complement of the intersection
         SimpleInterval intersection_with_complement = intersection_with(interval);
@@ -119,12 +118,12 @@ Interval SimpleInterval::difference_with(const Interval &other) const {
 
     auto elementwise_differences = std::vector<Interval>{};
 
-    for (auto atomic: other.intervals) {
+    for (auto atomic: other.simple_sets) {
         auto difference = difference_with(atomic);
         elementwise_differences.push_back(difference);
     }
 
-    result.intervals.push_back(*this);
+    result.simple_sets.push_back(*this);
     for (const auto &elementwise_difference: elementwise_differences) {
         result = result.intersection_with(elementwise_difference);
     }
@@ -132,13 +131,25 @@ Interval SimpleInterval::difference_with(const Interval &other) const {
     return result;
 }
 
-Interval::Interval(const std::vector<SimpleInterval> &simple_intervals) {
-    for (auto interval: simple_intervals) {
-        if (!interval.is_empty()) {
-            intervals.push_back(interval);
-        }
-    }
+SimpleInterval::SimpleInterval(float lower, float upper, BorderType left, BorderType right) : lower(lower),
+                                                                                              upper(upper),
+                                                                                              left(left),
+                                                                                              right(right){
+    if (lower > upper) { throw std::invalid_argument("Lower bound must be less than or equal to upper bound."); }
 }
+
+size_t SimpleInterval::operator()(const SimpleInterval &interval) const {
+    return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^ std::hash<int>()(
+            static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
+}
+
+//Interval::Interval(const std::vector<SimpleInterval> &simple_sets){
+//    for (auto interval: simple_sets) {
+//        if (!interval.is_empty()) {
+//            simple_sets.push_back(interval);
+//        }
+//    }
+//}
 
 Interval Interval::make_disjoint() {
     Interval disjoint;
@@ -150,17 +161,17 @@ Interval Interval::make_disjoint() {
 
     while (!intersections.is_empty()) {
         std::tie(current_disjoint, intersections) = intersections.split_into_disjoint_and_non_disjoint();
-        extend_vector(disjoint.intervals, current_disjoint.intervals);
+        extend_vector(disjoint.simple_sets, current_disjoint.simple_sets);
     }
 
-    disjoint.intervals.erase(unique(disjoint.intervals.begin(), disjoint.intervals.end()),
-                             disjoint.intervals.end());
+    disjoint.simple_sets.erase(unique(disjoint.simple_sets.begin(), disjoint.simple_sets.end()),
+                               disjoint.simple_sets.end());
 
     return disjoint.simplify();
 }
 
 bool Interval::is_empty() const {
-    return intervals.empty();
+    return simple_sets.empty();
 }
 
 std::string Interval::to_string() const {
@@ -168,9 +179,9 @@ std::string Interval::to_string() const {
         return "∅";
     }
     std::string result;
-    for (size_t i = 0; i < intervals.size(); ++i) {
-        result.append(intervals[i].to_string());
-        if (i != intervals.size() - 1) {
+    for (size_t i = 0; i < simple_sets.size(); ++i) {
+        result.append(simple_sets[i].to_string());
+        if (i != simple_sets.size() - 1) {
             result.append(" u ");
         }
     }
@@ -178,7 +189,7 @@ std::string Interval::to_string() const {
 }
 
 bool Interval::is_disjoint() const {
-    for (auto combination: unique_combinations(intervals)) {
+    for (auto combination: unique_combinations(simple_sets)) {
         SimpleInterval first = std::get<0>(combination);
         SimpleInterval second = std::get<1>(combination);
         if (!first.intersection_with(second).is_empty()) {
@@ -190,7 +201,7 @@ bool Interval::is_disjoint() const {
 
 Interval Interval::intersection_with(SimpleInterval &simple) {
     std::vector<SimpleInterval> intersections;
-    for (auto interval: intervals) {
+    for (auto interval: simple_sets) {
         SimpleInterval intersection = interval.intersection_with(simple);
         if (!intersection.is_empty()) {
             intersections.push_back(intersection);
@@ -205,42 +216,39 @@ std::tuple<Interval, Interval> Interval::split_into_disjoint_and_non_disjoint() 
     Interval non_disjoint;
 
     // for every pair of atomics
-    for (const auto &atomic_i: intervals) {
+    for (const auto &atomic_i: simple_sets) {
 
         // initialize the difference of A_i
         SimpleInterval difference = atomic_i;
 
-        for (const auto &atomic_j: intervals) {
+        for (const auto &atomic_j: simple_sets) {
 
-            // if the atomic intervals are the same, skip
+            // if the atomic simple_sets are the same, skip
             if (atomic_i == atomic_j) {
                 continue;
             }
 
-            // get the intersection of the atomic intervals
+            // get the intersection of the atomic simple_sets
             auto intersection = atomic_i.intersection_with(atomic_j);
 
             // if the intersection is not empty, append it to the non-disjoint set
             if (!intersection.is_empty()) {
-                non_disjoint.intervals.push_back(intersection);
+                non_disjoint.simple_sets.push_back(intersection);
             }
 
-            difference = difference.difference_with(atomic_j).intervals[0];
+            difference = difference.difference_with(atomic_j).simple_sets[0];
         }
 
-        disjoint.intervals.push_back(difference);
+        disjoint.simple_sets.push_back(difference);
     }
     return std::make_tuple(disjoint, non_disjoint);
 }
 
-Interval::Interval() {
-    intervals = {};
-}
 
 bool Interval::contains(SimpleInterval element) const {
-    for (auto interval: intervals) {
+    for (auto interval: simple_sets) {
         auto intersection = interval.intersection_with(element);
-        element = element.difference_with(intersection).intervals[0];
+        element = element.difference_with(intersection).simple_sets[0];
         if (element.is_empty()) {
             return true;
         }
@@ -249,12 +257,12 @@ bool Interval::contains(SimpleInterval element) const {
 }
 
 Interval Interval::intersection_with(const Interval &other) {
-    Interval result = Interval();
-    for (auto atomic_i: intervals) {
-        for (auto atomic_j: other.intervals) {
+    Interval result;
+    for (auto atomic_i: simple_sets) {
+        for (auto atomic_j: other.simple_sets) {
             auto intersection = atomic_i.intersection_with(atomic_j);
             if (!intersection.is_empty()) {
-                result.intervals.push_back(intersection);
+                result.simple_sets.push_back(intersection);
             }
         }
     }
@@ -263,29 +271,29 @@ Interval Interval::intersection_with(const Interval &other) {
 
 Interval Interval::difference_with(const Interval &other) {
     Interval result = empty();
-    for (auto atomic: intervals) {
+    for (auto atomic: simple_sets) {
         auto difference = atomic.difference_with(other);
-        extend_vector(result.intervals, difference.intervals);
+        extend_vector(result.simple_sets, difference.simple_sets);
     }
     return result;
 }
 
 Interval Interval::simplify() {
-    Interval result = Interval();
+    Interval result;
     Interval sorted = *this;
 
-    std::sort(sorted.intervals.begin(), sorted.intervals.end(), by_lower_ascending());
-    result.intervals.push_back(sorted.intervals[0]);
+    std::sort(sorted.simple_sets.begin(), sorted.simple_sets.end(), by_lower_ascending());
+    result.simple_sets.push_back(sorted.simple_sets[0]);
 
-    for (auto current_atom = sorted.intervals.begin() + 1; current_atom != sorted.intervals.end(); ++current_atom) {
-        auto last_atom = result.intervals.back();
+    for (auto current_atom = sorted.simple_sets.begin() + 1; current_atom != sorted.simple_sets.end(); ++current_atom) {
+        auto last_atom = result.simple_sets.back();
         if (last_atom.upper == current_atom->lower &&
             !(last_atom.right == BorderType::OPEN and current_atom->left == BorderType::OPEN)) {
-            result.intervals.pop_back();
-            result.intervals.push_back(
+            result.simple_sets.pop_back();
+            result.simple_sets.push_back(
                     SimpleInterval{last_atom.lower, current_atom->upper, last_atom.left, current_atom->right});
         } else {
-            result.intervals.push_back(*current_atom);
+            result.simple_sets.push_back(*current_atom);
         }
     }
     return result;
