@@ -276,6 +276,8 @@ Interval Interval::difference_with(const Interval &other) {
 Interval Interval::simplify() {
     Interval result = Interval();
     Interval sorted = *this;
+
+    std::sort(sorted.intervals.begin(), sorted.intervals.end(), by_lower_ascending());
     result.intervals.push_back(sorted.intervals[0]);
 
     for (auto current_atom = sorted.intervals.begin() + 1; current_atom != sorted.intervals.end(); ++current_atom) {
@@ -290,8 +292,6 @@ Interval Interval::simplify() {
         }
     }
     return result;
-
-
 }
 
 
