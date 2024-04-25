@@ -71,28 +71,13 @@ public:
     explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
                             BorderType right = BorderType::OPEN);
 
-/*    size_t operator()(const SimpleInterval &interval) const;*/
-
-    /**
-     * Intersect this with another simple set.
-     *
-     * This method depends on the type of simple set and has to be overloaded.
-     *
-     * @param other the other simples set.
-     * @return The intersection of both as simple set.
-     */
     [[nodiscard]] SimpleInterval simple_set_intersection_with(const SimpleInterval &other) const;
 
     [[nodiscard]] Interval simple_set_complement() const;
 
     [[nodiscard]] bool simple_set_contains(const float &element) const;
 
-    /**
-     * This method depends on the type of simple set and has to be overloaded.
-     *
-     * @return True if this is empty.
-     */
-    [[nodiscard]] bool is_empty() const;
+    [[nodiscard]] bool simple_set_is_empty() const;
 
     /**
      * This method depends on the type of simple set and has to be overloaded.
@@ -102,25 +87,14 @@ public:
      */
     bool operator==(const SimpleInterval &other) const;
 
-//    /**
-//     * Form the difference with another simple set.
-//     * @param other The other simple set.
-//     * @return The difference as disjoint composite set.
-//     */
-//    [[nodiscard]] Interval difference_with(const SimpleInterval &other) const;
+    std::string to_string();
 
-//
-//    /**
-//     * Form the difference with a composite set.
-//     * @param other The composite set.
-//     * @return The difference as non-disjoint composite set.
-//     */
-//    [[nodiscard]] Interval difference_with(const Interval &other) const;
-//
-    // TODO Ask Duc on how to overload the __repr__ function in C++.
-    explicit operator std::string() const;
+    explicit operator std::string();
 };
 
+/**
+ * Hash function for simple sets.
+ */
 namespace std {
     template <> struct hash<SimpleInterval>
     {
@@ -131,20 +105,6 @@ namespace std {
         }
     };
 }
-
-
-/**
- * Unique Combinations of atomic simple_sets within a vector.
- * The unique combinations are pairs of atomic simple_sets which exclude:
- * -  symmetric pairs (A, A)
- * - (A,B) if (B, A) is already visited and.
- *
- * @param elements The vector of atomic simple_sets.
- * @return The unique combinations of atomic simple_sets.
- */
-std::vector<std::tuple<SimpleInterval, SimpleInterval>>
-unique_combinations(const std::vector<SimpleInterval> &elements);
-
 
 /**
  * Struct for sorting a composite interval by lower value.
@@ -190,35 +150,14 @@ class Interval : public CompositeSetWrapper<Interval, SimpleInterval, float> {
 
 public:
 
-//    /**
-//     * Construct an interval from a vector of simple sets.
-//     * @param simple_sets The vector of simple sets.
-//     */
-//    explicit Interval(const std::vector<SimpleInterval> &simple_sets);
+    Interval() = default;
 
     explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
         this->simple_sets = simple_sets;
     }
-//
-//    /**
-//     * Create an equal composite  set that contains a disjoint union of simple sets.
-//     * @return The disjoint composite set.
-//     */
-//    Interval make_disjoint();
-//
-//    /**
-//     * Check if the composite set is empty.
-//     * @return True if the composite set is empty.
-//     */
-//    [[nodiscard]] bool is_empty() const;
-//
-//    //TODO Ask Duc on how to overload the __repr__ function in C++.
-//    [[nodiscard]] std::string to_string() const;
-//
-//    /**
-//     * @return True if the composite set is disjoint union of simple sets.
-//     */
-//    [[nodiscard]] bool is_disjoint() const;
+
+    Interval composite_set_simplify();
+
 //
 //    /**
 //     * Form the intersection with an simple set.
@@ -259,15 +198,7 @@ public:
 //     */
 //    std::tuple<Interval, Interval> split_into_disjoint_and_non_disjoint();
 //
-//    /**
-//     * Simplify the composite set into a shorter but equal representation.
-//     * The size refers to the number of simple sets contained.
-//     *
-//     * * This method depends on the type of simple set and has to be overloaded.
-//     *
-//     * @return The simplified composite set into a shorter but equal representation.
-//     */
-//    Interval simplify();
+
 //
 //    /**
 //     * Check if a simple set is contained in the composite set.

@@ -2,7 +2,6 @@
 #include <limits>
 #include <stdexcept>
 #include <algorithm>
-#include <map>
 #include <iostream>
 #include "interval.h"
 #include "sigma_algebra.h"
@@ -56,7 +55,7 @@ Interval SimpleInterval::simple_set_complement() const {
     return Interval(resulting_intervals);
 }
 
-bool SimpleInterval::is_empty() const {
+bool SimpleInterval::simple_set_is_empty() const {
     return lower == upper and (left == BorderType::OPEN or right == BorderType::OPEN);
 }
 
@@ -64,66 +63,11 @@ bool SimpleInterval::operator==(const SimpleInterval &other) const {
     return lower == other.lower and upper == other.upper and left == other.left and right == other.right;
 }
 
-//Interval SimpleInterval::difference_with(const SimpleInterval &other) const {
-//
-//    // get the intersection of both atomic simple_sets
-//    SimpleInterval intersection = intersection_with(other);
-//
-//    // if the intersection is empty, return the current atomic interval as interval
-//    if (intersection.is_empty()) {
-//        return Interval({*this});
-//    }
-//
-//    // get the complement of the intersection
-//    Interval complement_of_intersection = intersection.complement();
-//
-//    // initialize the difference vector
-//    std::vector<SimpleInterval> difference;
-//
-//    // for every interval in the complement of the intersection
-//    for (auto interval: complement_of_intersection.simple_sets) {
-//
-//        // intersect this with the current complement of the intersection
-//        SimpleInterval intersection_with_complement = intersection_with(interval);
-//
-//        // if the intersection with the complement is not empty, append it to the difference vector
-//        if (!intersection_with_complement.is_empty()) {
-//            difference.push_back(intersection_with_complement);
-//        }
-//    }
-//
-//    return Interval(difference);
-//}
-
-
-//
-//bool SimpleInterval::contains(SimpleInterval &other) const {
-//    return intersection_with(other) == other;
-//}
-//
 bool SimpleInterval::simple_set_contains(const float &element) const {
     SimpleInterval singleton = SimpleInterval{element, element, BorderType::CLOSED, BorderType::CLOSED};
     return contains(singleton);
 }
 
-//Interval SimpleInterval::difference_with(const Interval &other) const {
-//    Interval result;
-//
-//    auto elementwise_differences = std::vector<Interval>{};
-//
-//    for (const auto atomic: other.simple_sets) {
-//        auto difference = difference_with(atomic);
-//        elementwise_differences.push_back(difference);
-//    }
-//
-//    result.simple_sets.push_back(*this);
-//    for (const auto &elementwise_difference: elementwise_differences) {
-//        result = result.intersection_with(elementwise_difference);
-//    }
-//
-//    return result;
-//}
-//
 SimpleInterval::SimpleInterval(float lower, float upper, BorderType left, BorderType right) : lower(lower),
                                                                                               upper(upper),
                                                                                               left(left),
@@ -131,7 +75,11 @@ SimpleInterval::SimpleInterval(float lower, float upper, BorderType left, Border
     if (lower > upper) { throw std::invalid_argument("Lower bound must be less than or equal to upper bound."); }
 }
 
-SimpleInterval::operator std::string() const {
+SimpleInterval::operator std::string() {
+    return to_string();
+}
+
+std::string SimpleInterval::to_string() {
     if (is_empty()) {
         return "∅";
     }
@@ -139,6 +87,26 @@ SimpleInterval::operator std::string() const {
     char right_representation = right == BorderType::OPEN ? ')' : ']';
     return std::string(
             left_representation + std::to_string(lower) + ", " + std::to_string(upper) + right_representation);
+}
+
+Interval Interval::composite_set_simplify() {
+    std::vector<SimpleInterval> result;
+    auto sorted = simple_sets_as_vector();
+
+    std::sort(sorted.begin(), sorted.end(), by_lower_ascending());
+    result.push_back(sorted[0]);
+
+    for (auto current_simple_interval = sorted.begin() + 1; current_simple_interval != sorted.end(); ++current_simple_interval) {
+        auto last_simple_interval = result.back();
+        if (last_simple_interval.upper == current_simple_interval->lower &&
+            !(last_simple_interval.right == BorderType::OPEN and current_simple_interval->left == BorderType::OPEN)) {
+            result.pop_back();
+            result.emplace_back(last_simple_interval.lower, current_simple_interval->upper, last_simple_interval.left, current_simple_interval->right);
+        } else {
+            result.push_back(*current_simple_interval);
+        }
+    }
+    return Interval(SimpleSetType<SimpleInterval> (result.begin(), result.end()));
 }
 
 
@@ -166,34 +134,6 @@ SimpleInterval::operator std::string() const {
 //    return disjoint.simplify();
 //}
 //
-//bool Interval::is_empty() const {
-//    return simple_sets.empty();
-//}
-//
-//std::string Interval::to_string() const {
-//    if (is_empty()) {
-//        return "∅";
-//    }
-//    std::string result;
-//    for (size_t i = 0; i < simple_sets.size(); ++i) {
-//        result.append(simple_sets[i].to_string());
-//        if (i != simple_sets.size() - 1) {
-//            result.append(" u ");
-//        }
-//    }
-//    return result;
-//}
-//
-//bool Interval::is_disjoint() const {
-//    for (auto combination: unique_combinations(simple_sets)) {
-//        SimpleInterval first = std::get<0>(combination);
-//        SimpleInterval second = std::get<1>(combination);
-//        if (!first.intersection_with(second).is_empty()) {
-//            return false;
-//        }
-//    }
-//    return true;
-//}
 //
 //Interval Interval::intersection_with(SimpleInterval &simple) {
 //    std::vector<SimpleInterval> intersections;
@@ -274,45 +214,24 @@ SimpleInterval::operator std::string() const {
 //    return result;
 //}
 //
-//Interval Interval::simplify() {
+
+
+
+//Interval SimpleInterval::difference_with(const Interval &other) const {
 //    Interval result;
-//    Interval sorted = *this;
 //
-//    std::sort(sorted.simple_sets.begin(), sorted.simple_sets.end(), by_lower_ascending());
-//    result.simple_sets.push_back(sorted.simple_sets[0]);
+//    auto elementwise_differences = std::vector<Interval>{};
 //
-//    for (auto current_atom = sorted.simple_sets.begin() + 1; current_atom != sorted.simple_sets.end(); ++current_atom) {
-//        auto last_atom = result.simple_sets.back();
-//        if (last_atom.upper == current_atom->lower &&
-//            !(last_atom.right == BorderType::OPEN and current_atom->left == BorderType::OPEN)) {
-//            result.simple_sets.pop_back();
-//            result.simple_sets.push_back(
-//                    SimpleInterval{last_atom.lower, current_atom->upper, last_atom.left, current_atom->right});
-//        } else {
-//            result.simple_sets.push_back(*current_atom);
-//        }
+//    for (const auto atomic: other.simple_sets) {
+//        auto difference = difference_with(atomic);
+//        elementwise_differences.push_back(difference);
 //    }
+//
+//    result.simple_sets.push_back(*this);
+//    for (const auto &elementwise_difference: elementwise_differences) {
+//        result = result.intersection_with(elementwise_difference);
+//    }
+//
 //    return result;
 //}
 //
-//
-//std::vector<std::tuple<SimpleInterval, SimpleInterval>> unique_combinations(
-//        const std::vector<SimpleInterval> &elements) {
-//
-//    // initialize result
-//    std::vector<std::tuple<SimpleInterval, SimpleInterval>> combinations;
-//
-//    // for every pair of elements
-//    for (std::size_t i = 0; i < elements.size(); ++i) {
-//
-//        // get element from first vector
-//        SimpleInterval current_element1 = elements[i];
-//        for (std::size_t j = 0; j < i; ++j) {
-//            SimpleInterval current_element2 = elements[j];
-//            std::tuple<SimpleInterval, SimpleInterval> combination =
-//                    std::make_tuple(current_element1, current_element2);
-//            combinations.push_back(combination);
-//        }
-//    }
-//    return combinations;
-//}

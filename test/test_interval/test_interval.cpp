@@ -15,9 +15,9 @@ TEST(AtomicIntervalCreationTestSuite, SimpleInterval){
 }
 
 TEST(AtomicIntervalIntersectionTestSuite, SimpleInterval){
-    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::OPEN, BorderType::CLOSED};
-    auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::OPEN};
-    SimpleInterval intersection = interval1.intersection_with(interval2);
+    auto simple_interval_1 = SimpleInterval{0.0, 1.0, BorderType::OPEN, BorderType::CLOSED};
+    auto simple_interval_2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::OPEN};
+    SimpleInterval intersection = simple_interval_1.intersection_with(simple_interval_2);
     EXPECT_EQ(intersection.lower, 0.5);
     EXPECT_EQ(intersection.upper, 1.0);
     EXPECT_EQ(intersection.left, BorderType::CLOSED);
@@ -51,7 +51,6 @@ TEST(AtomicIntervalContainsTestSuite, SimpleInterval){
 TEST(AtomicIntervalInvertTestSuite, SimpleInterval){
     auto interval = SimpleInterval{.0, 1.0, BorderType::OPEN, BorderType::CLOSED};
     Interval inverted = interval.complement();
-
     auto element_1 = SimpleInterval{-std::numeric_limits<float>::infinity(), 0.0,
                                     BorderType::OPEN, BorderType::CLOSED};
     auto element_2 = SimpleInterval{1.0, std::numeric_limits<float>::infinity(),
@@ -70,18 +69,43 @@ TEST(AtomicIntervalIsEmptyTestSuite, SimpleInterval){
     auto interval3 = SimpleInterval{1, 1, BorderType::OPEN, BorderType::OPEN};
     EXPECT_TRUE(interval3.is_empty());
 }
-//
-//TEST(AtomicIntervalDifferenceTest, SimpleInterval){
-//    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval2 = SimpleInterval {0., 1., BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval3 = SimpleInterval {1., 2., BorderType::OPEN, BorderType::CLOSED};
-//    Interval empty_difference = interval1.difference_with(interval2);
-//    EXPECT_TRUE(empty_difference.is_empty());
-//
-//    Interval identity_difference = interval1.difference_with(interval3);
-//    EXPECT_EQ(identity_difference.simple_sets.size(), 1);
-//    EXPECT_EQ(identity_difference.simple_sets[0], interval1);
-//}
+
+TEST(AtomicIntervalDifferenceTest, SimpleInterval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval {0., 1., BorderType::CLOSED, BorderType::CLOSED};
+    auto interval3 = SimpleInterval {1., 2., BorderType::OPEN, BorderType::CLOSED};
+    auto interval4 = SimpleInterval {0., 3., BorderType::OPEN, BorderType::CLOSED};
+
+    Interval empty_difference = interval1.difference_with(interval2);
+    EXPECT_TRUE(empty_difference.is_empty());
+
+    Interval identity_difference = interval1.difference_with(interval3);
+    EXPECT_EQ(identity_difference.simple_sets.size(), 1);
+    EXPECT_EQ(identity_difference.simple_sets, SimpleSetType<SimpleInterval>{interval1});
+
+    Interval difference_from_middle_element = interval4.difference_with(interval3);
+    auto difference_from_middle_element_by_hand = SimpleSetType<SimpleInterval>{SimpleInterval(0., 1., BorderType::OPEN, BorderType::CLOSED),
+                                                                                    SimpleInterval(2., 3., BorderType::OPEN, BorderType::CLOSED)};
+    EXPECT_TRUE(difference_from_middle_element.is_disjoint());
+    EXPECT_EQ(difference_from_middle_element.simple_sets, difference_from_middle_element_by_hand);
+}
+
+TEST(SimplifyIntervalTestSuite, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::OPEN};
+    auto interval2 = SimpleInterval{1.0, 1.5, BorderType::CLOSED, BorderType::OPEN};
+    auto interval3 = SimpleInterval{1.5, 2.0, BorderType::OPEN, BorderType::CLOSED};
+    auto interval4 = SimpleInterval{3.0, 5.0, BorderType::CLOSED, BorderType::CLOSED};
+
+    auto interval = Interval{std::unordered_set<SimpleInterval>{interval1, interval2, interval3, interval4}};
+    interval = interval.simplify();
+
+    auto result_by_hand = Interval{std::unordered_set<SimpleInterval>{SimpleInterval{0.0, 1.5, BorderType::CLOSED, BorderType::OPEN},
+                                                                      SimpleInterval{1.5, 2, BorderType::OPEN, BorderType::CLOSED},
+                                                                      SimpleInterval{3.0, 5., BorderType::CLOSED, BorderType::CLOSED}}};
+    EXPECT_EQ(interval, result_by_hand);
+
+}
+
 //
 //TEST(IntervalIntervalDifferenceTest, Interval){
 //    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
@@ -106,13 +130,7 @@ TEST(AtomicIntervalIsEmptyTestSuite, SimpleInterval){
 //    EXPECT_EQ(difference2.simple_sets.size(), 1);
 //}
 //
-//TEST (AtomicIntervalToStringTestSuite, SimpleInterval){
-//    auto atomic_interval = SimpleInterval{0.0, 1.0, BorderType::OPEN, BorderType::CLOSED};
-//    auto interval = open(0.0, 1.0);
-//    interval.to_string();
-//    atomic_interval.to_string();
-//    //EXPECT_EQ(atomic_interval.to_string(), "(0.0, 1.0]");
-//}
+
 //
 //TEST(IntervalMakeDisjointTestSuite, Interval){
 //    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
