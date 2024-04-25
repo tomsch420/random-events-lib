@@ -1,7 +1,3 @@
-//
-// Created by tom_sch on 23.04.24.
-//
-
 #include <vector>
 #include <limits>
 #include <stdexcept>
@@ -11,7 +7,7 @@
 #include "interval.h"
 
 
-AtomicInterval AtomicInterval::intersection_with(const AtomicInterval &other) const {
+SimpleInterval SimpleInterval::intersection_with(const SimpleInterval &other) const {
 
     // get the new lower and upper bounds
     float new_lower = std::max(lower, other.lower);
@@ -47,31 +43,31 @@ AtomicInterval AtomicInterval::intersection_with(const AtomicInterval &other) co
     return {new_lower, new_upper, new_left, new_right};
 }
 
-Interval AtomicInterval::complement() {
-    const std::vector<AtomicInterval> resulting_intervals = {
-            AtomicInterval{-std::numeric_limits<float>::infinity(),
+Interval SimpleInterval::complement() {
+    const std::vector<SimpleInterval> resulting_intervals = {
+            SimpleInterval{-std::numeric_limits<float>::infinity(),
                            lower,
                            BorderType::OPEN,
                            invert_border(left)},
-            AtomicInterval{upper,
+            SimpleInterval{upper,
                            std::numeric_limits<float>::infinity(),
                            invert_border(right),
                            BorderType::OPEN}};
     return Interval(resulting_intervals);
 }
 
-bool AtomicInterval::is_empty() const {
+bool SimpleInterval::is_empty() const {
     return lower == upper and (left == BorderType::OPEN or right == BorderType::OPEN);
 }
 
-bool AtomicInterval::operator==(const AtomicInterval &other) const {
+bool SimpleInterval::operator==(const SimpleInterval &other) const {
     return lower == other.lower and upper == other.upper and left == other.left and right == other.right;
 }
 
-Interval AtomicInterval::difference_with(const AtomicInterval &other) const {
+Interval SimpleInterval::difference_with(const SimpleInterval &other) const {
 
     // get the intersection of both atomic intervals
-    AtomicInterval intersection = intersection_with(other);
+    SimpleInterval intersection = intersection_with(other);
 
     // if the intersection is empty, return the current atomic interval as interval
     if (intersection.is_empty()) {
@@ -82,13 +78,13 @@ Interval AtomicInterval::difference_with(const AtomicInterval &other) const {
     Interval complement_of_intersection = intersection.complement();
 
     // initialize the difference vector
-    std::vector<AtomicInterval> difference;
+    std::vector<SimpleInterval> difference;
 
     // for every interval in the complement of the intersection
     for (auto interval: complement_of_intersection.intervals) {
 
         // intersect this with the current complement of the intersection
-        AtomicInterval intersection_with_complement = intersection_with(interval);
+        SimpleInterval intersection_with_complement = intersection_with(interval);
 
         // if the intersection with the complement is not empty, append it to the difference vector
         if (!intersection_with_complement.is_empty()) {
@@ -99,7 +95,7 @@ Interval AtomicInterval::difference_with(const AtomicInterval &other) const {
     return Interval(difference);
 }
 
-std::string AtomicInterval::to_string() const {
+std::string SimpleInterval::to_string() const {
     if (is_empty()) {
         return "∅";
     }
@@ -109,17 +105,17 @@ std::string AtomicInterval::to_string() const {
             left_representation + std::to_string(lower) + ", " + std::to_string(upper) + right_representation);
 }
 
-bool AtomicInterval::contains(AtomicInterval &other) const {
+bool SimpleInterval::contains(SimpleInterval &other) const {
     return intersection_with(other) == other;
 }
 
-bool AtomicInterval::contains(float element) const {
-    auto singleton = AtomicInterval{element, element, BorderType::CLOSED, BorderType::CLOSED};
+bool SimpleInterval::contains(float element) const {
+    auto singleton = SimpleInterval{element, element, BorderType::CLOSED, BorderType::CLOSED};
     return contains(singleton);
 }
 
-Interval AtomicInterval::difference_with(const Interval &other) const {
-    Interval result = open(-std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+Interval SimpleInterval::difference_with(const Interval &other) const {
+    Interval result;
 
     auto elementwise_differences = std::vector<Interval>{};
 
@@ -128,6 +124,7 @@ Interval AtomicInterval::difference_with(const Interval &other) const {
         elementwise_differences.push_back(difference);
     }
 
+    result.intervals.push_back(*this);
     for (const auto &elementwise_difference: elementwise_differences) {
         result = result.intersection_with(elementwise_difference);
     }
@@ -135,8 +132,8 @@ Interval AtomicInterval::difference_with(const Interval &other) const {
     return result;
 }
 
-Interval::Interval(const std::vector<AtomicInterval> &intervals_) {
-    for (auto interval: intervals_) {
+Interval::Interval(const std::vector<SimpleInterval> &simple_intervals) {
+    for (auto interval: simple_intervals) {
         if (!interval.is_empty()) {
             intervals.push_back(interval);
         }
@@ -182,8 +179,8 @@ std::string Interval::to_string() const {
 
 bool Interval::is_disjoint() const {
     for (auto combination: unique_combinations(intervals)) {
-        AtomicInterval first = std::get<0>(combination);
-        AtomicInterval second = std::get<1>(combination);
+        SimpleInterval first = std::get<0>(combination);
+        SimpleInterval second = std::get<1>(combination);
         if (!first.intersection_with(second).is_empty()) {
             return false;
         }
@@ -191,10 +188,10 @@ bool Interval::is_disjoint() const {
     return true;
 }
 
-Interval Interval::intersection_with(AtomicInterval &atomic) {
-    std::vector<AtomicInterval> intersections;
+Interval Interval::intersection_with(SimpleInterval &simple) {
+    std::vector<SimpleInterval> intersections;
     for (auto interval: intervals) {
-        AtomicInterval intersection = interval.intersection_with(atomic);
+        SimpleInterval intersection = interval.intersection_with(simple);
         if (!intersection.is_empty()) {
             intersections.push_back(intersection);
         }
@@ -211,7 +208,7 @@ std::tuple<Interval, Interval> Interval::split_into_disjoint_and_non_disjoint() 
     for (const auto &atomic_i: intervals) {
 
         // initialize the difference of A_i
-        AtomicInterval difference = atomic_i;
+        SimpleInterval difference = atomic_i;
 
         for (const auto &atomic_j: intervals) {
 
@@ -240,7 +237,7 @@ Interval::Interval() {
     intervals = {};
 }
 
-bool Interval::contains(AtomicInterval element) const {
+bool Interval::contains(SimpleInterval element) const {
     for (auto interval: intervals) {
         auto intersection = interval.intersection_with(element);
         element = element.difference_with(intersection).intervals[0];
@@ -286,7 +283,7 @@ Interval Interval::simplify() {
             !(last_atom.right == BorderType::OPEN and current_atom->left == BorderType::OPEN)) {
             result.intervals.pop_back();
             result.intervals.push_back(
-                    AtomicInterval{last_atom.lower, current_atom->upper, last_atom.left, current_atom->right});
+                    SimpleInterval{last_atom.lower, current_atom->upper, last_atom.left, current_atom->right});
         } else {
             result.intervals.push_back(*current_atom);
         }
@@ -295,46 +292,23 @@ Interval Interval::simplify() {
 }
 
 
-std::vector<std::tuple<AtomicInterval, AtomicInterval>> unique_combinations(
-        const std::vector<AtomicInterval> &elements) {
+std::vector<std::tuple<SimpleInterval, SimpleInterval>> unique_combinations(
+        const std::vector<SimpleInterval> &elements) {
 
     // initialize result
-    std::vector<std::tuple<AtomicInterval, AtomicInterval>> combinations;
+    std::vector<std::tuple<SimpleInterval, SimpleInterval>> combinations;
 
     // for every pair of elements
     for (std::size_t i = 0; i < elements.size(); ++i) {
 
         // get element from first vector
-        AtomicInterval current_element1 = elements[i];
+        SimpleInterval current_element1 = elements[i];
         for (std::size_t j = 0; j < i; ++j) {
-            AtomicInterval current_element2 = elements[j];
-            std::tuple<AtomicInterval, AtomicInterval> combination =
+            SimpleInterval current_element2 = elements[j];
+            std::tuple<SimpleInterval, SimpleInterval> combination =
                     std::make_tuple(current_element1, current_element2);
             combinations.push_back(combination);
         }
     }
     return combinations;
-}
-
-std::vector<AtomicInterval> intersections_of_unique_combinations(const std::vector<AtomicInterval> &elements) {
-    std::vector<AtomicInterval> intersections;
-    for (auto combination: unique_combinations(elements)) {
-        AtomicInterval first = std::get<0>(combination);
-        AtomicInterval second = std::get<1>(combination);
-        AtomicInterval intersection = first.intersection_with(second);
-        if (!intersection.is_empty()) {
-            intersections.push_back(intersection);
-        }
-    }
-    return intersections;
-}
-
-std::vector<std::tuple<size_t, size_t>> unique_index_combinations(size_t size) {
-    std::vector<std::tuple<size_t, size_t>> result;
-    for (size_t i = 0; i < size; ++i) {
-        for (size_t j = 0; j < i; ++j) {
-            result.emplace_back(i, j);
-        }
-    }
-    return result;
 }
