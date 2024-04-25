@@ -1,0 +1,2 @@
+add_library(random_events_lib interval.cpp)
+target_include_directories(random_events_lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
