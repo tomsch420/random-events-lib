@@ -1,18 +1,23 @@
+#pragma once
 #include <unordered_set>
 #include <vector>
+
+
+template<typename T>
+using SimpleSetType = std::unordered_set<T>;
 
 /**
 * Interface class for simple sets.
 */
 template<typename T_CompositeSet, typename T_SimpleSet, typename T_Elementary>
 class SimpleSetWrapper {
-
+public:
     /**
      * @return The simple set pointer that implements the interface.
      */
     T_SimpleSet *get_simple_set() const {
         auto *derived = static_cast<const T_SimpleSet *>(this);
-        return derived;
+        return (T_SimpleSet *) derived;
     }
 
     /**
@@ -23,8 +28,8 @@ class SimpleSetWrapper {
     * @param other the other simples set.
     * @return The intersection of both as simple set.
     */
-    [[nodiscard]] T_SimpleSet t_intersection_with(const T_SimpleSet &other) const {
-        return get_simple_set()->intersection_with(other);
+    [[nodiscard]] T_SimpleSet intersection_with(const T_SimpleSet &other) const {
+        return get_simple_set()->simple_set_intersection_with(other);
     }
 
     /**
@@ -32,19 +37,19 @@ class SimpleSetWrapper {
     *
     * @return The complement of this simple set as disjoint composite set.
     */
-    T_CompositeSet t_complement() const {
-        return get_simple_set()->complement();
+    T_CompositeSet complement() const {
+        return get_simple_set()->simple_set_complement();
     }
 
-    /**
-    * This method depends on the type of simple set and has to be overwritten.
-    *
-    * @param other The other simple set.
-    * @return True if they are equal.
-    */
-    bool operator==(const T_SimpleSet &other) const {
-        return *get_simple_set() == other;
-    }
+//    /**
+//    * This method depends on the type of simple set and has to be overwritten.
+//    *
+//    * @param other The other simple set.
+//    * @return True if they are equal.
+//    */
+//    virtual bool operator==(const T_SimpleSet &other) const {
+//        return *get_simple_set() == other;
+//    }
 
     /**
     * Check if an elementary event is contained in this.
@@ -54,8 +59,18 @@ class SimpleSetWrapper {
     * @param element The element to check.
     * @return True if the element is contained in this.
     */
-    [[nodiscard]] bool t_contains(T_Elementary element) const {
-        return get_simple_set()->contains(element);
+    [[nodiscard]] bool contains(const T_Elementary &element) const {
+        return get_simple_set()->simple_set_contains(element);
+    }
+
+    /**
+     * Check if another simple set is contained in this.
+     *
+     * @param other The other simple set to check.
+     * @return True if the other simple set is contained in this.
+     */
+    bool contains(const T_SimpleSet &other) const {
+        return !intersection_with(other).is_empty();
     }
 
     /**
@@ -63,7 +78,7 @@ class SimpleSetWrapper {
      *
      * @return True if this is empty.
      */
-    [[nodiscard]] bool t_is_empty() const{
+    [[nodiscard]] bool t_is_empty() const {
         return get_simple_set()->is_empty();
     }
 
@@ -72,14 +87,14 @@ class SimpleSetWrapper {
      * @param other The other simple set.
      * @return The difference as disjoint composite set.
      */
-    [[nodiscard]] T_CompositeSet difference_with(const T_SimpleSet &other) const{
+    [[nodiscard]] T_CompositeSet difference_with(const T_SimpleSet &other) const {
 
         // get the intersection of both atomic simple_sets
         T_SimpleSet intersection = intersection_with(other);
 
         // if the intersection is empty, return the current atomic interval as interval
         if (intersection.is_empty()) {
-            return Interval({*this});
+            return T_CompositeSet({*this});
         }
 
         // get the complement of the intersection
@@ -102,7 +117,6 @@ class SimpleSetWrapper {
 
         return T_CompositeSet(difference);
     }
-
 };
 
 
@@ -112,6 +126,13 @@ class SimpleSetWrapper {
 template<typename T_CompositeSet, typename T_SimpleSet, typename T_Elementary>
 class CompositeSetWrapper {
 public:
+
+//    struct T_SimpleSetHash {
+//        std::size_t operator()(const T_SimpleSet &simple_set) const {
+//            return std::hash<T_SimpleSet>{}(simple_set);
+//        }
+//    };
+
     /**
      * @return The composite set pointer that implements the interface.
      */
@@ -120,14 +141,21 @@ public:
         return derived;
     }
 
-    CompositeSetWrapper(){};
+    CompositeSetWrapper() {
+        simple_sets = SimpleSetType<T_SimpleSet>();
+    };
 
     /**
      * Construct a composite set from a unordered set of simple sets.
      */
-    explicit CompositeSetWrapper(const std::vector<T_SimpleSet> &simple_sets) : simple_sets(simple_sets) {}
+    explicit CompositeSetWrapper(const SimpleSetType<T_SimpleSet> &simple_sets_) {
+        for (auto simple_set: simple_sets) {
+            if (!simple_set.is_empty()) {
+                simple_sets.push_back(simple_set);
+            }
+        }
+    }
 
 public:
-    std::vector<T_SimpleSet> simple_sets;
-
+    SimpleSetType<T_SimpleSet> simple_sets;
 };

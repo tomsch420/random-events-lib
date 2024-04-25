@@ -1,4 +1,6 @@
+#pragma once
 #include "sigma_algebra.h"
+#include <unordered_set>
 
 /**
  * Enum for border types of simple_sets.
@@ -41,8 +43,8 @@ class Interval; // Forward declaration
 /**
  * Class that represents an atomic interval.
  */
-struct SimpleInterval : SimpleSetWrapper<Interval, SimpleInterval, float> {
-
+class SimpleInterval : public SimpleSetWrapper<Interval, SimpleInterval, float> {
+public:
     /**
      * The lower value.
      */
@@ -69,7 +71,7 @@ struct SimpleInterval : SimpleSetWrapper<Interval, SimpleInterval, float> {
     explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
                             BorderType right = BorderType::OPEN);
 
-    size_t operator()(const SimpleInterval &interval) const;
+/*    size_t operator()(const SimpleInterval &interval) const;*/
 
     /**
      * Intersect this with another simple set.
@@ -79,32 +81,11 @@ struct SimpleInterval : SimpleSetWrapper<Interval, SimpleInterval, float> {
      * @param other the other simples set.
      * @return The intersection of both as simple set.
      */
-    [[nodiscard]] SimpleInterval intersection_with(const SimpleInterval &other) const;
+    [[nodiscard]] SimpleInterval simple_set_intersection_with(const SimpleInterval &other) const;
 
-    /**
-     * This method depends on the type of simple set and has to be overloaded.
-     *
-     * @return The complement of this simple set as disjoint composite set.
-     */
-    Interval complement();
+    [[nodiscard]] Interval simple_set_complement() const;
 
-    /**
-     * Check if an elementary event is contained in this.
-     *
-     * This method depends on the type of simple set and has to be overloaded.
-     *
-     * @param element The element to check.
-     * @return True if the element is contained in this.
-     */
-    [[nodiscard]] bool contains(float element) const;
-
-    /**
-     * Check if another simple set is contained in this.
-     *
-     * @param other The other simple set to check.
-     * @return True if the other simple set is contained in this.
-     */
-    [[nodiscard]] bool contains(SimpleInterval &other) const;
+    [[nodiscard]] bool simple_set_contains(const float &element) const;
 
     /**
      * This method depends on the type of simple set and has to be overloaded.
@@ -121,24 +102,36 @@ struct SimpleInterval : SimpleSetWrapper<Interval, SimpleInterval, float> {
      */
     bool operator==(const SimpleInterval &other) const;
 
-    /**
-     * Form the difference with another simple set.
-     * @param other The other simple set.
-     * @return The difference as disjoint composite set.
-     */
-    [[nodiscard]] Interval difference_with(const SimpleInterval &other) const;
+//    /**
+//     * Form the difference with another simple set.
+//     * @param other The other simple set.
+//     * @return The difference as disjoint composite set.
+//     */
+//    [[nodiscard]] Interval difference_with(const SimpleInterval &other) const;
 
-
-    /**
-     * Form the difference with a composite set.
-     * @param other The composite set.
-     * @return The difference as non-disjoint composite set.
-     */
-    [[nodiscard]] Interval difference_with(const Interval &other) const;
-
+//
+//    /**
+//     * Form the difference with a composite set.
+//     * @param other The composite set.
+//     * @return The difference as non-disjoint composite set.
+//     */
+//    [[nodiscard]] Interval difference_with(const Interval &other) const;
+//
     // TODO Ask Duc on how to overload the __repr__ function in C++.
-    [[nodiscard]] std::string to_string() const;
+    explicit operator std::string() const;
 };
+
+namespace std {
+    template <> struct hash<SimpleInterval>
+    {
+        size_t operator()(const SimpleInterval& interval) const
+        {
+            return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^ std::hash<int>()(
+                    static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
+        }
+    };
+}
+
 
 /**
  * Unique Combinations of atomic simple_sets within a vector.
@@ -203,114 +196,114 @@ public:
 //     */
 //    explicit Interval(const std::vector<SimpleInterval> &simple_sets);
 
-    explicit Interval(const std::vector<SimpleInterval> &simple_sets = {}) {
+    explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
         this->simple_sets = simple_sets;
     }
-
-    /**
-     * Create an equal composite  set that contains a disjoint union of simple sets.
-     * @return The disjoint composite set.
-     */
-    Interval make_disjoint();
-
-    /**
-     * Check if the composite set is empty.
-     * @return True if the composite set is empty.
-     */
-    [[nodiscard]] bool is_empty() const;
-
-    //TODO Ask Duc on how to overload the __repr__ function in C++.
-    [[nodiscard]] std::string to_string() const;
-
-    /**
-     * @return True if the composite set is disjoint union of simple sets.
-     */
-    [[nodiscard]] bool is_disjoint() const;
-
-    /**
-     * Form the intersection with an simple set.
-     * The intersection is only disjoint if this is disjoint.
-     * @param simple The simple event to intersect with.
-     * @return The intersection.
-     */
-    Interval intersection_with(SimpleInterval &simple);
-
-    /**
-     * Form the intersection with another composite set.
-     *
-     * The intersection is only disjoint if both composite sets are disjoint.
-     *
-     * @param other The other composite set.
-     * @return The intersection as composite set.
-     */
-    Interval intersection_with(const Interval &other);
-
-    /**
-     * Form the difference with another composite set.
-     *
-     * This difference is not guaranteed disjoint.
-     *
-     * @param other The other composite set.
-     * @return The difference as composite set.
-     */
-    Interval difference_with(const Interval &other);
-
-    /**
-     * Split this composite set into disjoint and non-disjoint parts.
-     *
-     * This method is required for making the union of composite sets disjoint.
-     * The partitioning is done by removing every other simple set from every simple set.
-     * The purified simple sets are then disjoint by definition and the pairwise intersections are not disjoint yet.
-     *
-     * @return A tuple of disjoint and non-disjoint composite sets.
-     */
-    std::tuple<Interval, Interval> split_into_disjoint_and_non_disjoint();
-
-    /**
-     * Simplify the composite set into a shorter but equal representation.
-     * The size refers to the number of simple sets contained.
-     *
-     * * This method depends on the type of simple set and has to be overloaded.
-     *
-     * @return The simplified composite set into a shorter but equal representation.
-     */
-    Interval simplify();
-
-    /**
-     * Check if a simple set is contained in the composite set.
-     * @param element The element to check.
-     * @return  True if the element is contained in the composite set.
-     */
-    [[nodiscard]] bool contains(SimpleInterval element) const;
+//
+//    /**
+//     * Create an equal composite  set that contains a disjoint union of simple sets.
+//     * @return The disjoint composite set.
+//     */
+//    Interval make_disjoint();
+//
+//    /**
+//     * Check if the composite set is empty.
+//     * @return True if the composite set is empty.
+//     */
+//    [[nodiscard]] bool is_empty() const;
+//
+//    //TODO Ask Duc on how to overload the __repr__ function in C++.
+//    [[nodiscard]] std::string to_string() const;
+//
+//    /**
+//     * @return True if the composite set is disjoint union of simple sets.
+//     */
+//    [[nodiscard]] bool is_disjoint() const;
+//
+//    /**
+//     * Form the intersection with an simple set.
+//     * The intersection is only disjoint if this is disjoint.
+//     * @param simple The simple event to intersect with.
+//     * @return The intersection.
+//     */
+//    Interval intersection_with(SimpleInterval &simple);
+//
+//    /**
+//     * Form the intersection with another composite set.
+//     *
+//     * The intersection is only disjoint if both composite sets are disjoint.
+//     *
+//     * @param other The other composite set.
+//     * @return The intersection as composite set.
+//     */
+//    Interval intersection_with(const Interval &other);
+//
+//    /**
+//     * Form the difference with another composite set.
+//     *
+//     * This difference is not guaranteed disjoint.
+//     *
+//     * @param other The other composite set.
+//     * @return The difference as composite set.
+//     */
+//    Interval difference_with(const Interval &other);
+//
+//    /**
+//     * Split this composite set into disjoint and non-disjoint parts.
+//     *
+//     * This method is required for making the union of composite sets disjoint.
+//     * The partitioning is done by removing every other simple set from every simple set.
+//     * The purified simple sets are then disjoint by definition and the pairwise intersections are not disjoint yet.
+//     *
+//     * @return A tuple of disjoint and non-disjoint composite sets.
+//     */
+//    std::tuple<Interval, Interval> split_into_disjoint_and_non_disjoint();
+//
+//    /**
+//     * Simplify the composite set into a shorter but equal representation.
+//     * The size refers to the number of simple sets contained.
+//     *
+//     * * This method depends on the type of simple set and has to be overloaded.
+//     *
+//     * @return The simplified composite set into a shorter but equal representation.
+//     */
+//    Interval simplify();
+//
+//    /**
+//     * Check if a simple set is contained in the composite set.
+//     * @param element The element to check.
+//     * @return  True if the element is contained in the composite set.
+//     */
+//    [[nodiscard]] bool contains(SimpleInterval element) const;
 
 };
 
 inline Interval closed(float lower, float upper) {
-    return Interval(std::vector<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::CLOSED}});
+    return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::CLOSED}});
 }
 
 inline Interval open(float lower, float upper) {
-    return Interval(std::vector<SimpleInterval>{SimpleInterval{lower, upper, BorderType::OPEN, BorderType::OPEN}});
+    return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::OPEN, BorderType::OPEN}});
 }
 
 inline Interval open_closed(float lower, float upper) {
-    return Interval(std::vector<SimpleInterval>{SimpleInterval{lower, upper, BorderType::OPEN, BorderType::CLOSED}});
+    return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::OPEN, BorderType::CLOSED}});
 }
 
 inline Interval closed_open(float lower, float upper) {
-    return Interval(std::vector<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::OPEN}});
+    return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::OPEN}});
 }
 
 inline Interval singleton(float value) {
-    return Interval(std::vector<SimpleInterval>{SimpleInterval{value, value, BorderType::CLOSED, BorderType::CLOSED}});
+    return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{value, value, BorderType::CLOSED, BorderType::CLOSED}});
 }
 
 inline Interval empty() {
-    return Interval(std::vector<SimpleInterval>{});
+    return Interval(SimpleSetType<SimpleInterval>{});
 }
 
 inline Interval reals() {
-    return Interval(std::vector<SimpleInterval>{
+    return Interval(SimpleSetType<SimpleInterval>{
             SimpleInterval{-std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
                            BorderType::OPEN, BorderType::OPEN}});
 }
