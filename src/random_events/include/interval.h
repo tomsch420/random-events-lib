@@ -155,10 +155,11 @@ public:
 
     explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
         this->simple_sets = simple_sets;
-        this->empty_simple_set = SimpleInterval();
+        this->empty_simple_set_ptr = &simple_interval;
     }
 
     Interval composite_set_simplify();
+    SimpleInterval simple_interval;
 };
 
 inline Interval closed(float lower, float upper) {

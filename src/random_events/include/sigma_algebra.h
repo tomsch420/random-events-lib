@@ -131,7 +131,7 @@ public:
     /**
      * Empty simple set.
      */
-    T_SimpleSet empty_simple_set;
+    T_SimpleSet *empty_simple_set_ptr = nullptr;
 
     /**
      * Default Constructor.
@@ -263,7 +263,7 @@ public:
                 if (difference_with_intersection.is_empty()) {
 
                     // set the difference to simple empty and skip the rest
-                    difference = empty_simple_set;
+                    difference = *empty_simple_set_ptr;
                     continue;
                 }
 
