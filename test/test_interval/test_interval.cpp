@@ -160,6 +160,36 @@ TEST(IntervalComplement, Interval){
     EXPECT_TRUE(complement.intersection_with(interval).is_empty());
 }
 
+TEST(IntervalUnion, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval3 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval = Interval{SimpleSetType<SimpleInterval>{interval1}};
+    auto other_interval = Interval{SimpleSetType<SimpleInterval>{interval2, interval3}};
+    auto union_ = interval.union_with(interval2);
+    EXPECT_EQ(union_.simple_sets.size(), 1);
+    EXPECT_TRUE(union_.is_disjoint());
+
+    auto union_2 = union_.union_with(other_interval);
+    EXPECT_EQ(union_2.simple_sets.size(), 2);
+    EXPECT_TRUE(union_2.is_disjoint());
+}
+
+TEST(IntervalDifference, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval3 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval = Interval{SimpleSetType<SimpleInterval>{interval1}};
+    auto other_interval = Interval{SimpleSetType<SimpleInterval>{interval2, interval3}};
+    auto difference = other_interval.difference_with(interval1);
+    EXPECT_EQ(difference.simple_sets.size(), 2);
+    EXPECT_TRUE(difference.is_disjoint());
+
+    auto difference_2 = other_interval.difference_with(difference);
+    EXPECT_EQ(difference_2.simple_sets.size(), 1);
+    EXPECT_TRUE(difference_2.is_disjoint());
+}
+
 
 //
 //TEST(IntervalIntervalDifferenceTest, Interval){

@@ -25,7 +25,7 @@ public:
     /**
      *
      */
-    T_SimpleSet empty_set(){
+    T_SimpleSet empty_set() {
         return get_simple_set()->simple_set_empty_set();
     }
 
@@ -359,6 +359,73 @@ public:
             }
             result = result.intersection_with(simple_set_complement);
         }
+        return result.make_disjoint();
+    }
+
+    /**
+    * Form the union with a simple set.
+    *
+    * @param other The other simple set.
+    * @return The union as disjoint composite set.
+    */
+    T_CompositeSet union_with(const T_SimpleSet &other) const {
+        T_CompositeSet result = T_CompositeSet(simple_sets);
+        result.simple_sets.insert(other);
+        return result.make_disjoint();
+    }
+
+    /**
+     * Form the union with another composite set.
+     *
+     * @param other The other composite set.
+     * @return The union as disjoint composite set.
+     */
+    T_CompositeSet union_with(const T_CompositeSet &other) const {
+        T_CompositeSet result = T_CompositeSet(simple_sets);
+        result.simple_sets.insert(other.simple_sets.begin(), other.simple_sets.end());
+        return result.make_disjoint();
+    }
+
+    /**
+     * Form the difference with a simple set.
+     *
+     * @param other the simple set
+     * @return The difference as disjoint composite set.
+     */
+    T_CompositeSet difference_with(const T_SimpleSet &other) const {
+        T_CompositeSet result;
+        for (const auto &simple_set: simple_sets) {
+            auto difference = simple_set.difference_with(other);
+            result.simple_sets.insert(difference.simple_sets.begin(), difference.simple_sets.end());
+        }
+        return result.make_disjoint();
+    }
+
+    /**
+     * Form the difference with another composite set.
+     *
+     * @param other The other composite set.
+     * @return The difference as disjoint composite set.
+     */
+    T_CompositeSet difference_with(const T_CompositeSet &other) const {
+        T_CompositeSet result;
+
+        for (const auto &own_simple_set: simple_sets) {
+            T_CompositeSet current_difference;
+            bool first_iteration = true;
+
+            for (const auto &other_simple_set: other.simple_sets) {
+                auto difference = own_simple_set.difference_with(other_simple_set);
+                if (first_iteration) {
+                    first_iteration = false;
+                    current_difference = difference;
+                    continue;
+                }
+                current_difference = current_difference.intersection_with(difference);
+            }
+            result.simple_sets.insert(current_difference.simple_sets.begin(), current_difference.simple_sets.end());
+        }
+
         return result.make_disjoint();
     }
 
