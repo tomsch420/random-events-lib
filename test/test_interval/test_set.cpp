@@ -15,6 +15,7 @@ TEST(Intersection, Set){
     EXPECT_TRUE(set1.contains("mario"));
     EXPECT_FALSE(set1.contains("luigi"));
     EXPECT_TRUE(complement.contains("luigi"));
+    EXPECT_EQ(all_elements, complement.empty_simple_set.all_elements);
 }
 
 TEST(Emptyness, Set){

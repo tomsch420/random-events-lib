@@ -13,7 +13,7 @@ SimpleSet SimpleSet::simple_set_intersection_with(const SimpleSet &other) const 
 }
 
 Set SimpleSet::simple_set_complement() const {
-    auto result = Set();
+    auto result = Set(all_elements);
     for (auto &element_: all_elements) {
         if (element_ != this->element) {
             result.simple_sets.insert(SimpleSet(element_, all_elements));
