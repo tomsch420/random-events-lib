@@ -30,15 +30,15 @@ public:
 
     [[nodiscard]] SimpleSet simple_set_intersection_with(const SimpleSet &other) const;
 
-    Set simple_set_complement() const;
+    [[nodiscard]] Set simple_set_complement() const;
 
-    bool simple_set_contains(const std::string &other_element) const;
+    [[nodiscard]] bool simple_set_contains(const std::string &other_element) const;
 
-    bool simple_set_is_empty() const;
+    [[nodiscard]] bool simple_set_is_empty() const;
 
     bool operator==(const SimpleSet &other) const;
 
-    std::string to_string() const;
+    [[nodiscard]] std::string to_string() const;
 
     explicit operator std::string() const;
 
