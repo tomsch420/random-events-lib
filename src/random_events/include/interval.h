@@ -71,6 +71,10 @@ public:
     explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
                             BorderType right = BorderType::OPEN);
 
+    static SimpleInterval simple_set_empty_set() {
+        return SimpleInterval();
+    }
+
     [[nodiscard]] SimpleInterval simple_set_intersection_with(const SimpleInterval &other) const;
 
     [[nodiscard]] Interval simple_set_complement() const;
@@ -158,24 +162,6 @@ public:
 
     Interval composite_set_simplify();
 
-//
-//    /**
-//     * Form the intersection with an simple set.
-//     * The intersection is only disjoint if this is disjoint.
-//     * @param simple The simple event to intersect with.
-//     * @return The intersection.
-//     */
-//    Interval intersection_with(SimpleInterval &simple);
-//
-//    /**
-//     * Form the intersection with another composite set.
-//     *
-//     * The intersection is only disjoint if both composite sets are disjoint.
-//     *
-//     * @param other The other composite set.
-//     * @return The intersection as composite set.
-//     */
-//    Interval intersection_with(const Interval &other);
 //
 //    /**
 //     * Form the difference with another composite set.

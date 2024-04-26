@@ -129,6 +129,38 @@ TEST(IntervalMakeDisjointTestSuite, Interval){
     EXPECT_TRUE(disjoint_interval.is_disjoint());
 }
 
+TEST(IntervalIntersectionSimple, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval3 = SimpleInterval{0.5, 2.5, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval = Interval{SimpleSetType<SimpleInterval>{interval1, interval2}};
+    auto intersection = interval.intersection_with(interval3);
+    EXPECT_TRUE(intersection.is_disjoint());
+    EXPECT_EQ(intersection.simple_sets.size(), 2);
+}
+
+TEST(IntervalIntersectionInterval, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval3 = SimpleInterval{4, 5, BorderType::CLOSED, BorderType::CLOSED};
+    auto composite_interval1 = Interval{SimpleSetType<SimpleInterval>{interval1, interval2}};
+    auto composite_interval2 = Interval{SimpleSetType<SimpleInterval>{interval2, interval3}};
+    auto intersection = composite_interval1.intersection_with(composite_interval2);
+    EXPECT_TRUE(intersection.is_disjoint());
+    EXPECT_EQ(intersection.simple_sets.size(), 1);
+}
+
+TEST(IntervalComplement, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval = Interval{SimpleSetType<SimpleInterval>{interval1, interval2}};
+    auto complement = interval.complement();
+    EXPECT_EQ(complement.simple_sets.size(), 3);
+    EXPECT_TRUE(complement.is_disjoint());
+    EXPECT_TRUE(complement.intersection_with(interval).is_empty());
+}
+
+
 //
 //TEST(IntervalIntervalDifferenceTest, Interval){
 //    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};

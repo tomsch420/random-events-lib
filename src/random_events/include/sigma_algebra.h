@@ -23,6 +23,13 @@ public:
     }
 
     /**
+     *
+     */
+    T_SimpleSet empty_set(){
+        return get_simple_set()->simple_set_empty_set();
+    }
+
+    /**
     * Intersect this with another simple set.
     *
     * This method depends on the type of simple set and has to be overwritten.
@@ -224,7 +231,7 @@ public:
      *
      * @return A tuple of disjoint and non-disjoint composite sets.
      */
-    std::tuple<T_CompositeSet, T_CompositeSet> split_into_disjoint_and_non_disjoint() {
+    std::tuple<T_CompositeSet, T_CompositeSet> split_into_disjoint_and_non_disjoint() const {
 
         // initialize result for disjoint and non-disjoint sets
         T_CompositeSet disjoint;
@@ -252,7 +259,17 @@ public:
                     non_disjoint.simple_sets.insert(intersection);
                 }
 
-                // get the difference of the simple set.
+                // get the difference of the simple set with the intersection.
+                auto difference_with_intersection = difference.difference_with(intersection);
+
+                // if the difference is empty
+                if (difference_with_intersection.is_empty()) {
+
+                    // set the difference to simple empty and skip the rest
+                    difference = difference.empty_set();
+                    continue;
+                }
+
                 // The difference should only contain 1 simple set since the intersection is completely in simple_set_i.
                 difference = *difference.difference_with(intersection).simple_sets.begin();
             }
@@ -268,7 +285,7 @@ public:
      *
      * @return The disjoint composite set.
      */
-    T_CompositeSet make_disjoint() {
+    T_CompositeSet make_disjoint() const {
 
         // initialize disjoint, non-disjoint and current sets
         T_CompositeSet disjoint;
@@ -290,6 +307,59 @@ public:
 
         // simplify and return the disjoint set
         return disjoint.simplify();
+    }
+
+
+    /**
+     * Form the intersection with an simple set.
+     * The intersection is only disjoint if this is disjoint.
+     * @param simple_set The simple event to intersect with.
+     * @return The intersection.
+     */
+    T_CompositeSet intersection_with(const T_SimpleSet &simple_set) const {
+        T_CompositeSet result;
+        for (const auto &current_simple_set: simple_sets) {
+            T_SimpleSet intersection = current_simple_set.intersection_with(simple_set);
+            if (!intersection.is_empty()) {
+                result.simple_sets.insert(intersection);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Form the intersection with another composite set.
+     *
+     * The intersection is only disjoint if both composite sets are disjoint.
+     *
+     * @param other The other composite set.
+     * @return The intersection as composite set.
+     */
+    T_CompositeSet intersection_with(const T_CompositeSet &other) const {
+        T_CompositeSet result;
+        for (const auto &current_simple_set: simple_sets) {
+            auto current_result = other.intersection_with(current_simple_set);
+            result.simple_sets.insert(current_result.simple_sets.begin(), current_result.simple_sets.end());
+        }
+        return result;
+    }
+
+    /**
+     * @return the complement of a composite set as disjoint composite set.
+     */
+    T_CompositeSet complement() const {
+        T_CompositeSet result;
+        bool first_iteration = true;
+        for (const auto &simple_set: simple_sets) {
+            auto simple_set_complement = simple_set.complement();
+            if (first_iteration) {
+                first_iteration = false;
+                result = simple_set_complement;
+                continue;
+            }
+            result = result.intersection_with(simple_set_complement);
+        }
+        return result.make_disjoint();
     }
 
 public:

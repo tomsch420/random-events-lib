@@ -109,44 +109,6 @@ Interval Interval::composite_set_simplify() {
     return Interval(SimpleSetType<SimpleInterval> (result.begin(), result.end()));
 }
 
-
-//size_t SimpleInterval::operator()(const SimpleInterval &interval) const {
-//    return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^ std::hash<int>()(
-//            static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
-//}
-//
-//Interval Interval::make_disjoint() {
-//    Interval disjoint;
-//    Interval intersections;
-//
-//    Interval current_disjoint;
-//
-//    std::tie(disjoint, intersections) = split_into_disjoint_and_non_disjoint();
-//
-//    while (!intersections.is_empty()) {
-//        std::tie(current_disjoint, intersections) = intersections.split_into_disjoint_and_non_disjoint();
-//        extend_vector(disjoint.simple_sets, current_disjoint.simple_sets);
-//    }
-//
-//    disjoint.simple_sets.erase(unique(disjoint.simple_sets.begin(), disjoint.simple_sets.end()),
-//                               disjoint.simple_sets.end());
-//
-//    return disjoint.simplify();
-//}
-//
-//
-//Interval Interval::intersection_with(SimpleInterval &simple) {
-//    std::vector<SimpleInterval> intersections;
-//    for (auto interval: simple_sets) {
-//        SimpleInterval intersection = interval.intersection_with(simple);
-//        if (!intersection.is_empty()) {
-//            intersections.push_back(intersection);
-//        }
-//    }
-//    return Interval(intersections);
-//}
-
-
 //bool Interval::contains(SimpleInterval element) const {
 //    for (auto interval: simple_sets) {
 //        auto intersection = interval.intersection_with(element);
@@ -158,18 +120,6 @@ Interval Interval::composite_set_simplify() {
 //    return false;
 //}
 
-//Interval Interval::intersection_with(const Interval &other) {
-//    Interval result;
-//    for (auto atomic_i: simple_sets) {
-//        for (auto atomic_j: other.simple_sets) {
-//            auto intersection = atomic_i.intersection_with(atomic_j);
-//            if (!intersection.is_empty()) {
-//                result.simple_sets.push_back(intersection);
-//            }
-//        }
-//    }
-//    return result;
-//}
 //
 //Interval Interval::difference_with(const Interval &other) {
 //    Interval result = empty();
@@ -180,8 +130,6 @@ Interval Interval::composite_set_simplify() {
 //    return result;
 //}
 //
-
-
 
 //Interval SimpleInterval::difference_with(const Interval &other) const {
 //    Interval result;
