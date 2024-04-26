@@ -425,8 +425,26 @@ public:
             }
             result.simple_sets.insert(current_difference.simple_sets.begin(), current_difference.simple_sets.end());
         }
-
         return result.make_disjoint();
+    }
+
+
+    /**
+     * Check if this contains an elementary object.
+     * @param element The element to check.
+     * @return True if the element is contained in the composite set.
+     */
+    bool contains(T_Elementary element) const {
+        for (const auto &simple_set: simple_sets) {
+            if (simple_set.contains(element)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool contains(const T_CompositeSet &other) const {
+        return intersection_with(other) == other;
     }
 
 public:

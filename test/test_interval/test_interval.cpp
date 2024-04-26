@@ -191,59 +191,20 @@ TEST(IntervalDifference, Interval){
 }
 
 
-//
-//TEST(IntervalIntervalDifferenceTest, Interval){
-//    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval2 = SimpleInterval {0., 2., BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval3 = SimpleInterval {1., 4., BorderType::OPEN, BorderType::CLOSED};
-//    Interval composed_interval_1 = Interval(std::vector<SimpleInterval>{interval2, interval3});
-//    Interval composed_interval_2 = Interval(std::vector<SimpleInterval>{interval1, interval2});
-//    auto difference = composed_interval_1.difference_with(composed_interval_2);
-//    EXPECT_EQ(difference.simple_sets.size(), 1);
-//}
-//
-//TEST(AtomicIntervalDifferenceWithIntervalTest, SimpleInterval){
-//    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval2 = SimpleInterval {0., 2., BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval3 = SimpleInterval {1., 4., BorderType::OPEN, BorderType::CLOSED};
-//    Interval shitty_interval = Interval(std::vector<SimpleInterval>{interval2, interval3});
-//    auto difference = interval1.difference_with(shitty_interval);
-//    EXPECT_TRUE(difference.is_empty());
-//
-//    Interval other_shitty_interval = Interval(std::vector<SimpleInterval>{interval1, interval2});
-//    auto difference2 = interval3.difference_with(other_shitty_interval);
-//    EXPECT_EQ(difference2.simple_sets.size(), 1);
-//}
-//
+TEST(IntervalContainment, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval = Interval{SimpleSetType<SimpleInterval>{interval1, interval2}};
+    EXPECT_TRUE(interval.contains(0.5));
+    EXPECT_FALSE(interval.contains(1.5));
 
-//
+    auto interval3 = closed(2.5, 2.7);
+    EXPECT_TRUE(interval.contains(interval3));
 
-//
-//TEST(UniqueCombinationsTestCase, SimpleInterval){
-//    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval3 = SimpleInterval{1.5, 2.0, BorderType::CLOSED, BorderType::CLOSED};
-//    Interval composed_interval = Interval{std::vector<SimpleInterval>{interval1, interval2}};
-//    auto combinations = unique_combinations(composed_interval.simple_sets);
-//    EXPECT_EQ(combinations.size(), 1);
-//
-//    Interval composed_interval2 = Interval{std::vector<SimpleInterval>{interval1, interval2, interval3}};
-//    auto combinations2 = unique_combinations(composed_interval2.simple_sets);
-//    EXPECT_EQ(combinations2.size(), 3);
-//}
-//
-//TEST(IntersectionWithAtomic, Interval){
-//    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval2 = SimpleInterval{1.5, 2.5, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval3 = SimpleInterval{0.5, 2.0, BorderType::CLOSED, BorderType::CLOSED};
-//
-//    auto interval = Interval{std::vector<SimpleInterval>{interval1, interval2}};
-//    auto intersection = interval.intersection_with(interval3);
-//    EXPECT_EQ(intersection.simple_sets.size(), 2);
-//    EXPECT_TRUE(intersection.is_disjoint());
-//    EXPECT_EQ(intersection.simple_sets[0].lower, 0.5);
-//    EXPECT_EQ(intersection.simple_sets[0].upper, 1.0);
-//
-//    EXPECT_EQ(intersection.simple_sets[1].lower, 1.5);
-//    EXPECT_EQ(intersection.simple_sets[1].upper, 2.0);
-//}
+    auto interval4 = closed(0.5, 1.5);
+    EXPECT_FALSE(interval.contains(interval4));
+
+    EXPECT_TRUE(interval.contains(interval));
+
+
+}

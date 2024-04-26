@@ -162,37 +162,6 @@ public:
 
     Interval composite_set_simplify();
 
-//
-//    /**
-//     * Form the difference with another composite set.
-//     *
-//     * This difference is not guaranteed disjoint.
-//     *
-//     * @param other The other composite set.
-//     * @return The difference as composite set.
-//     */
-//    Interval difference_with(const Interval &other);
-//
-//    /**
-//     * Split this composite set into disjoint and non-disjoint parts.
-//     *
-//     * This method is required for making the union of composite sets disjoint.
-//     * The partitioning is done by removing every other simple set from every simple set.
-//     * The purified simple sets are then disjoint by definition and the pairwise intersections are not disjoint yet.
-//     *
-//     * @return A tuple of disjoint and non-disjoint composite sets.
-//     */
-//    std::tuple<Interval, Interval> split_into_disjoint_and_non_disjoint();
-//
-
-//
-//    /**
-//     * Check if a simple set is contained in the composite set.
-//     * @param element The element to check.
-//     * @return  True if the element is contained in the composite set.
-//     */
-//    [[nodiscard]] bool contains(SimpleInterval element) const;
-
 };
 
 inline Interval closed(float lower, float upper) {
