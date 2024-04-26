@@ -2,6 +2,7 @@
 
 #include <unordered_set>
 #include <vector>
+#include <iostream>
 
 
 template<typename T>
@@ -128,7 +129,6 @@ public:
     }
 
 
-
     /**
      * Default Constructor.
      */
@@ -209,34 +209,88 @@ public:
         return result;
     }
 
-//    /**
-//     * Create an equal composite  set that contains a disjoint union of simple sets.
-//     * @return The disjoint composite set.
-//     */
-//    T_CompositeSet make_disjoint() {
-//        // initialize disjoint, non-disjoint and current sets
-//        T_CompositeSet disjoint;
-//        T_CompositeSet intersections;
-//        T_CompositeSet current_disjoint;
-//
-//        // start with the initial split
-//        std::tie(disjoint, intersections) = split_into_disjoint_and_non_disjoint();
-//
-//        // as long the splitting still produces non-disjoint sets
-//        while (!intersections.is_empty()) {
-//
-//            // split into disjoint and non-disjoint sets
-//            std::tie(current_disjoint, intersections) = intersections.split_into_disjoint_and_non_disjoint();
-//
-//            // extend the result by the disjoint sets
-//            extend_vector(disjoint.simple_sets, current_disjoint.simple_sets);
-//        }
-//
-////        disjoint.simple_sets.erase(unique(disjoint.simple_sets.begin(), disjoint.simple_sets.end()),
-////                                   disjoint.simple_sets.end());
-//        // simplify and return the disjoint set
-//        return disjoint.simplify();
-//    }
+    /**
+     * Split this composite set into disjoint and non-disjoint parts.
+     *
+     * This method is required for making the composite set disjoint.
+     * The partitioning is done by removing every other simple set from every simple set.
+     * The purified simple sets are then disjoint by definition and the pairwise intersections are (potentially)
+     * not disjoint yet.
+     *
+     * This method requires:
+     *  - the intersection of two simple sets as a simple set
+     *  - the difference of a simple set (A) and another simple set (B) that is completely contained in A (B ⊆ A).
+     *      The result of that difference has to be a composite set with only one simple set in it.
+     *
+     * @return A tuple of disjoint and non-disjoint composite sets.
+     */
+    std::tuple<T_CompositeSet, T_CompositeSet> split_into_disjoint_and_non_disjoint() {
+
+        // initialize result for disjoint and non-disjoint sets
+        T_CompositeSet disjoint;
+        T_CompositeSet non_disjoint;
+
+        // for every pair of simple sets
+        for (const auto &simple_set_i: simple_sets) {
+
+            // initialize the difference of A_i
+            T_SimpleSet difference = simple_set_i;
+
+            // for every other simple set
+            for (const auto &simple_set_j: simple_sets) {
+
+                // if the atomic simple_sets are the same, skip
+                if (simple_set_i == simple_set_j) {
+                    continue;
+                }
+
+                // get the intersection of the atomic simple_sets
+                auto intersection = simple_set_i.intersection_with(simple_set_j);
+
+                // if the intersection is not empty, append it to the non-disjoint set
+                if (!intersection.is_empty()) {
+                    non_disjoint.simple_sets.insert(intersection);
+                }
+
+                // get the difference of the simple set.
+                // The difference should only contain 1 simple set since the intersection is completely in simple_set_i.
+                difference = *difference.difference_with(intersection).simple_sets.begin();
+            }
+
+            // append the simple_set_i without every other simple set to the disjoint set
+            disjoint.simple_sets.insert(difference);
+        }
+        return std::make_tuple(disjoint, non_disjoint);
+    }
+
+    /**
+     * Create an equal composite set that contains a disjoint union of simple sets.
+     *
+     * @return The disjoint composite set.
+     */
+    T_CompositeSet make_disjoint() {
+
+        // initialize disjoint, non-disjoint and current sets
+        T_CompositeSet disjoint;
+        T_CompositeSet intersections;
+        T_CompositeSet current_disjoint;
+
+        // start with the initial split
+        std::tie(disjoint, intersections) = split_into_disjoint_and_non_disjoint();
+
+        // as long the splitting still produces non-disjoint sets
+        while (!intersections.is_empty()) {
+
+            // split into disjoint and non-disjoint sets
+            std::tie(current_disjoint, intersections) = intersections.split_into_disjoint_and_non_disjoint();
+
+            // extend the result by the disjoint sets
+            disjoint.simple_sets.insert(current_disjoint.simple_sets.begin(), current_disjoint.simple_sets.end());
+        }
+
+        // simplify and return the disjoint set
+        return disjoint.simplify();
+    }
 
 public:
     SimpleSetType<T_SimpleSet> simple_sets;

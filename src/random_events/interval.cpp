@@ -146,40 +146,6 @@ Interval Interval::composite_set_simplify() {
 //    return Interval(intersections);
 //}
 
-//std::tuple<Interval, Interval> Interval::split_into_disjoint_and_non_disjoint() {
-//    // initialize result for disjoint and non-disjoint sets
-//    Interval disjoint;
-//    Interval non_disjoint;
-//
-//    // for every pair of atomics
-//    for (const auto &atomic_i: simple_sets) {
-//
-//        // initialize the difference of A_i
-//        SimpleInterval difference = atomic_i;
-//
-//        for (const auto &atomic_j: simple_sets) {
-//
-//            // if the atomic simple_sets are the same, skip
-//            if (atomic_i == atomic_j) {
-//                continue;
-//            }
-//
-//            // get the intersection of the atomic simple_sets
-//            auto intersection = atomic_i.intersection_with(atomic_j);
-//
-//            // if the intersection is not empty, append it to the non-disjoint set
-//            if (!intersection.is_empty()) {
-//                non_disjoint.simple_sets.push_back(intersection);
-//            }
-//
-//            difference = difference.difference_with(atomic_j).simple_sets[0];
-//        }
-//
-//        disjoint.simple_sets.push_back(difference);
-//    }
-//    return std::make_tuple(disjoint, non_disjoint);
-//}
-
 
 //bool Interval::contains(SimpleInterval element) const {
 //    for (auto interval: simple_sets) {

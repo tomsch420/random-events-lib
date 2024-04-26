@@ -106,6 +106,29 @@ TEST(SimplifyIntervalTestSuite, Interval){
 
 }
 
+TEST(SplitIntervalTestSuit, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::OPEN};
+    auto interval2 = SimpleInterval{1.0, 1.5, BorderType::CLOSED, BorderType::OPEN};
+    auto interval3 = SimpleInterval{1.5, 2.0, BorderType::OPEN, BorderType::CLOSED};
+    auto interval4 = SimpleInterval{3.0, 5.0, BorderType::CLOSED, BorderType::CLOSED};
+
+    auto interval = Interval{std::unordered_set<SimpleInterval>{interval1, interval2, interval3, interval4}};
+    auto [disjoint, non_disjoint] = interval.split_into_disjoint_and_non_disjoint();
+
+    EXPECT_TRUE(disjoint.is_disjoint());
+}
+
+TEST(IntervalMakeDisjointTestSuite, Interval){
+    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval3 = SimpleInterval{1.5, 2.0, BorderType::CLOSED, BorderType::CLOSED};
+    auto interval4 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
+    Interval composed_interval = Interval{SimpleSetType<SimpleInterval>{interval1, interval2, interval3, interval4}};
+    Interval disjoint_interval = composed_interval.make_disjoint();
+    EXPECT_EQ(disjoint_interval.simple_sets.size(), 1);
+    EXPECT_TRUE(disjoint_interval.is_disjoint());
+}
+
 //
 //TEST(IntervalIntervalDifferenceTest, Interval){
 //    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
@@ -132,15 +155,7 @@ TEST(SimplifyIntervalTestSuite, Interval){
 //
 
 //
-//TEST(IntervalMakeDisjointTestSuite, Interval){
-//    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval3 = SimpleInterval{1.5, 2.0, BorderType::CLOSED, BorderType::CLOSED};
-//    auto interval4 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//    Interval composed_interval = Interval{std::vector<SimpleInterval>{interval1, interval2, interval3, interval4}};
-//    Interval disjoint_interval = composed_interval.make_disjoint();
-//    EXPECT_EQ(disjoint_interval.simple_sets.size(), 1);
-//}
+
 //
 //TEST(UniqueCombinationsTestCase, SimpleInterval){
 //    auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
