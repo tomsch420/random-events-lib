@@ -71,9 +71,6 @@ public:
     explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
                             BorderType right = BorderType::OPEN);
 
-    static SimpleInterval simple_set_empty_set() {
-        return SimpleInterval();
-    }
 
     [[nodiscard]] SimpleInterval simple_set_intersection_with(const SimpleInterval &other) const;
 
@@ -161,7 +158,6 @@ public:
     }
 
     Interval composite_set_simplify();
-
 };
 
 inline Interval closed(float lower, float upper) {

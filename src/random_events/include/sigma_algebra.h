@@ -2,7 +2,6 @@
 
 #include <unordered_set>
 #include <vector>
-#include <iostream>
 
 
 template<typename T>
@@ -20,13 +19,6 @@ public:
     T_SimpleSet *get_simple_set() const {
         auto *derived = static_cast<const T_SimpleSet *>(this);
         return (T_SimpleSet *) derived;
-    }
-
-    /**
-     *
-     */
-    T_SimpleSet empty_set() {
-        return get_simple_set()->simple_set_empty_set();
     }
 
     /**
@@ -83,10 +75,11 @@ public:
 
     /**
      * Form the difference with another simple set.
+     *
      * @param other The other simple set.
      * @return The difference as disjoint composite set.
      */
-    [[nodiscard]] T_CompositeSet difference_with(const T_SimpleSet &other) const {
+    T_CompositeSet difference_with(const T_SimpleSet &other) const {
 
         // get the intersection of both atomic simple_sets
         T_SimpleSet intersection = intersection_with(other);
@@ -135,6 +128,10 @@ public:
         return (T_CompositeSet *) derived;
     }
 
+    /**
+     * Empty simple set.
+     */
+    static const T_SimpleSet EMPTY_SIMPLE_SET;
 
     /**
      * Default Constructor.
@@ -266,7 +263,7 @@ public:
                 if (difference_with_intersection.is_empty()) {
 
                     // set the difference to simple empty and skip the rest
-                    difference = difference.empty_set();
+                    difference = EMPTY_SIMPLE_SET;
                     continue;
                 }
 
