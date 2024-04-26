@@ -94,7 +94,7 @@ public:
 };
 
 /**
- * Hash function for simple sets.
+ * Hash function for simple intervals.
  */
 namespace std {
     template <> struct hash<SimpleInterval>
@@ -155,6 +155,7 @@ public:
 
     explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
         this->simple_sets = simple_sets;
+        this->empty_simple_set = SimpleInterval();
     }
 
     Interval composite_set_simplify();

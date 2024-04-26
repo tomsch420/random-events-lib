@@ -6,9 +6,6 @@
 #include "interval.h"
 #include "sigma_algebra.h"
 
-template<> const SimpleInterval CompositeSetWrapper<Interval, SimpleInterval, float>::EMPTY_SIMPLE_SET =
-        SimpleInterval(0, 0, BorderType::OPEN, BorderType::OPEN);
-
 SimpleInterval SimpleInterval::simple_set_intersection_with(const SimpleInterval &other) const {
 
     // get the new lower and upper bounds

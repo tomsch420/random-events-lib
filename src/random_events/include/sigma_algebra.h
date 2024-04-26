@@ -131,7 +131,7 @@ public:
     /**
      * Empty simple set.
      */
-    static const T_SimpleSet EMPTY_SIMPLE_SET;
+    T_SimpleSet empty_simple_set;
 
     /**
      * Default Constructor.
@@ -263,7 +263,7 @@ public:
                 if (difference_with_intersection.is_empty()) {
 
                     // set the difference to simple empty and skip the rest
-                    difference = EMPTY_SIMPLE_SET;
+                    difference = empty_simple_set;
                     continue;
                 }
 
