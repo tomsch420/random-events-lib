@@ -3,7 +3,7 @@
 #include <set>
 #include <vector>
 #include <tuple>
-
+#include <memory>
 
 template<typename T>
 using SimpleSetType = std::set<T>;
@@ -12,7 +12,7 @@ using SimpleSetType = std::set<T>;
 * Interface class for simple sets.
 */
 template<typename T_CompositeSet, typename T_SimpleSet, typename T_Elementary>
-class SimpleSetWrapper{
+class SimpleSetWrapper {
 public:
     /**
      * @return The simple set pointer that implements the interface.
@@ -87,7 +87,7 @@ public:
 
         // if the intersection is empty, return the current atomic interval as interval
         if (intersection.is_empty()) {
-            return T_CompositeSet({*get_simple_set()});
+            return T_CompositeSet(*get_simple_set());
         }
 
         // get the complement of the intersection
@@ -120,11 +120,11 @@ public:
     }
 
     bool operator>(const T_SimpleSet &other) const {
-        return ! operator<=(other);
+        return !operator<=(other);
     }
 
     bool operator>=(const T_SimpleSet &other) const {
-        return ! operator<(other);
+        return !operator<(other);
     }
 
 
@@ -135,7 +135,7 @@ public:
 * Interface class for composite elements.
 * */
 template<typename T_CompositeSet, typename T_SimpleSet, typename T_Elementary>
-class CompositeSetWrapper{
+class CompositeSetWrapper {
 public:
 
     /**
@@ -168,6 +168,8 @@ public:
             }
         }
     }
+
+    explicit CompositeSetWrapper(const T_CompositeSet &composite_set) : simple_sets(composite_set.simple_sets) {}
 
     /**
      * @return True if this is empty.
@@ -401,6 +403,13 @@ public:
         return result.make_disjoint();
     }
 
+//    std::unique_ptr<AbstractCompositeSet> union_with(const AbstractCompositeSet &other) const override
+//    {
+//        auto result = std::make_unique<CompositeSetWrapper>(
+//                union_with(static_cast<const T_CompositeSet &>(other)));
+//        return result;
+//    }
+
     /**
      * Form the difference with a simple set.
      *
@@ -443,6 +452,11 @@ public:
         return result.make_disjoint();
     }
 
+//    std::unique_ptr<AbstractCompositeSet> difference_with(const AbstractCompositeSet &other) const override {
+//        auto result = std::make_unique<CompositeSetWrapper>(
+//                difference_with(static_cast<const T_CompositeSet &>(other)));
+//        return result;
+//    }
 
     /**
      * Check if this contains an elementary object.

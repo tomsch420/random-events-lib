@@ -31,9 +31,9 @@ inline BorderType intersect_borders(BorderType border_1, BorderType border_2) {
 }
 
 /**
- * Logically complement a border.
- * @param border The borders to complement.
- * @return The complement a border.
+ * Logically t_complement a border.
+ * @param border The borders to t_complement.
+ * @return The t_complement a border.
  */
 inline BorderType invert_border(BorderType border) {
     return border == BorderType::OPEN ? BorderType::CLOSED : BorderType::OPEN;
@@ -159,6 +159,11 @@ public:
     explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
         this->simple_sets = simple_sets;
         this->empty_simple_set_ptr = &simple_interval;
+    }
+
+    explicit Interval(const SimpleInterval &simple_interval) {
+        this->simple_sets.insert(simple_interval);
+        this->empty_simple_set_ptr = &this->simple_interval;
     }
 
     Interval composite_set_simplify();

@@ -3,15 +3,23 @@
 
 SimpleEvent SimpleEvent::simple_set_intersection_with(const SimpleEvent &other) const {
     auto result = SimpleEvent();
-
-    auto all_variables = merge_keys_of_assignments(other.variable_assignments);
-
-    for (const auto& variable : all_variables){
-        ;
-        auto this_assignment = variable_assignments.find(variable);
-        auto other_assignment = other.variable_assignments.find(variable);
-
-    }
+//
+//    auto all_variables = merge_keys_of_assignments(other.variable_assignments);
+//
+//    for (const auto& variable : all_variables){
+//        auto assignment;
+//
+//        auto this_assignment = variable_assignments.find(variable);
+//
+//        if this_assignment is not Null:
+//            default_assignment = default_assignment.intersection(this_assignment);
+//
+//        auto other_assignment = other.variable_assignments.find(variable);
+//        if other_assignment is not Null:
+//            default_assignment = default_assignment.intersection(other_assignment);
+//
+//        result.variable_assignments.insert({variable, default_assignment});
+//    }
 }
 
 std::set<VisitVariableVariant> SimpleEvent::merge_keys_of_assignments(const VariableAssignmentType &other_assignments) const {

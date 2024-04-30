@@ -9,18 +9,25 @@
 #include <variant>
 
 
+class AbstractVariable {
+public:
+    /**
+     * The (virtual) name of the variable.
+     */
+    std::string name;
+
+    explicit AbstractVariable(std::string name) : name(std::move(name)){};
+};
+
+
+
 /**
  * Template class for variables.
  */
 template<typename T_Variable, typename T_Domain>
-class Variable {
+class Variable: public AbstractVariable {
 public:
-    Variable(std::string name, T_Domain domain) : name(std::move(name)), domain(std::move(domain)) {};
-
-    /**
-     * The name of the variable.
-     */
-    std::string name;
+    Variable(std::string name, T_Domain domain) : AbstractVariable(name), domain(std::move(domain)) {};
 
     /**
      * The domain of the variable.

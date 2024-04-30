@@ -50,6 +50,11 @@ public:
         return element <= other.element;
     }
 
+    SimpleSet& operator=(const SimpleSet &other){
+        this->element = other.element;
+        return *this;
+    }
+
 };
 
 /**
@@ -69,8 +74,10 @@ public:
 
     std::set<std::string> all_elements;
 
-    explicit Set(const SimpleSetType<SimpleSet> &simple_sets, std::set<std::string> all_elements) :
-            empty_simple_set(SimpleSet(std::move(all_elements))) {
+    explicit Set() = default;
+
+    explicit Set(const SimpleSetType<SimpleSet> &simple_sets, const std::set<std::string> &all_elements) :
+            empty_simple_set(SimpleSet(all_elements)) {
         this->simple_sets = simple_sets;
         this->all_elements = all_elements;
         this->empty_simple_set_ptr = &empty_simple_set;
@@ -85,4 +92,17 @@ public:
     Set composite_set_simplify();
 
     SimpleSet empty_simple_set;
+
+
+    Set& operator=(const Set &other){
+        this->simple_sets = other.simple_sets;
+        return *this;
+    }
+
+    Set(const SimpleSet &other){
+        this->simple_sets = {other};
+        this->all_elements = other.all_elements;
+    }
+
+
 };
