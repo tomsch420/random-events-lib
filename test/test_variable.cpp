@@ -20,3 +20,14 @@ TEST(Variable, Integer) {
     EXPECT_EQ(variable.name, "x");
     EXPECT_EQ(variable.domain, reals());
 }
+
+TEST(Variable, Comparison){
+    auto variable1 = Symbolic("x", Set({"a", "b", "c"}));
+    auto variable2 = Symbolic("y", Set({"a", "b", "c"}));
+    auto variable3 = Continuous("x");
+    EXPECT_TRUE(variable1 != variable2);
+    EXPECT_TRUE(variable1 == variable3);
+    EXPECT_TRUE(variable2 != variable3);
+    EXPECT_TRUE(variable1 < variable2);
+    EXPECT_TRUE(variable2 > variable3);
+}

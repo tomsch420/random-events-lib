@@ -1,4 +1,5 @@
 #pragma once
+
 #include "sigma_algebra.h"
 #include <unordered_set>
 
@@ -91,45 +92,47 @@ public:
     std::string to_string();
 
     explicit operator std::string();
+
+    /**
+     * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
+     * ordered by upper bound.
+     * @param other The other interval
+     * @return True if this interval is less than the other interval.
+     */
+    bool operator<(const SimpleInterval &other) const override {
+        if (lower == other.lower) {
+            return upper < other.upper;
+        }
+        return lower < other.lower;
+    }
+
+    /**
+    * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
+    * ordered by upper bound.
+    * @param other The other interval
+    * @return True if this interval is less or equal to the other interval.
+    */
+    bool operator<=(const SimpleInterval &other) const override {
+        if (lower == other.lower) {
+            return upper <= other.upper;
+        }
+        return lower <= other.lower;
+    }
+
 };
 
 /**
  * Hash function for simple intervals.
  */
 namespace std {
-    template <> struct hash<SimpleInterval>
-    {
-        size_t operator()(const SimpleInterval& interval) const
-        {
+    template<>
+    struct hash<SimpleInterval> {
+        size_t operator()(const SimpleInterval &interval) const {
             return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^ std::hash<int>()(
                     static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
         }
     };
 }
-
-/**
- * Struct for sorting a composite interval by lower value.
- */
-struct by_lower_ascending {
-    bool operator()(const SimpleInterval &a, const SimpleInterval &b) const {
-        if (a.lower == b.lower) {
-            return a.upper < b.upper;
-        }
-        return a.lower < b.lower;
-    }
-};
-
-/**
- * Struct for sorting a composite interval by upper value.
- */
-struct by_upper_ascending {
-    bool operator()(const SimpleInterval &a, const SimpleInterval &b) const {
-        if (a.upper == b.upper) {
-            return a.lower < b.lower;
-        }
-        return a.upper < b.upper;
-    }
-};
 
 /**
  * Extend a vector with another vector.
@@ -159,11 +162,16 @@ public:
     }
 
     Interval composite_set_simplify();
+
+    /**
+     * The empty simple interval.
+     */
     SimpleInterval simple_interval;
 };
 
 inline Interval closed(float lower, float upper) {
-    return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::CLOSED}});
+    return Interval(
+            SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::CLOSED}});
 }
 
 inline Interval open(float lower, float upper) {
@@ -179,7 +187,8 @@ inline Interval closed_open(float lower, float upper) {
 }
 
 inline Interval singleton(float value) {
-    return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{value, value, BorderType::CLOSED, BorderType::CLOSED}});
+    return Interval(
+            SimpleSetType<SimpleInterval>{SimpleInterval{value, value, BorderType::CLOSED, BorderType::CLOSED}});
 }
 
 inline Interval empty() {

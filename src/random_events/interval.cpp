@@ -92,7 +92,7 @@ Interval Interval::composite_set_simplify() {
     std::vector<SimpleInterval> result;
     auto sorted = simple_sets_as_vector();
 
-    std::sort(sorted.begin(), sorted.end(), by_lower_ascending());
+    std::sort(sorted.begin(), sorted.end());
     result.push_back(sorted[0]);
 
     for (auto current_simple_interval = sorted.begin() + 1; current_simple_interval != sorted.end(); ++current_simple_interval) {

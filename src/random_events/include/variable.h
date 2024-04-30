@@ -5,6 +5,8 @@
 #include "set.h"
 #include <string>
 #include <utility>
+#include <iostream>
+#include <variant>
 
 
 /**
@@ -27,14 +29,54 @@ public:
      */
     const T_Domain domain;
 
+    template <typename T>
+    bool operator== (const T &other) const {
+        return name == other.name;
+    }
+
+    template <typename T>
+    bool operator!= (const T &other) const {
+        return name != other.name;
+    }
+
+    [[nodiscard]] std::string to_string() const {
+        return name;
+    }
+
+    template <typename T>
+    bool operator<(const T &other) const {
+        return name < other.name;
+    }
+
+    template <typename T>
+    bool operator>(const T &other) const {
+        return name > other.name;
+    }
+
+    template <typename T>
+    bool operator<=(const T &other) const {
+        return name <= other.name;
+    }
+
+    template <typename T>
+    bool operator>=(const T &other) const {
+        return name >= other.name;
+    }
+
 };
 
-
+/**
+ * Class that represents a symbolic variable.
+ */
 class Symbolic: public Variable<Symbolic, Set>{
 public:
     explicit Symbolic(std::string  name, Set domain): Variable<Symbolic, Set>(std::move(name), std::move(domain)){};
 };
 
+
+/**
+ * Class that represents an integer variable.
+ */
 class Integer: public Variable<Integer, Interval>{
 public:
 
@@ -57,4 +99,22 @@ public:
         Variable<Continuous, Interval>::name = std::move(name);
     };
 };
-
+//
+//template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
+//std::variant<Continuous, Integer, Symbolic> variable_variant;
+//
+//struct VisitVariable{
+//
+//    template<typename T_Variable, typename T_Domain>
+//    static std::function<T_Domain(const T_Variable &variable)> get_domain = [] (const T_Variable &variable) {
+//        return variable.domain;
+//    };
+//
+//};
+//
+//std::visit(overload{
+//        [](Continuous& v)       { get_domain<Continuous, Interval>(v); },
+//        [](Integer& v)          { get_domain<Integer, Interval>(v); },
+//        [](Symbolic&v )         { get_domain<Symbolic, Set>(v); },
+//
+//}, VariableVariant);

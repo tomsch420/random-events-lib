@@ -42,6 +42,14 @@ public:
 
     explicit operator std::string() const;
 
+    bool operator<(const SimpleSet &other) const override {
+        return element < other.element;
+    }
+
+    bool operator<=(const SimpleSet &other) const override {
+        return element <= other.element;
+    }
+
 };
 
 /**

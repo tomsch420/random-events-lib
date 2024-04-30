@@ -1,17 +1,18 @@
 #pragma once
 
-#include <unordered_set>
+#include <set>
 #include <vector>
+#include <tuple>
 
 
 template<typename T>
-using SimpleSetType = std::unordered_set<T>;
+using SimpleSetType = std::set<T>;
 
 /**
 * Interface class for simple sets.
 */
 template<typename T_CompositeSet, typename T_SimpleSet, typename T_Elementary>
-class SimpleSetWrapper {
+class SimpleSetWrapper{
 public:
     /**
      * @return The simple set pointer that implements the interface.
@@ -93,7 +94,7 @@ public:
         T_CompositeSet complement_of_intersection = intersection.complement();
 
         // initialize the difference vector
-        std::unordered_set<T_SimpleSet> difference;
+        std::set<T_SimpleSet> difference;
 
         // for every interval in the complement of the intersection
         for (const T_SimpleSet &simple_set: complement_of_intersection.simple_sets) {
@@ -110,6 +111,23 @@ public:
         return T_CompositeSet(difference);
     }
 
+    virtual bool operator<(const T_SimpleSet &other) const {
+        return get_simple_set()->operator<(other);
+    }
+
+    virtual bool operator<=(const T_SimpleSet &other) const {
+        return get_simple_set()->operator<=(other);
+    }
+
+    bool operator>(const T_SimpleSet &other) const {
+        return ! operator<=(other);
+    }
+
+    bool operator>=(const T_SimpleSet &other) const {
+        return ! operator<(other);
+    }
+
+
 };
 
 
@@ -117,7 +135,7 @@ public:
 * Interface class for composite elements.
 * */
 template<typename T_CompositeSet, typename T_SimpleSet, typename T_Elementary>
-class CompositeSetWrapper {
+class CompositeSetWrapper{
 public:
 
     /**
@@ -477,3 +495,4 @@ std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements
     }
     return combinations;
 }
+
