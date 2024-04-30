@@ -8,6 +8,415 @@
 template<typename T>
 using SimpleSetType = std::set<T>;
 
+static std::string EMPTY_SET_SYMBOL = "∅";
+
+union elementary_variants {
+    float f;
+    int i;
+    std::string s;
+};
+
+
+class AbstractCompositeSet; // Forward declaration
+class AbstractAllElements;
+
+class AbstractSimpleSet {
+public:
+
+
+    /**
+     * Some description of all elements.
+     */
+    AbstractAllElements *all_elements = nullptr;
+
+    /**
+    * Intersect this with another simple set.
+    *
+    * @param other the other simples set.
+    * @return The intersection of both as simple set.
+    */
+    virtual AbstractSimpleSet *intersection_with(const AbstractSimpleSet *other) const = 0;
+
+    /**
+    * This method depends on the type of simple set and has to be overwritten.
+    *
+    * @return The complement of this simple set as disjoint composite set.
+    */
+    virtual std::set<AbstractSimpleSet *> *complement() const = 0;
+
+    /**
+    * Check if an elementary event is contained in this.
+    *
+    * @param element The element to check.
+    * @return True if the element is contained in this.
+    */
+    virtual bool contains(const elementary_variants *element) const = 0;
+
+
+    /**
+    * This method depends on the type of simple set and has to be overwritten.
+    *
+    * @return True if this is empty.
+    */
+    virtual bool is_empty() const = 0;
+
+    /**
+    * Form the difference with another simple set.
+    *
+    * @param other The other simple set.
+    * @return The difference as disjoint composite set.
+    */
+    std::set<AbstractSimpleSet *> *difference_with(const AbstractSimpleSet *other) const {
+
+        // get the intersection of both atomic simple_sets
+        AbstractSimpleSet *intersection = intersection_with(other);
+
+        // if the intersection is empty, return the current atomic interval as interval
+        if (intersection->is_empty()) {
+            auto result = new std::set<AbstractSimpleSet *>;
+            result->insert((AbstractSimpleSet *) this);
+            return result;
+        }
+
+        // get the complement of the intersection
+        auto complement_of_intersection = intersection->complement();
+
+        // initialize the difference vector
+        auto *difference = new std::set<AbstractSimpleSet *>;
+
+        // for every interval in the complement of the intersection
+        for (auto simple_set: *complement_of_intersection) {
+
+            // intersect this with the current complement of the intersection
+            auto intersection_with_complement = intersection_with(simple_set);
+
+            // if the intersection with the complement is not empty, append it to the difference vector
+            if (!intersection_with_complement->is_empty()) {
+                difference->insert(intersection_with_complement);
+            }
+        }
+        return difference;
+    }
+
+    virtual std::string *non_empty_to_string() const = 0;
+
+    virtual std::string *to_string() const {
+        if (is_empty()) {
+            return &EMPTY_SET_SYMBOL;
+        }
+        auto result = new std::string;
+        result->append(*non_empty_to_string());
+        return result;
+    };
+
+    virtual bool operator==(const AbstractSimpleSet &other) const = 0;
+
+    virtual bool operator<(const AbstractSimpleSet &other) const = 0;
+
+    virtual bool operator<=(const AbstractSimpleSet &other) const = 0;
+
+    bool operator>(const AbstractSimpleSet &other) const {
+        return !operator<=(other);
+    }
+
+    bool operator>=(const AbstractSimpleSet &other) const {
+        return !operator<(other);
+    }
+};
+
+/**
+ * Unique Combinations of elements within a vector.
+ * The unique combinations are pairs of elements which exclude:
+ * - symmetric pairs (A, A)
+ * - (A,B) if (B, A) is already visited.
+ *
+ * @param elements The vector.
+ * @return The unique combinations of elements of the vector.
+ */
+template<typename T>
+std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements) {
+
+    // initialize result
+    std::vector<std::tuple<T, T>> combinations;
+
+    // for every pair of elements
+    for (std::size_t i = 0; i < elements.size(); ++i) {
+
+        // get element from first vector
+        T current_element1 = elements[i];
+        for (std::size_t j = 0; j < i; ++j) {
+            T current_element2 = elements[j];
+            std::tuple<T, T> combination = std::make_tuple(current_element1, current_element2);
+            combinations.push_back(combination);
+        }
+    }
+    return combinations;
+}
+
+
+/**
+* Abstract class for composite elements.
+* Composite elements contain a **disjoint** union of (abstract) simple sets.
+*/
+class AbstractCompositeSet {
+public:
+
+    /**
+     * Some description of all elements.
+     */
+    AbstractAllElements *all_elements = nullptr;
+
+    /**
+     * Empty simple set.
+     */
+    AbstractSimpleSet *empty_simple_set_ptr = nullptr;
+
+
+    std::set<AbstractSimpleSet *> simple_sets;
+
+    AbstractCompositeSet() = default;
+
+    virtual ~AbstractCompositeSet() {
+        simple_sets.clear();
+    }
+
+    explicit AbstractCompositeSet(const AbstractAllElements *all_elements) : all_elements(
+            (AbstractAllElements *) all_elements) {}
+
+    /**
+    * @return True if this is empty.
+    */
+    bool is_empty() const {
+        return simple_sets.empty();
+    }
+
+    /**
+     * @return True if the composite set is disjoint union of simple sets.
+     */
+    bool is_disjoint() const {
+        std::vector<AbstractSimpleSet *> simple_sets_vector = std::vector<AbstractSimpleSet *>(simple_sets.begin(),
+                                                                                               simple_sets.end());
+        for (const auto &[first, second]: unique_combinations<AbstractSimpleSet *>(simple_sets_vector)) {
+            if (!first->intersection_with(second)->is_empty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+    * Simplify the composite set into a shorter but equal representation.
+    * The size (shortness9 refers to the number of simple sets contained.
+    *
+    * @return The simplified composite set into a shorter but equal representation.
+    */
+    virtual AbstractCompositeSet *simplify() const = 0;
+
+    /**
+     * @param all_elements All elements that are possible.
+     * @return A **new** empty composite set given all elements that are possible.
+     */
+    virtual AbstractCompositeSet *make_new_empty(AbstractAllElements *all_elements) const = 0;
+
+    /**
+     * @return A string representation of this.
+     */
+    std::string *to_string() const {
+        if (is_empty()) {
+            return &EMPTY_SET_SYMBOL;
+        }
+        auto result = new std::string;
+
+        for (auto simple_set: simple_sets) {
+            result->append(*simple_set->to_string());
+            if (simple_set != *simple_sets.end()) {
+                result->append(" u ");
+            }
+        }
+        return result;
+    }
+
+
+    /**
+     * @param other The other composite set.
+     * @return True if this is equal to the other composite set.
+     */
+    bool operator==(const AbstractCompositeSet *other) const {
+        return simple_sets == other->simple_sets;
+    }
+
+    /**
+    * Split this composite set into disjoint and non-disjoint parts.
+    *
+    * This method is required for making the composite set disjoint.
+    * The partitioning is done by removing every other simple set from every simple set.
+    * The purified simple sets are then disjoint by definition and the pairwise intersections are (potentially)
+    * not disjoint yet.
+    *
+    * This method requires:
+    *  - the intersection of two simple sets as a simple set
+    *  - the difference of a simple set (A) and another simple set (B) that is completely contained in A (B ⊆ A).
+    *      The result of that difference has to be a composite set with only one simple set in it.
+    *
+    * @return A tuple of disjoint and non-disjoint composite sets.
+    */
+    std::tuple<AbstractCompositeSet *, AbstractCompositeSet *> split_into_disjoint_and_non_disjoint() const {
+
+        // initialize result for disjoint and non-disjoint sets
+        AbstractCompositeSet *disjoint = make_new_empty(all_elements);
+        AbstractCompositeSet *non_disjoint = make_new_empty(all_elements);
+
+        // for every pair of simple sets
+        for (const auto simple_set_i: simple_sets) {
+
+            // initialize the difference of A_i
+            AbstractSimpleSet *difference = simple_set_i;
+
+            // for every other simple set
+            for (const auto &simple_set_j: simple_sets) {
+
+                // if the atomic simple_sets are the same, skip
+                if (simple_set_i == simple_set_j) {
+                    continue;
+                }
+
+                // get the intersection of the atomic simple_sets
+                auto intersection = simple_set_i->intersection_with(simple_set_j);
+
+                // if the intersection is not empty, append it to the non-disjoint set
+                if (!intersection->is_empty()) {
+                    non_disjoint->simple_sets.insert(intersection);
+                }
+
+                // get the difference of the simple set with the intersection.
+                auto difference_with_intersection = difference->difference_with(intersection);
+
+                // if the difference is empty
+                if (difference_with_intersection->empty()) {
+
+                    // set the difference to simple empty and skip the rest
+                    difference = empty_simple_set_ptr;
+                    continue;
+                }
+
+                // The difference should only contain 1 simple set since the intersection is completely in simple_set_i.
+                difference = *difference->difference_with(intersection)->begin();
+            }
+
+            // append the simple_set_i without every other simple set to the disjoint set
+            disjoint->simple_sets.insert(difference);
+        }
+
+        return std::make_tuple(disjoint, non_disjoint);
+    }
+
+    /**
+    * Create an equal composite set that contains a disjoint union of simple sets.
+    *
+    * @return The disjoint composite set.
+    */
+    AbstractCompositeSet *make_disjoint() const {
+
+        // initialize disjoint, non-disjoint and current sets
+        AbstractCompositeSet *disjoint;
+        AbstractCompositeSet *intersections;
+        AbstractCompositeSet *current_disjoint;
+
+        // start with the initial split
+        std::tie(disjoint, intersections) = split_into_disjoint_and_non_disjoint();
+
+        // as long the splitting still produces non-disjoint sets
+        while (!intersections->is_empty()) {
+
+            delete intersections;
+
+            // split into disjoint and non-disjoint sets
+            std::tie(current_disjoint, intersections) = intersections->split_into_disjoint_and_non_disjoint();
+
+            // extend the result by the disjoint sets
+            disjoint->simple_sets.insert(current_disjoint->simple_sets.begin(),
+                                         current_disjoint->simple_sets.end());
+            delete current_disjoint;
+
+        }
+        delete intersections;
+        // simplify and return the disjoint set
+        return disjoint->simplify();
+    }
+
+    /**
+     * Form the intersection with an simple set.
+     * The intersection is only disjoint if this is disjoint.
+     * @param simple_set The simple event to intersect with.
+     * @return The intersection.
+     */
+    AbstractCompositeSet *intersection_with(const AbstractSimpleSet *simple_set) const {
+        AbstractCompositeSet *result = make_new_empty(all_elements);
+        for (const auto current_simple_set: simple_sets) {
+            auto intersection = current_simple_set->intersection_with(simple_set);
+            if (!intersection->is_empty()) {
+                result->simple_sets.insert(intersection);
+            }
+        }
+        return result;
+    }
+
+    AbstractCompositeSet *intersection_with(const std::set<AbstractSimpleSet *> &other) const {
+        AbstractCompositeSet *result = make_new_empty(all_elements);
+        for (const auto current_simple_set: simple_sets) {
+            auto current_result = intersection_with(current_simple_set);
+            result->simple_sets.insert(current_result->simple_sets.begin(), current_result->simple_sets.end());
+        }
+        return result;
+    }
+
+    /**
+    * Form the intersection with another composite set.
+    *
+    * The intersection is only disjoint if both composite sets are disjoint.
+    *
+    * @param other The other composite set.
+    * @return The intersection as composite set.
+    */
+    AbstractCompositeSet *intersection_with(const AbstractCompositeSet *other) const {
+        return intersection_with(other->simple_sets);
+    }
+
+    /**
+     * @return the complement of a composite set as disjoint composite set.
+     */
+    AbstractCompositeSet *complement() const {
+        AbstractCompositeSet *result = make_new_empty(all_elements);
+        bool first_iteration = true;
+        for (const auto simple_set: simple_sets) {
+            auto simple_set_complement = simple_set->complement();
+            if (first_iteration) {
+                first_iteration = false;
+                result->simple_sets.insert(simple_set_complement->begin(), simple_set_complement->end());
+                continue;
+            }
+            result = result->intersection_with(*simple_set_complement);
+        }
+        return result->make_disjoint();
+    }
+
+    /**
+    * Form the union with a simple set.
+    *
+    * @param other The other simple set.
+    * @return The union as disjoint composite set.
+    */
+    AbstractCompositeSet* union_with(AbstractSimpleSet* other) const {
+        AbstractCompositeSet* result = make_new_empty(all_elements);
+        result->simple_sets.insert(simple_sets.begin(), simple_sets.end());
+        result->simple_sets.insert(other);
+        return result->make_disjoint();
+    }
+
+
+};
+
+
 /**
 * Interface class for simple sets.
 */
@@ -479,34 +888,4 @@ public:
 public:
     SimpleSetType<T_SimpleSet> simple_sets;
 };
-
-
-/**
- * Unique Combinations of elements within a vector.
- * The unique combinations are pairs of elements which exclude:
- * - symmetric pairs (A, A)
- * - (A,B) if (B, A) is already visited.
- *
- * @param elements The vector.
- * @return The unique combinations of elements of the vector.
- */
-template<typename T>
-std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements) {
-
-    // initialize result
-    std::vector<std::tuple<T, T>> combinations;
-
-    // for every pair of elements
-    for (std::size_t i = 0; i < elements.size(); ++i) {
-
-        // get element from first vector
-        T current_element1 = elements[i];
-        for (std::size_t j = 0; j < i; ++j) {
-            T current_element2 = elements[j];
-            std::tuple<T, T> combination = std::make_tuple(current_element1, current_element2);
-            combinations.push_back(combination);
-        }
-    }
-    return combinations;
-}
 
