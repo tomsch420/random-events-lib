@@ -10,7 +10,7 @@ add_executable(RunUnitTest test_interval.cpp
 
 include_directories(${SRC_DIR}/random_events/include)
 
-# linking Google_Tests_run with random_events_lib which will be tested
-target_link_libraries(RunUnitTest random_events_lib)
+# linking Google_Tests_run with random_events which will be tested
+target_link_libraries(RunUnitTest random_events)
 
 target_link_libraries(RunUnitTest gtest gtest_main)
