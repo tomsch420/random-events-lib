@@ -2,9 +2,14 @@
 
 #include "sigma_algebra.h"
 #include "interval.h"
+#include "set.h"
 #include <string>
 #include <utility>
 
+
+/**
+ * Template class for variables.
+ */
 template<typename T_Variable, typename T_Domain>
 class Variable {
 public:
@@ -24,6 +29,25 @@ public:
 
 };
 
+
+class Symbolic: public Variable<Symbolic, Set>{
+public:
+    explicit Symbolic(std::string  name, Set domain): Variable<Symbolic, Set>(std::move(name), std::move(domain)){};
+};
+
+class Integer: public Variable<Integer, Interval>{
+public:
+
+    [[maybe_unused]] const Interval domain = reals();
+
+    explicit Integer(std::string name) : Variable(name, reals()) {
+        Variable<Integer, Interval>::name = std::move(name);
+    };
+};
+
+/**
+ * Class that represents a continuous variable.
+ */
 class Continuous: public Variable<Continuous, Interval>{
 public:
 
