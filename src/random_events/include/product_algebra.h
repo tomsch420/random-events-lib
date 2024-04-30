@@ -7,9 +7,8 @@
 #include <variant>
 #include "variable.h"
 
-using VariableVariant = std::variant<Continuous, Integer, Symbolic>;
-using SetType = std::variant<Interval, Set>;
-using VariableAssignmentType = std::map<VariableVariant, SetType>;
+using SetType = std::variant<std::monostate, Interval, Set>;
+using VariableAssignmentType = std::map<VisitVariableVariant, SetType>;
 
 class Event; // Forward declaration
 
@@ -19,6 +18,8 @@ public:
     SimpleEvent() = default;
 
     explicit SimpleEvent(VariableAssignmentType &variableAssignmentType);
+
+    explicit SimpleEvent(std::map<VariableVariant , SetType> &assignment);
 
     VariableAssignmentType variable_assignments;
 
@@ -35,7 +36,7 @@ public:
      * @param other_assignments The other variable assignment.
      * @return The merged keys.
      */
-    std::set<VariableVariant> merge_keys_of_assignments(const VariableAssignmentType &other_assignments) const;
+    std::set<VisitVariableVariant> merge_keys_of_assignments(const VariableAssignmentType &other_assignments) const;
 
 };
 

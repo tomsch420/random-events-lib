@@ -15,8 +15,7 @@
 template<typename T_Variable, typename T_Domain>
 class Variable {
 public:
-
-    Variable(std::string name, T_Domain domain): name(std::move(name)), domain(std::move(domain)){};
+    Variable(std::string name, T_Domain domain) : name(std::move(name)), domain(std::move(domain)) {};
 
     /**
      * The name of the variable.
@@ -29,13 +28,13 @@ public:
      */
     const T_Domain domain;
 
-    template <typename T>
-    bool operator== (const T &other) const {
+    template<typename T>
+    bool operator==(const T &other) const {
         return name == other.name;
     }
 
-    template <typename T>
-    bool operator!= (const T &other) const {
+    template<typename T>
+    bool operator!=(const T &other) const {
         return name != other.name;
     }
 
@@ -43,22 +42,22 @@ public:
         return name;
     }
 
-    template <typename T>
+    template<typename T>
     bool operator<(const T &other) const {
         return name < other.name;
     }
 
-    template <typename T>
+    template<typename T>
     bool operator>(const T &other) const {
         return name > other.name;
     }
 
-    template <typename T>
+    template<typename T>
     bool operator<=(const T &other) const {
         return name <= other.name;
     }
 
-    template <typename T>
+    template<typename T>
     bool operator>=(const T &other) const {
         return name >= other.name;
     }
@@ -68,16 +67,16 @@ public:
 /**
  * Class that represents a symbolic variable.
  */
-class Symbolic: public Variable<Symbolic, Set>{
+class Symbolic : public Variable<Symbolic, Set> {
 public:
-    explicit Symbolic(std::string  name, Set domain): Variable<Symbolic, Set>(std::move(name), std::move(domain)){};
+    explicit Symbolic(std::string name, Set domain) : Variable<Symbolic, Set>(std::move(name), std::move(domain)) {};
 };
 
 
 /**
  * Class that represents an integer variable.
  */
-class Integer: public Variable<Integer, Interval>{
+class Integer : public Variable<Integer, Interval> {
 public:
 
     [[maybe_unused]] const Interval domain = reals();
@@ -90,7 +89,7 @@ public:
 /**
  * Class that represents a continuous variable.
  */
-class Continuous: public Variable<Continuous, Interval>{
+class Continuous : public Variable<Continuous, Interval> {
 public:
 
     [[maybe_unused]] const Interval domain = reals();
@@ -98,23 +97,34 @@ public:
     explicit Continuous(std::string name) : Variable(name, reals()) {
         Variable<Continuous, Interval>::name = std::move(name);
     };
+
 };
-//
-//template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
-//std::variant<Continuous, Integer, Symbolic> variable_variant;
-//
-//struct VisitVariable{
-//
-//    template<typename T_Variable, typename T_Domain>
-//    static std::function<T_Domain(const T_Variable &variable)> get_domain = [] (const T_Variable &variable) {
-//        return variable.domain;
-//    };
-//
-//};
-//
-//std::visit(overload{
-//        [](Continuous& v)       { get_domain<Continuous, Interval>(v); },
-//        [](Integer& v)          { get_domain<Integer, Interval>(v); },
-//        [](Symbolic&v )         { get_domain<Symbolic, Set>(v); },
-//
-//}, VariableVariant);
+
+using VariableVariant = std::variant<std::monostate, Continuous, Integer, Symbolic>;
+
+struct VisitVariableVariant {
+    VariableVariant variable_variant;
+
+    VisitVariableVariant() = default;
+
+    VisitVariableVariant(VariableVariant variable) : variable_variant(std::move(variable)) {};
+
+    bool operator==(const VisitVariableVariant &other) const {
+        return variable_variant == other.variable_variant;
+    }
+
+    bool operator<(const VisitVariableVariant &other) const {
+        return variable_variant < other.variable_variant;
+    }
+
+    bool operator>(const VisitVariableVariant &other) const {
+        return variable_variant > other.variable_variant;
+    }
+
+    Continuous operator()(Continuous &v) { return std::get<Continuous>(variable_variant); }
+
+    Integer operator()(Integer &v) { return std::get<Integer>(variable_variant); }
+
+    Symbolic operator()(Symbolic &v) { return std::get<Symbolic>(variable_variant); }
+
+};
