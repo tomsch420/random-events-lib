@@ -10,7 +10,7 @@ using SimpleSetType = std::set<T>;
 
 static std::string EMPTY_SET_SYMBOL = "∅";
 
-union elementary_variants {
+union ElementaryVariant {
     float f;
     int i;
     std::string s;
@@ -22,6 +22,7 @@ class AbstractAllElements;
 
 class AbstractSimpleSet {
 public:
+    virtual ~AbstractSimpleSet() = default;
 
 
     /**
@@ -50,7 +51,7 @@ public:
     * @param element The element to check.
     * @return True if the element is contained in this.
     */
-    virtual bool contains(const elementary_variants *element) const = 0;
+    virtual bool contains(const ElementaryVariant *element) const = 0;
 
 
     /**
@@ -109,17 +110,17 @@ public:
         return result;
     };
 
-    virtual bool operator==(const AbstractSimpleSet &other) const = 0;
+    virtual bool operator==(const AbstractSimpleSet *other) const = 0;
 
-    virtual bool operator<(const AbstractSimpleSet &other) const = 0;
+    virtual bool operator<(const AbstractSimpleSet *other) const = 0;
 
-    virtual bool operator<=(const AbstractSimpleSet &other) const = 0;
+    virtual bool operator<=(const AbstractSimpleSet *other) const = 0;
 
-    bool operator>(const AbstractSimpleSet &other) const {
+    bool operator>(const AbstractSimpleSet *other) const {
         return !operator<=(other);
     }
 
-    bool operator>=(const AbstractSimpleSet &other) const {
+    bool operator>=(const AbstractSimpleSet *other) const {
         return !operator<(other);
     }
 };
@@ -224,7 +225,7 @@ public:
      * @param all_elements_ All elements that are possible.
      * @return A **new** composite set given the contained simple sets and all elements that are possible.
      */
-    virtual AbstractCompositeSet *make_new(std::set<AbstractSimpleSet> *simple_sets_,
+    virtual AbstractCompositeSet *make_new(std::set<AbstractSimpleSet*> *simple_sets_,
         AbstractAllElements *all_elements_) const = 0;
 
     /**

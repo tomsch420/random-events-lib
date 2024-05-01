@@ -6,15 +6,25 @@
 #include "interval.h"
 #include "sigma_algebra.h"
 
-SimpleInterval SimpleInterval::simple_set_intersection_with(const SimpleInterval &other) const {
+
+SimpleInterval::SimpleInterval(const float lower, const float upper, const BorderType left,
+                               const BorderType right) : lower(lower),
+                                                         upper(upper),
+                                                         left(left),
+                                                         right(right) {
+    if (lower > upper) { throw std::invalid_argument("Lower bound must be less than or equal to upper bound."); }
+}
+
+SimpleInterval *SimpleInterval::intersection_with(const AbstractSimpleSet *other) const {
+    const auto derived_other = (SimpleInterval*) other;
 
     // get the new lower and upper bounds
-    float new_lower = std::max(lower, other.lower);
-    float new_upper = std::min(upper, other.upper);
+    const float new_lower = std::max(lower, derived_other->lower);
+    const float new_upper = std::min(upper, derived_other->upper);
 
     // return the empty interval if the new lower bound is greater than the new upper bound
     if (new_lower > new_upper) {
-        return SimpleInterval();
+        return new SimpleInterval();
     }
 
     // initialize the new borders
@@ -22,88 +32,147 @@ SimpleInterval SimpleInterval::simple_set_intersection_with(const SimpleInterval
     BorderType new_right;
 
     // if the lower bounds are equal, intersect the borders
-    if (lower == other.lower) {
-        new_left = intersect_borders(left, other.left);
+    if (lower == derived_other->lower) {
+        new_left = intersect_borders(left, derived_other->left);
     } else {
         // else take the border of the interval with the lower bound
-        new_left = lower == new_lower ? left : other.left;
+        new_left = lower == new_lower ? left : derived_other->left;
     }
 
     // if the upper bounds are equal, intersect the borders
-    if (upper == other.upper) {
-
-        new_right = intersect_borders(right, other.right);
+    if (upper == derived_other->upper) {
+        new_right = intersect_borders(right, derived_other->right);
     } else {
         // else take the border of the interval with the upper bound
-        new_right = upper == new_upper ? right : other.right;
+        new_right = upper == new_upper ? right : derived_other->right;
     }
 
-    return SimpleInterval{new_lower, new_upper, new_left, new_right};
+    return new SimpleInterval{new_lower, new_upper, new_left, new_right};
 }
 
-Interval SimpleInterval::simple_set_complement() const {
-    const SimpleSetType<SimpleInterval> resulting_intervals = {
-            SimpleInterval{-std::numeric_limits<float>::infinity(),
-                           lower,
-                           BorderType::OPEN,
-                           invert_border(left)},
-            SimpleInterval{upper,
-                           std::numeric_limits<float>::infinity(),
-                           invert_border(right),
-                           BorderType::OPEN}};
-    return Interval(resulting_intervals);
+std::set<AbstractSimpleSet *> *SimpleInterval::complement() const {
+    auto resulting_intervals = new std::set<AbstractSimpleSet *>;
+
+    if (lower == -std::numeric_limits<float>::infinity() and upper == std::numeric_limits<float>::infinity()) {
+        return resulting_intervals;
+    }
+
+    if (lower == -std::numeric_limits<float>::infinity()) {
+        resulting_intervals->insert(new SimpleInterval{
+            upper, std::numeric_limits<float>::infinity(),
+            invert_border(right), BorderType::OPEN
+        });
+    }
+
+    if (upper == std::numeric_limits<float>::infinity()) {
+        resulting_intervals->insert(new SimpleInterval{
+            -std::numeric_limits<float>::infinity(), lower,
+            BorderType::OPEN, invert_border(left)
+        });
+    }
+
+    return resulting_intervals;
 }
 
-bool SimpleInterval::simple_set_is_empty() const {
-    return lower == upper and (left == BorderType::OPEN or right == BorderType::OPEN);
+bool SimpleInterval::contains(const ElementaryVariant *element) const {
+    return false;
+}
+
+bool SimpleInterval::is_empty() const {
+    return lower > upper or (lower == upper and (left == BorderType::OPEN or right == BorderType::OPEN));
+}
+
+
+bool SimpleInterval::operator==(const AbstractSimpleSet *other) const {
+    auto derived_other = (SimpleInterval*) other;
+    return this == derived_other;
+}
+
+bool SimpleInterval::operator==(const SimpleInterval* other) const {
+    return lower == other->lower and upper == other->upper and left == other->left and right ==
+       other->right;
 }
 
 bool SimpleInterval::operator==(const SimpleInterval &other) const {
-    return lower == other.lower and upper == other.upper and left == other.left and right == other.right;
+    return *this == &other;
 }
 
-bool SimpleInterval::simple_set_contains(const float &element) const {
-    SimpleInterval singleton = SimpleInterval{element, element, BorderType::CLOSED, BorderType::CLOSED};
-    return contains(singleton);
+std::string *SimpleInterval::non_empty_to_string() const {
+    const char left_representation = left == BorderType::OPEN ? '(' : '[';
+    const char right_representation = right == BorderType::OPEN ? ')' : ']';
+    return new std::string(
+        left_representation + std::to_string(lower) + ", " + std::to_string(upper) + right_representation);
 }
 
-SimpleInterval::SimpleInterval(float lower, float upper, BorderType left, BorderType right) : lower(lower),
-                                                                                              upper(upper),
-                                                                                              left(left),
-                                                                                              right(right){
-    if (lower > upper) { throw std::invalid_argument("Lower bound must be less than or equal to upper bound."); }
-}
+bool SimpleInterval::operator<(const AbstractSimpleSet *other) const {
+    //cast other to simple interval
+    const auto derived_other = (SimpleInterval*) other;
 
-SimpleInterval::operator std::string() {
-    return to_string();
-}
-
-std::string SimpleInterval::to_string() {
-    if (is_empty()) {
-        return "∅";
+    if (lower == derived_other->lower) {
+        return upper < derived_other->upper;
     }
-    char left_representation = left == BorderType::OPEN ? '(' : '[';
-    char right_representation = right == BorderType::OPEN ? ')' : ']';
-    return std::string(
-            left_representation + std::to_string(lower) + ", " + std::to_string(upper) + right_representation);
+    return lower < derived_other->lower;
 }
 
-Interval Interval::composite_set_simplify() {
-    std::vector<SimpleInterval> result;
-    auto sorted = simple_sets_as_vector();
+bool SimpleInterval::operator<=(const AbstractSimpleSet *other) const {
+    //cast other to simple interval
+    const auto derived_other = (SimpleInterval*) other;
 
-    std::sort(sorted.begin(), sorted.end());
-    result.push_back(sorted[0]);
+    if (lower == derived_other->lower) {
+        return upper <= derived_other->upper;
+    }
+    return lower <= derived_other->lower;
+}
 
-    for (auto current_simple_interval = sorted.begin() + 1; current_simple_interval != sorted.end(); ++current_simple_interval) {
-        auto last_simple_interval = result.back();
-        if (last_simple_interval.upper == current_simple_interval->lower &&
-            !(last_simple_interval.right == BorderType::OPEN and current_simple_interval->left == BorderType::OPEN)) {
-            result.pop_back();
-            result.emplace_back(last_simple_interval.lower, current_simple_interval->upper, last_simple_interval.left, current_simple_interval->right);
+Interval::~Interval() {
+    simple_sets.clear();
+}
+
+Interval *Interval::simplify() const {
+    std::set<SimpleInterval *> result;
+
+    // // convert to vector and cast to SimpleInterval
+    // auto simple_set_vector = std::vector<SimpleInterval>();
+    // for (const auto simple_set : simple_sets) {
+    //     simple_set_vector.emplace_back(*simple_set);
+    // }
+    //
+    // //std::sort(simple_set_vector.begin(), simple_set_vector.end());
+    // result.push_back(simple_set_vector[0]);
+
+    bool first_iteration = true;
+
+    for (const auto current_simple_set: simple_sets) {
+        auto current_simple_interval = (SimpleInterval*) current_simple_set;
+
+        // if this is the first iteration, just copy the interval
+        if (first_iteration) {
+            result.insert(current_simple_interval);
+            first_iteration = false;
+            continue;
+        }
+
+        auto last_simple_interval = *result.end();
+
+        if (last_simple_interval->upper == current_simple_interval->lower &&
+            !(last_simple_interval->right == BorderType::OPEN and current_simple_interval->left == BorderType::OPEN)) {
+            last_simple_interval->upper = current_simple_interval->upper;
+            last_simple_interval->right = current_simple_interval->right;
+            // result.emplace_back(last_simple_interval.lower, current_simple_interval->upper, last_simple_interval.left,
+            //                     current_simple_interval->right);
         } else {
-            result.push_back(*current_simple_interval);
+            result.insert(current_simple_interval);
         }
     }
-    return Interval(SimpleSetType<SimpleInterval> (result.begin(), result.end()));
+
+    return nullptr;
+    //return new Interval(result, all_elements);
+}
+
+Interval * Interval::make_new_empty(AbstractAllElements *all_elements) const {
+    return new Interval();
+}
+
+Interval * Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_) const {
+    return new Interval();
 }
