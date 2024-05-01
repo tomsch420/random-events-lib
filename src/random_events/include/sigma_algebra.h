@@ -73,8 +73,8 @@ public:
 
         // if the intersection is empty, return the current atomic interval as interval
         if (intersection->is_empty()) {
-            auto result = new std::set<AbstractSimpleSet *>;
-            result->insert((AbstractSimpleSet *) this);
+            const auto result = new std::set<AbstractSimpleSet *>;
+            result->insert(const_cast<AbstractSimpleSet *>(this));
             return result;
         }
 
@@ -85,7 +85,7 @@ public:
         auto *difference = new std::set<AbstractSimpleSet *>;
 
         // for every interval in the complement of the intersection
-        for (auto simple_set: *complement_of_intersection) {
+        for (auto const simple_set: *complement_of_intersection) {
 
             // intersect this with the current complement of the intersection
             auto intersection_with_complement = intersection_with(simple_set);
@@ -181,7 +181,7 @@ public:
     }
 
     explicit AbstractCompositeSet(const AbstractAllElements *all_elements) : all_elements(
-            (AbstractAllElements *) all_elements) {}
+            const_cast<AbstractAllElements *>(all_elements)) {}
 
     /**
     * @return True if this is empty.
@@ -217,6 +217,15 @@ public:
      * @return A **new** empty composite set given all elements that are possible.
      */
     virtual AbstractCompositeSet *make_new_empty(AbstractAllElements *all_elements) const = 0;
+
+
+    /**
+     * @param simple_sets_ The simple sets to contain.
+     * @param all_elements_ All elements that are possible.
+     * @return A **new** composite set given the contained simple sets and all elements that are possible.
+     */
+    virtual AbstractCompositeSet *make_new(std::set<AbstractSimpleSet> *simple_sets_,
+        AbstractAllElements *all_elements_) const = 0;
 
     /**
      * @return A string representation of this.
@@ -413,9 +422,74 @@ public:
         return result->make_disjoint();
     }
 
+    /**
+    * Form the union with another composite set.
+    *
+    * @param other The other composite set.
+    * @return The union as disjoint composite set.
+    */
+    AbstractCompositeSet* union_with(const AbstractCompositeSet* other) const {
+        AbstractCompositeSet* result = make_new_empty(all_elements);
+        result->simple_sets.insert(simple_sets.begin(), simple_sets.end());
+        result->simple_sets.insert(other->simple_sets.begin(), other->simple_sets.end());
+        return result->make_disjoint();
+    }
+
+    /**
+     * Form the difference with a simple set.
+     *
+     * @param other the simple set
+     * @return The difference as disjoint composite set.
+     */
+    AbstractCompositeSet* difference_with(const AbstractSimpleSet* other) const {
+        AbstractCompositeSet* result = make_new_empty(all_elements);
+        for (const auto simple_set: simple_sets) {
+            const auto difference = simple_set->difference_with(other);
+            result->simple_sets.insert(difference->begin(), difference->end());
+        }
+        return result->make_disjoint();
+    }
+
+    /**
+     * Form the difference with another composite set.
+     *
+     * @param other The other composite set.
+     * @return The difference as disjoint composite set.
+     */
+    AbstractCompositeSet* difference_with(const AbstractCompositeSet* other) const {
+        AbstractCompositeSet* result = make_new_empty(all_elements);
+
+        for (const auto &own_simple_set: simple_sets) {
+            AbstractCompositeSet* current_difference = make_new_empty(all_elements);
+            bool first_iteration = true;
+
+            for (const auto other_simple_set: other->simple_sets) {
+                const auto difference_with_simple_set = own_simple_set->difference_with(other_simple_set);
+
+                // handle first iteration
+                if (first_iteration) {
+                    first_iteration = false;
+                    current_difference->simple_sets.insert(difference_with_simple_set->begin(),
+                        difference_with_simple_set->end());
+                    continue;
+                }
+
+                AbstractCompositeSet* difference = make_new_empty(all_elements);
+                difference->simple_sets.insert(difference_with_simple_set->begin(), difference_with_simple_set->end());
+                current_difference = current_difference->intersection_with(difference);
+                delete difference;
+            }
+            result->simple_sets.insert(current_difference->simple_sets.begin(),
+                current_difference->simple_sets.end());
+        }
+        return result->make_disjoint();
+    }
+
+    bool contains(const AbstractCompositeSet* other) const {
+        return intersection_with(other) == other;
+    }
 
 };
-
 
 /**
 * Interface class for simple sets.
