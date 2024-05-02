@@ -163,17 +163,17 @@ public:
 
     explicit Interval(const SimpleSetSetPtr_t &simple_sets) {
         this->simple_sets = simple_sets;
-        empty_simple_set_ptr = AbstractSimpleSetPtr_t(&simple_interval);
+        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
     explicit Interval(SimpleInterval &simple_interval) {
         simple_sets->insert(std::make_shared<SimpleInterval>(simple_interval));
-        empty_simple_set_ptr = AbstractSimpleSetPtr_t(&simple_interval);
+        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
     explicit Interval(const SimpleSetSetPtr_t &simple_sets, AbstractAllElements *all_elements) {
         this->simple_sets = simple_sets;
-        empty_simple_set_ptr = AbstractSimpleSetPtr_t(&simple_interval);
+        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
         this->all_elements = all_elements;
     }
 

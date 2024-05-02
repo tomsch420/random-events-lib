@@ -138,11 +138,11 @@ Interval::~Interval() {
 }
 
 AbstractCompositeSetPtr_t Interval::simplify() {
-    SimpleSetSetPtr_t result;
+    auto result = make_shared_simple_set_set();
     bool first_iteration = true;
 
     for (const auto &current_simple_set: *simple_sets) {
-        auto current_simple_interval = std::dynamic_pointer_cast<SimpleInterval>(current_simple_set);
+        auto current_simple_interval = std::static_pointer_cast<SimpleInterval>(current_simple_set);
 
         // if this is the first iteration, just copy the interval
         if (first_iteration) {
