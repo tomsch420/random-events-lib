@@ -50,21 +50,33 @@ SimpleInterval *SimpleInterval::intersection_with(const AbstractSimpleSet *other
     return new SimpleInterval{new_lower, new_upper, new_left, new_right};
 }
 
-std::set<AbstractSimpleSet *> *SimpleInterval::complement() const {
-    auto resulting_intervals = new std::set<AbstractSimpleSet *>;
+SimpleSetSet_t *SimpleInterval::complement() const {
+    auto resulting_intervals = new SimpleSetSet_t;
 
+    // if the interval is the real line, return an empty set
     if (lower == -std::numeric_limits<float>::infinity() and upper == std::numeric_limits<float>::infinity()) {
         return resulting_intervals;
     }
 
-    if (lower == -std::numeric_limits<float>::infinity()) {
+    // if the interval is empty, return the real line
+    if (is_empty()) {
+
+        resulting_intervals->insert(new SimpleInterval{
+                -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+                BorderType::OPEN, BorderType::OPEN
+        });
+        return resulting_intervals;
+    }
+
+    // if the interval has nothing left
+    if (upper < std::numeric_limits<float>::infinity()) {
         resulting_intervals->insert(new SimpleInterval{
             upper, std::numeric_limits<float>::infinity(),
             invert_border(right), BorderType::OPEN
         });
     }
 
-    if (upper == std::numeric_limits<float>::infinity()) {
+    if (lower > -std::numeric_limits<float>::infinity()) {
         resulting_intervals->insert(new SimpleInterval{
             -std::numeric_limits<float>::infinity(), lower,
             BorderType::OPEN, invert_border(left)
@@ -83,18 +95,14 @@ bool SimpleInterval::is_empty() const {
 }
 
 
-bool SimpleInterval::operator==(const AbstractSimpleSet *other) const {
-    auto derived_other = (SimpleInterval*) other;
-    return this == derived_other;
+bool SimpleInterval::operator==(const AbstractSimpleSet &other) const {
+    auto derived_other = (SimpleInterval*) &other;
+    return *this == *derived_other;
 }
 
-bool SimpleInterval::operator==(const SimpleInterval* other) const {
-    return lower == other->lower and upper == other->upper and left == other->left and right ==
-       other->right;
-}
 
 bool SimpleInterval::operator==(const SimpleInterval &other) const {
-    return *this == &other;
+    return lower == other.lower and upper == other.upper and left == other.left and right == other.right;
 }
 
 std::string *SimpleInterval::non_empty_to_string() const {
@@ -104,25 +112,32 @@ std::string *SimpleInterval::non_empty_to_string() const {
         left_representation + std::to_string(lower) + ", " + std::to_string(upper) + right_representation);
 }
 
-bool SimpleInterval::operator<(const AbstractSimpleSet *other) const {
-    //cast other to simple interval
-    const auto derived_other = (SimpleInterval*) other;
 
-    if (lower == derived_other->lower) {
-        return upper < derived_other->upper;
+bool SimpleInterval::operator<(const SimpleInterval &other) const {
+    if (lower == other.lower) {
+        return upper < other.upper;
     }
-    return lower < derived_other->lower;
+    return lower < other.lower;
 }
 
-bool SimpleInterval::operator<=(const AbstractSimpleSet *other) const {
-    //cast other to simple interval
-    const auto derived_other = (SimpleInterval*) other;
-
-    if (lower == derived_other->lower) {
-        return upper <= derived_other->upper;
-    }
-    return lower <= derived_other->lower;
+bool SimpleInterval::operator<(const AbstractSimpleSet &other) const {
+    const auto derived_other = (SimpleInterval*) &other;
+    return *this < *derived_other;
 }
+
+
+bool SimpleInterval::operator<=(const SimpleInterval &other) const {
+    if (lower == other.lower) {
+        return upper <= other.upper;
+    }
+    return lower <= other.lower;
+}
+
+bool SimpleInterval::operator<=(const AbstractSimpleSet &other) const {
+    const auto derived_other = (SimpleInterval*) &other;
+    return *this <= *derived_other;
+}
+
 
 Interval::~Interval() {
     simple_sets.clear();

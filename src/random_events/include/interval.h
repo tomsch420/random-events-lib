@@ -7,15 +7,15 @@
  * Enum for border types of simple_sets.
  */
 enum class BorderType {
- /**
-  * Open indicates that a value is included in the interval.
-  */
- OPEN,
+    /**
+     * Open indicates that a value is included in the interval.
+     */
+    OPEN,
 
- /**
-  * Close indicates that a value is excluded in the interval.
-  */
- CLOSED
+    /**
+     * Close indicates that a value is excluded in the interval.
+     */
+    CLOSED
 };
 
 /**
@@ -25,7 +25,7 @@ enum class BorderType {
  * @return The intersection of the borders.
  */
 inline BorderType intersect_borders(const BorderType border_1, const BorderType border_2) {
- return (border_1 == BorderType::OPEN || border_2 == BorderType::OPEN) ? BorderType::OPEN : BorderType::CLOSED;
+    return (border_1 == BorderType::OPEN || border_2 == BorderType::OPEN) ? BorderType::OPEN : BorderType::CLOSED;
 }
 
 /**
@@ -34,7 +34,7 @@ inline BorderType intersect_borders(const BorderType border_1, const BorderType 
  * @return The t_complement a border.
  */
 inline BorderType invert_border(const BorderType border) {
- return border == BorderType::OPEN ? BorderType::CLOSED : BorderType::OPEN;
+    return border == BorderType::OPEN ? BorderType::CLOSED : BorderType::OPEN;
 }
 
 
@@ -43,69 +43,79 @@ inline BorderType invert_border(const BorderType border) {
  */
 class SimpleInterval : public AbstractSimpleSet {
 public:
- /**
-  * The lower value.
-  */
- float lower = 0;
+    /**
+     * The lower value.
+     */
+    float lower = 0;
 
- /**
-  * The upper value.
-  */
- float upper = 0;
+    /**
+     * The upper value.
+     */
+    float upper = 0;
 
- /**
-  * THe left border type.
-  */
- BorderType left = BorderType::OPEN;
+    /**
+     * THe left border type.
+     */
+    BorderType left = BorderType::OPEN;
 
- /**
-  * The right border type.
-  */
- BorderType right = BorderType::OPEN;
+    /**
+     * The right border type.
+     */
+    BorderType right = BorderType::OPEN;
 
- /**
-  * Construct an atomic interval.
-  */
- explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
-                         BorderType right = BorderType::OPEN);
-
-
- SimpleInterval *intersection_with(const AbstractSimpleSet *other) const override;
-
- std::set<AbstractSimpleSet *> *complement() const override;
-
- bool contains(const ElementaryVariant *element) const override;
-
- bool is_empty() const override;
-
- /**
-  * This method depends on the type of simple set and has to be overloaded.
-  *
-  * @param other The other simple set.
-  * @return True if they are equal.
-  */
- bool operator==(const AbstractSimpleSet *other) const override;
- bool operator==(const SimpleInterval *other) const;
- bool operator==(const SimpleInterval &other) const;
-
- std::string *non_empty_to_string() const override;
+    /**
+     * Construct an atomic interval.
+     */
+    explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
+                            BorderType right = BorderType::OPEN);
 
 
- /**
-  * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
-  * ordered by upper bound.
-  * @param other The other interval
-  * @return True if this interval is less than the other interval.
-  */
- bool operator<(const AbstractSimpleSet *other) const override;
+    SimpleInterval *intersection_with(const AbstractSimpleSet *other) const override;
 
- /**
- * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
- * ordered by upper bound.
- * @param other The other interval
- * @return True if this interval is less or equal to the other interval.
- */
- bool operator<=(const AbstractSimpleSet *other) const override;
+    SimpleSetSet_t *complement() const override;
+
+    bool contains(const ElementaryVariant *element) const override;
+
+    bool is_empty() const override;
+
+    /**
+     * This method depends on the type of simple set and has to be overloaded.
+     *
+     * @param other The other simple set.
+     * @return True if they are equal.
+     */
+    bool operator==(const AbstractSimpleSet &other) const override;
+
+    bool operator==(const SimpleInterval &other) const;
+
+    std::string *non_empty_to_string() const override;
+
+    bool operator<(const AbstractSimpleSet &other) const override;
+
+    /**
+     * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
+     * ordered by upper bound.
+     *
+     * Note that border types are ignored in ordering.
+     *
+     * @param other The other interval
+     * @return True if this interval is less than the other interval.
+     */
+    bool operator<(const SimpleInterval &other) const;
+
+
+    bool operator<=(const AbstractSimpleSet &other) const override;
+
+    /**
+    * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
+    * ordered by upper bound.
+    *
+    * Note that border types are ignored in ordering.
+    *
+    * @param other The other interval
+    * @return True if this interval is less or equal to the other interval.
+    */
+    bool operator<=(const SimpleInterval &other) const;
 };
 
 
@@ -113,13 +123,13 @@ public:
  * Hash function for simple intervals.
  */
 namespace std {
- template<>
- struct hash<SimpleInterval> {
-  size_t operator()(const SimpleInterval &interval) const {
-   return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^ std::hash<int>()(
-           static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
-  }
- };
+    template<>
+    struct hash<SimpleInterval> {
+        size_t operator()(const SimpleInterval &interval) const {
+            return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^ std::hash<int>()(
+                    static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
+        }
+    };
 }
 
 
@@ -129,33 +139,33 @@ namespace std {
  */
 class Interval : public AbstractCompositeSet {
 public:
- Interval() = default;
+    Interval() = default;
 
- //
- // explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
- //     this->simple_sets = simple_sets;
- //     this->empty_simple_set_ptr = &simple_interval;
- // }
- //
- // explicit Interval(const SimpleInterval &simple_interval) {
- //     this->simple_sets.insert(simple_interval);
- //     this->empty_simple_set_ptr = &this->simple_interval;
- // }
+    //
+    // explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
+    //     this->simple_sets = simple_sets;
+    //     this->empty_simple_set_ptr = &simple_interval;
+    // }
+    //
+    // explicit Interval(const SimpleInterval &simple_interval) {
+    //     this->simple_sets.insert(simple_interval);
+    //     this->empty_simple_set_ptr = &this->simple_interval;
+    // }
 
- ~Interval() override;
+    ~Interval() override;
 
- [[nodiscard]] Interval *simplify() const override;
+    [[nodiscard]] Interval *simplify() const override;
 
- Interval *make_new_empty(AbstractAllElements *all_elements) const override;
+    Interval *make_new_empty(AbstractAllElements *all_elements) const override;
 
- Interval *make_new(std::set<AbstractSimpleSet*> *simple_sets_,
-        AbstractAllElements *all_elements_) const override;
+    Interval *make_new(std::set<AbstractSimpleSet *> *simple_sets_,
+                       AbstractAllElements *all_elements_) const override;
 
 
- /**
-  * The empty simple interval.
-  */
- SimpleInterval simple_interval;
+    /**
+     * The empty simple interval.
+     */
+    SimpleInterval simple_interval;
 };
 
 // inline Interval closed(const float lower, const float upper) {
