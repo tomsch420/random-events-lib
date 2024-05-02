@@ -2,21 +2,19 @@
 #include <limits>
 #include <stdexcept>
 #include <algorithm>
+#include <memory>
 #include <iostream>
 #include "interval.h"
 #include "sigma_algebra.h"
 
 
-SimpleInterval::SimpleInterval(const float lower, const float upper, const BorderType left,
-                               const BorderType right) : lower(lower),
-                                                         upper(upper),
-                                                         left(left),
-                                                         right(right) {
+SimpleInterval::SimpleInterval(const float lower, const float upper, const BorderType left, const BorderType right)
+        : lower(lower), upper(upper), left(left), right(right) {
     if (lower > upper) { throw std::invalid_argument("Lower bound must be less than or equal to upper bound."); }
 }
 
-SimpleInterval *SimpleInterval::intersection_with(const AbstractSimpleSet *other) const {
-    const auto derived_other = (SimpleInterval*) other;
+AbstractSimpleSetPtr_t SimpleInterval::intersection_with(const AbstractSimpleSetPtr_t &other) const {
+    const auto derived_other = (SimpleInterval *) other.get();
 
     // get the new lower and upper bounds
     const float new_lower = std::max(lower, derived_other->lower);
@@ -24,7 +22,7 @@ SimpleInterval *SimpleInterval::intersection_with(const AbstractSimpleSet *other
 
     // return the empty interval if the new lower bound is greater than the new upper bound
     if (new_lower > new_upper) {
-        return new SimpleInterval();
+        return make_shared_simple_interval();
     }
 
     // initialize the new borders
@@ -47,11 +45,11 @@ SimpleInterval *SimpleInterval::intersection_with(const AbstractSimpleSet *other
         new_right = upper == new_upper ? right : derived_other->right;
     }
 
-    return new SimpleInterval{new_lower, new_upper, new_left, new_right};
+    return make_shared_simple_interval(new_lower, new_upper, new_left, new_right);
 }
 
-SimpleSetSet_t *SimpleInterval::complement() const {
-    auto resulting_intervals = new SimpleSetSet_t;
+SimpleSetSetPtr_t SimpleInterval::complement() const {
+    auto resulting_intervals = make_shared_simple_set_set();
 
     // if the interval is the real line, return an empty set
     if (lower == -std::numeric_limits<float>::infinity() and upper == std::numeric_limits<float>::infinity()) {
@@ -60,27 +58,23 @@ SimpleSetSet_t *SimpleInterval::complement() const {
 
     // if the interval is empty, return the real line
     if (is_empty()) {
-
-        resulting_intervals->insert(new SimpleInterval{
-                -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
-                BorderType::OPEN, BorderType::OPEN
-        });
+        resulting_intervals->insert(make_shared_simple_interval(-std::numeric_limits<float>::infinity(),
+                                                                std::numeric_limits<float>::infinity(),
+                                                                BorderType::OPEN, BorderType::OPEN));
         return resulting_intervals;
     }
 
     // if the interval has nothing left
     if (upper < std::numeric_limits<float>::infinity()) {
-        resulting_intervals->insert(new SimpleInterval{
-            upper, std::numeric_limits<float>::infinity(),
-            invert_border(right), BorderType::OPEN
-        });
+        resulting_intervals->insert(
+                make_shared_simple_interval(upper, std::numeric_limits<float>::infinity(), invert_border(right),
+                                            BorderType::OPEN));
     }
 
     if (lower > -std::numeric_limits<float>::infinity()) {
-        resulting_intervals->insert(new SimpleInterval{
-            -std::numeric_limits<float>::infinity(), lower,
-            BorderType::OPEN, invert_border(left)
-        });
+        resulting_intervals->insert(
+                make_shared_simple_interval(-std::numeric_limits<float>::infinity(), lower, BorderType::OPEN,
+                                            invert_border(left)));
     }
 
     return resulting_intervals;
@@ -96,7 +90,7 @@ bool SimpleInterval::is_empty() const {
 
 
 bool SimpleInterval::operator==(const AbstractSimpleSet &other) const {
-    auto derived_other = (SimpleInterval*) &other;
+    auto derived_other = (SimpleInterval *) &other;
     return *this == *derived_other;
 }
 
@@ -109,7 +103,7 @@ std::string *SimpleInterval::non_empty_to_string() const {
     const char left_representation = left == BorderType::OPEN ? '(' : '[';
     const char right_representation = right == BorderType::OPEN ? ')' : ']';
     return new std::string(
-        left_representation + std::to_string(lower) + ", " + std::to_string(upper) + right_representation);
+            left_representation + std::to_string(lower) + ", " + std::to_string(upper) + right_representation);
 }
 
 
@@ -121,7 +115,7 @@ bool SimpleInterval::operator<(const SimpleInterval &other) const {
 }
 
 bool SimpleInterval::operator<(const AbstractSimpleSet &other) const {
-    const auto derived_other = (SimpleInterval*) &other;
+    const auto derived_other = (SimpleInterval *) &other;
     return *this < *derived_other;
 }
 
@@ -134,60 +128,48 @@ bool SimpleInterval::operator<=(const SimpleInterval &other) const {
 }
 
 bool SimpleInterval::operator<=(const AbstractSimpleSet &other) const {
-    const auto derived_other = (SimpleInterval*) &other;
+    const auto derived_other = (SimpleInterval *) &other;
     return *this <= *derived_other;
 }
 
 
 Interval::~Interval() {
-    simple_sets.clear();
+    simple_sets->clear();
 }
 
-Interval *Interval::simplify() const {
-    std::set<SimpleInterval *> result;
-
-    // // convert to vector and cast to SimpleInterval
-    // auto simple_set_vector = std::vector<SimpleInterval>();
-    // for (const auto simple_set : simple_sets) {
-    //     simple_set_vector.emplace_back(*simple_set);
-    // }
-    //
-    // //std::sort(simple_set_vector.begin(), simple_set_vector.end());
-    // result.push_back(simple_set_vector[0]);
-
+AbstractCompositeSetPtr_t Interval::simplify() const {
+    SimpleSetSetPtr_t result;
     bool first_iteration = true;
 
-    for (const auto current_simple_set: simple_sets) {
-        auto current_simple_interval = (SimpleInterval*) current_simple_set;
+    for (const auto &current_simple_set: *simple_sets) {
+        auto current_simple_interval = std::dynamic_pointer_cast<SimpleInterval>(current_simple_set);
 
         // if this is the first iteration, just copy the interval
         if (first_iteration) {
-            result.insert(current_simple_interval);
+            result->insert(current_simple_interval);
             first_iteration = false;
             continue;
         }
 
-        auto last_simple_interval = *result.end();
+        auto last_simple_interval = std::dynamic_pointer_cast<SimpleInterval>(*result->rbegin());
 
         if (last_simple_interval->upper == current_simple_interval->lower &&
             !(last_simple_interval->right == BorderType::OPEN and current_simple_interval->left == BorderType::OPEN)) {
             last_simple_interval->upper = current_simple_interval->upper;
             last_simple_interval->right = current_simple_interval->right;
-            // result.emplace_back(last_simple_interval.lower, current_simple_interval->upper, last_simple_interval.left,
-            //                     current_simple_interval->right);
         } else {
-            result.insert(current_simple_interval);
+            result->insert(current_simple_interval);
         }
     }
 
-    return nullptr;
-    //return new Interval(result, all_elements);
+    return make_shared_interval(result, all_elements);
 }
 
-Interval * Interval::make_new_empty(AbstractAllElements *all_elements) const {
-    return new Interval();
+AbstractCompositeSetPtr_t Interval::make_new_empty(AbstractAllElements *all_elements) const {
+    return make_shared_interval();
 }
 
-Interval * Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_) const {
-    return new Interval();
+AbstractCompositeSetPtr_t
+Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_) const {
+    return make_shared_interval();
 }

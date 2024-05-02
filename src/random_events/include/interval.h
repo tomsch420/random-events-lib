@@ -1,7 +1,25 @@
 #pragma once
 
 #include "sigma_algebra.h"
-#include <unordered_set>
+#include <memory>
+
+//FORWARD DECLARE
+class SimpleInterval;
+class Interval;
+
+// TYPEDEFS
+typedef std::shared_ptr<SimpleInterval> SimpleIntervalPtr_t;
+
+template<typename... Args>
+std::shared_ptr<SimpleInterval> make_shared_simple_interval(Args&&... args) {
+    return std::make_shared<SimpleInterval>(std::forward<Args>(args)...);
+}
+
+typedef std::shared_ptr<Interval> IntervalPtr_t;
+template<typename... Args>
+std::shared_ptr<Interval> make_shared_interval(Args&&... args) {
+    return std::make_shared<Interval>(std::forward<Args>(args)...);
+}
 
 /**
  * Enum for border types of simple_sets.
@@ -70,9 +88,9 @@ public:
                             BorderType right = BorderType::OPEN);
 
 
-    SimpleInterval *intersection_with(const AbstractSimpleSet *other) const override;
+    AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) const override;
 
-    SimpleSetSet_t *complement() const override;
+    SimpleSetSetPtr_t complement() const override;
 
     bool contains(const ElementaryVariant *element) const override;
 
@@ -116,6 +134,7 @@ public:
     * @return True if this interval is less or equal to the other interval.
     */
     bool operator<=(const SimpleInterval &other) const;
+
 };
 
 
@@ -141,24 +160,30 @@ class Interval : public AbstractCompositeSet {
 public:
     Interval() = default;
 
-    //
-    // explicit Interval(const SimpleSetType<SimpleInterval> &simple_sets) {
-    //     this->simple_sets = simple_sets;
-    //     this->empty_simple_set_ptr = &simple_interval;
-    // }
-    //
-    // explicit Interval(const SimpleInterval &simple_interval) {
-    //     this->simple_sets.insert(simple_interval);
-    //     this->empty_simple_set_ptr = &this->simple_interval;
-    // }
+
+    explicit Interval(const SimpleSetSetPtr_t &simple_sets) {
+        this->simple_sets = simple_sets;
+        empty_simple_set_ptr = AbstractSimpleSetPtr_t(&simple_interval);
+    }
+
+    explicit Interval(SimpleInterval &simple_interval) {
+        simple_sets->insert(std::make_shared<SimpleInterval>(simple_interval));
+        empty_simple_set_ptr = AbstractSimpleSetPtr_t(&simple_interval);
+    }
+
+    explicit Interval(const SimpleSetSetPtr_t &simple_sets, AbstractAllElements *all_elements) {
+        this->simple_sets = simple_sets;
+        empty_simple_set_ptr = AbstractSimpleSetPtr_t(&simple_interval);
+        this->all_elements = all_elements;
+    }
 
     ~Interval() override;
 
-    [[nodiscard]] Interval *simplify() const override;
+    AbstractCompositeSetPtr_t simplify() const override;
 
-    Interval *make_new_empty(AbstractAllElements *all_elements) const override;
+    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElements *all_elements) const override;
 
-    Interval *make_new(std::set<AbstractSimpleSet *> *simple_sets_,
+    AbstractCompositeSetPtr_t make_new(std::set<AbstractSimpleSet *> *simple_sets_,
                        AbstractAllElements *all_elements_) const override;
 
 
@@ -167,38 +192,54 @@ public:
      */
     SimpleInterval simple_interval;
 };
+//
+//class RealLine : public AbstractAllElements {
+//
+//    Interval all_elements;
+//public:
+//    RealLine() {
+//        auto all_elements_ = new SimpleInterval{-std::numeric_limits<float>::infinity(),
+//                                                std::numeric_limits<float>::infinity(),
+//                                                BorderType::OPEN, BorderType::OPEN};
+//        all_elements = Interval(SimpleSetSet_t{all_elements_});
+//    }
+//};
+//
+//
+//inline Interval closed(const float lower, const float upper) {
+//    auto interval = new SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::CLOSED};
+//    return Interval({interval});
+//}
 
-// inline Interval closed(const float lower, const float upper) {
-//  return Interval(
-//   SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::CLOSED}});
-// }
+//inline Interval open(const float lower, const float upper) {
+//    return Interval(
+//            SimpleSetType < SimpleInterval > {SimpleInterval{lower, upper, BorderType::OPEN, BorderType::OPEN}});
+//}
 //
-// inline Interval open(const float lower, const float upper) {
-//  return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::OPEN, BorderType::OPEN}});
-// }
+//inline Interval open_closed(const float lower, const float upper) {
+//    return Interval(
+//            SimpleSetType < SimpleInterval > {SimpleInterval{lower, upper, BorderType::OPEN, BorderType::CLOSED}});
+//}
 //
-// inline Interval open_closed(const float lower, const float upper) {
-//  return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::OPEN, BorderType::CLOSED}});
-// }
+//inline Interval closed_open(const float lower, const float upper) {
+//    return Interval(
+//            SimpleSetType < SimpleInterval > {SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::OPEN}});
+//}
 //
-// inline Interval closed_open(const float lower, const float upper) {
-//  return Interval(SimpleSetType<SimpleInterval>{SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::OPEN}});
-// }
+//inline Interval singleton(const float value) {
+//    return Interval(
+//            SimpleSetType < SimpleInterval > {SimpleInterval{value, value, BorderType::CLOSED, BorderType::CLOSED}});
+//}
 //
-// inline Interval singleton(const float value) {
-//  return Interval(
-//   SimpleSetType<SimpleInterval>{SimpleInterval{value, value, BorderType::CLOSED, BorderType::CLOSED}});
-// }
+//inline Interval empty() {
+//    return Interval(SimpleSetType < SimpleInterval > {});
+//}
 //
-// inline Interval empty() {
-//  return Interval(SimpleSetType<SimpleInterval>{});
-// }
-//
-// inline Interval reals() {
-//  return Interval(SimpleSetType<SimpleInterval>{
-//   SimpleInterval{
-//    -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
-//    BorderType::OPEN, BorderType::OPEN
-//   }
-//  });
-// }
+//inline Interval reals() {
+//    return Interval(SimpleSetType < SimpleInterval > {
+//            SimpleInterval{
+//                    -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+//                    BorderType::OPEN, BorderType::OPEN
+//            }
+//    });
+//}
