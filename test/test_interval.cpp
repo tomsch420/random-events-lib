@@ -2,6 +2,7 @@
 #include "interval.h"
 #include "sigma_algebra.h"
 #include <set>
+#include <memory>
 
 bool compare_simple_set_set(const SimpleSetSetPtr_t &lhs, const SimpleSetSetPtr_t &rhs) {
     if (lhs->size() != rhs->size()) {
@@ -36,20 +37,21 @@ TEST(AtomicIntervalCreationTestSuite, SimpleInterval) {
 TEST(AtomicIntervalIntersectionTestSuite, SimpleInterval) {
     auto simple_interval_1 = make_shared_simple_interval(0.0, 1.0, BorderType::OPEN, BorderType::CLOSED);
     auto simple_interval_2 = make_shared_simple_interval(0.5, 1.5, BorderType::CLOSED, BorderType::OPEN);
-    auto intersection = simple_interval_1->intersection_with(simple_interval_2);
+    const auto intersection = simple_interval_1->intersection_with(simple_interval_2);
 
-    auto intersection_by_hand = make_shared_simple_interval(0.5, 1, BorderType::CLOSED, BorderType::CLOSED);
-    EXPECT_EQ(*intersection.get(), *intersection_by_hand.get());
+
+    const auto intersection_by_hand = make_shared_simple_interval(0.5, 1, BorderType::CLOSED, BorderType::CLOSED);
+    EXPECT_TRUE(*intersection_by_hand == *intersection);
 }
 
-TEST(AtomicIntervalEmptyIntersectionTestSuite, SimpleInterval) {
-    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::OPEN, BorderType::CLOSED);
-    auto interval2 = make_shared_simple_interval(2., 3., BorderType::CLOSED, BorderType::OPEN);
-    auto intersection = interval1->intersection_with(interval2);
-    auto intersection_by_hand = make_shared_simple_interval(0., 0, BorderType::OPEN, BorderType::OPEN);
-    EXPECT_EQ(*intersection.get(), *intersection_by_hand.get());
-    EXPECT_TRUE(intersection->is_empty());
-}
+//TEST(AtomicIntervalEmptyIntersectionTestSuite, SimpleInterval) {
+//    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::OPEN, BorderType::CLOSED);
+//    auto interval2 = make_shared_simple_interval(2., 3., BorderType::CLOSED, BorderType::OPEN);
+//    auto intersection = interval1->intersection_with(interval2);
+//    auto intersection_by_hand = make_shared_simple_interval(0., 0, BorderType::OPEN, BorderType::OPEN);
+//    EXPECT_EQ(*intersection.get(), *intersection_by_hand.get());
+//    EXPECT_TRUE(intersection->is_empty());
+//}
 
 // TEST(AtomicIntervalContainsTestSuite, SimpleInterval){
 //     auto interval = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};

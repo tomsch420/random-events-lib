@@ -78,14 +78,14 @@ public:
     * @param other the other simples set.
     * @return The intersection of both as simple set.
     */
-    virtual AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) const = 0;
+    virtual AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other)= 0;
 
     /**
     * This method depends on the type of simple set and has to be overwritten.
     *
     * @return The complement of this simple set as disjoint composite set.
     */
-    virtual SimpleSetSetPtr_t complement() const = 0;
+    virtual SimpleSetSetPtr_t complement()= 0;
 
     /**
     * Check if an elementary event is contained in this.
@@ -93,7 +93,7 @@ public:
     * @param element The element to check.
     * @return True if the element is contained in this.
     */
-    virtual bool contains(const ElementaryVariant *element) const = 0;
+    virtual bool contains(const ElementaryVariant *element)= 0;
 
 
     /**
@@ -101,7 +101,7 @@ public:
     *
     * @return True if this is empty.
     */
-    virtual bool is_empty() const = 0;
+    virtual bool is_empty()= 0;
 
     /**
     * Form the difference with another simple set.
@@ -109,23 +109,23 @@ public:
     * @param other The other simple set.
     * @return The difference as disjoint composite set.
     */
-    SimpleSetSetPtr_t difference_with(const AbstractSimpleSetPtr_t& other) const;
+    SimpleSetSetPtr_t difference_with(const AbstractSimpleSetPtr_t& other);
 
-    virtual std::string *non_empty_to_string() const = 0;
+    virtual std::string *non_empty_to_string()= 0;
 
-    virtual std::string *to_string() const;
+    virtual std::string *to_string();
 
-    virtual bool operator==(const AbstractSimpleSet &other) const = 0;
+    virtual bool operator==(const AbstractSimpleSet &other)= 0;
 
-    virtual bool operator<(const AbstractSimpleSet &other) const = 0;
+    virtual bool operator<(const AbstractSimpleSet &other)= 0;
 
-    virtual bool operator<=(const AbstractSimpleSet &other) const = 0;
+    virtual bool operator<=(const AbstractSimpleSet &other)= 0;
 
-    bool operator!=(const AbstractSimpleSet &other) const;
+    bool operator!=(const AbstractSimpleSet &other);
 
-    bool operator>(const AbstractSimpleSet &other) const;
+    bool operator>(const AbstractSimpleSet &other);
 
-    bool operator>=(const AbstractSimpleSet &other) const;
+    bool operator>=(const AbstractSimpleSet &other);
 
     std::shared_ptr<AbstractSimpleSet> share_more()
     {
@@ -196,12 +196,12 @@ public:
     /**
     * @return True if this is empty.
     */
-    bool is_empty() const;
+    bool is_empty();
 
     /**
      * @return True if the composite set is disjoint union of simple sets.
      */
-    bool is_disjoint() const;
+    bool is_disjoint();
 
     /**
     * Simplify the composite set into a shorter but equal representation.
@@ -209,13 +209,13 @@ public:
     *
     * @return The simplified composite set into a shorter but equal representation.
     */
-    virtual AbstractCompositeSetPtr_t simplify() const = 0;
+    virtual AbstractCompositeSetPtr_t simplify()= 0;
 
     /**
      * @param all_elements All elements that are possible.
      * @return A **new** empty composite set given all elements that are possible.
      */
-    virtual AbstractCompositeSetPtr_t make_new_empty(AbstractAllElements *all_elements) const = 0;
+    virtual AbstractCompositeSetPtr_t make_new_empty(AbstractAllElements *all_elements)= 0;
 
 
     /**
@@ -224,19 +224,19 @@ public:
      * @return A **new** composite set given the contained simple sets and all elements that are possible.
      */
     virtual AbstractCompositeSetPtr_t
-    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_) const = 0;
+    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_)= 0;
 
     /**
      * @return A string representation of this.
      */
-    std::string *to_string() const;
+    std::string *to_string();
 
 
     /**
      * @param other The other composite set.
      * @return True if this is equal to the other composite set.
      */
-    bool operator==(const AbstractCompositeSetPtr_t other) const;
+    bool operator==(const AbstractCompositeSetPtr_t other);
 
     /**
     * Split this composite set into disjoint and non-disjoint parts.
@@ -253,14 +253,14 @@ public:
     *
     * @return A tuple of disjoint and non-disjoint composite sets.
     */
-    std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t> split_into_disjoint_and_non_disjoint() const;
+    std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t> split_into_disjoint_and_non_disjoint();
 
     /**
     * Create an equal composite set that contains a disjoint union of simple sets.
     *
     * @return The disjoint composite set.
     */
-    AbstractCompositeSetPtr_t make_disjoint() const;
+    AbstractCompositeSetPtr_t make_disjoint();
 
     /**
      * Form the intersection with an simple set.
@@ -268,9 +268,9 @@ public:
      * @param simple_set The simple event to intersect with.
      * @return The intersection.
      */
-    AbstractCompositeSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &simple_set) const;
+    AbstractCompositeSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &simple_set);
 
-    AbstractCompositeSetPtr_t intersection_with(const SimpleSetSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t intersection_with(const SimpleSetSetPtr_t &other);
 
     /**
     * Form the intersection with another composite set.
@@ -280,12 +280,12 @@ public:
     * @param other The other composite set.
     * @return The intersection as composite set.
     */
-    AbstractCompositeSetPtr_t intersection_with(const AbstractCompositeSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t intersection_with(const AbstractCompositeSetPtr_t &other);
 
     /**
      * @return the complement of a composite set as disjoint composite set.
      */
-    AbstractCompositeSetPtr_t complement() const;
+    AbstractCompositeSetPtr_t complement();
 
     /**
     * Form the union with a simple set.
@@ -293,7 +293,7 @@ public:
     * @param other The other simple set.
     * @return The union as disjoint composite set.
     */
-    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other);
 
     /**
     * Form the union with another composite set.
@@ -301,7 +301,7 @@ public:
     * @param other The other composite set.
     * @return The union as disjoint composite set.
     */
-    AbstractCompositeSetPtr_t union_with(const AbstractCompositeSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t union_with(const AbstractCompositeSetPtr_t &other);
 
     /**
      * Form the difference with a simple set.
@@ -309,7 +309,7 @@ public:
      * @param other the simple set
      * @return The difference as disjoint composite set.
      */
-    AbstractCompositeSetPtr_t difference_with(const AbstractSimpleSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t difference_with(const AbstractSimpleSetPtr_t &other);
 
     /**
      * Form the difference with another composite set.
@@ -317,8 +317,8 @@ public:
      * @param other The other composite set.
      * @return The difference as disjoint composite set.
      */
-    AbstractCompositeSetPtr_t difference_with(const AbstractCompositeSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t difference_with(const AbstractCompositeSetPtr_t &other);
 
-    bool contains(const AbstractCompositeSetPtr_t &other) const;
+    bool contains(const AbstractCompositeSetPtr_t &other);
 
 };

@@ -88,13 +88,13 @@ public:
                             BorderType right = BorderType::OPEN);
 
 
-    AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) const override;
+    AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override;
 
-    SimpleSetSetPtr_t complement() const override;
+    SimpleSetSetPtr_t complement() override;
 
-    bool contains(const ElementaryVariant *element) const override;
+    bool contains(const ElementaryVariant *element) override;
 
-    bool is_empty() const override;
+    bool is_empty() override;
 
     /**
      * This method depends on the type of simple set and has to be overloaded.
@@ -102,13 +102,13 @@ public:
      * @param other The other simple set.
      * @return True if they are equal.
      */
-    bool operator==(const AbstractSimpleSet &other) const override;
+    bool operator==(const AbstractSimpleSet &other) override;
 
-    bool operator==(const SimpleInterval &other) const;
+    bool operator==(const SimpleInterval &other);
 
-    std::string *non_empty_to_string() const override;
+    std::string *non_empty_to_string() override;
 
-    bool operator<(const AbstractSimpleSet &other) const override;
+    bool operator<(const AbstractSimpleSet &other) override;
 
     /**
      * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
@@ -119,10 +119,10 @@ public:
      * @param other The other interval
      * @return True if this interval is less than the other interval.
      */
-    bool operator<(const SimpleInterval &other) const;
+    bool operator<(const SimpleInterval &other);
 
 
-    bool operator<=(const AbstractSimpleSet &other) const override;
+    bool operator<=(const AbstractSimpleSet &other) override;
 
     /**
     * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
@@ -133,7 +133,7 @@ public:
     * @param other The other interval
     * @return True if this interval is less or equal to the other interval.
     */
-    bool operator<=(const SimpleInterval &other) const;
+    bool operator<=(const SimpleInterval &other);
 
 };
 
@@ -179,12 +179,12 @@ public:
 
     ~Interval() override;
 
-    AbstractCompositeSetPtr_t simplify() const override;
+    AbstractCompositeSetPtr_t simplify() override;
 
-    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElements *all_elements) const override;
+    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElements *all_elements) override;
 
     AbstractCompositeSetPtr_t make_new(std::set<AbstractSimpleSet *> *simple_sets_,
-                       AbstractAllElements *all_elements_) const override;
+                       AbstractAllElements *all_elements_) override;
 
 
     /**

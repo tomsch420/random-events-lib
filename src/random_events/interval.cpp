@@ -13,7 +13,7 @@ SimpleInterval::SimpleInterval(const float lower, const float upper, const Borde
     if (lower > upper) { throw std::invalid_argument("Lower bound must be less than or equal to upper bound."); }
 }
 
-AbstractSimpleSetPtr_t SimpleInterval::intersection_with(const AbstractSimpleSetPtr_t &other) const {
+AbstractSimpleSetPtr_t SimpleInterval::intersection_with(const AbstractSimpleSetPtr_t &other) {
     const auto derived_other = (SimpleInterval *) other.get();
 
     // get the new lower and upper bounds
@@ -48,7 +48,7 @@ AbstractSimpleSetPtr_t SimpleInterval::intersection_with(const AbstractSimpleSet
     return make_shared_simple_interval(new_lower, new_upper, new_left, new_right);
 }
 
-SimpleSetSetPtr_t SimpleInterval::complement() const {
+SimpleSetSetPtr_t SimpleInterval::complement() {
     auto resulting_intervals = make_shared_simple_set_set();
 
     // if the interval is the real line, return an empty set
@@ -80,26 +80,26 @@ SimpleSetSetPtr_t SimpleInterval::complement() const {
     return resulting_intervals;
 }
 
-bool SimpleInterval::contains(const ElementaryVariant *element) const {
+bool SimpleInterval::contains(const ElementaryVariant *element) {
     return false;
 }
 
-bool SimpleInterval::is_empty() const {
+bool SimpleInterval::is_empty() {
     return lower > upper or (lower == upper and (left == BorderType::OPEN or right == BorderType::OPEN));
 }
 
 
-bool SimpleInterval::operator==(const AbstractSimpleSet &other) const {
+bool SimpleInterval::operator==(const AbstractSimpleSet &other) {
     auto derived_other = (SimpleInterval *) &other;
     return *this == *derived_other;
 }
 
 
-bool SimpleInterval::operator==(const SimpleInterval &other) const {
+bool SimpleInterval::operator==(const SimpleInterval &other) {
     return lower == other.lower and upper == other.upper and left == other.left and right == other.right;
 }
 
-std::string *SimpleInterval::non_empty_to_string() const {
+std::string *SimpleInterval::non_empty_to_string() {
     const char left_representation = left == BorderType::OPEN ? '(' : '[';
     const char right_representation = right == BorderType::OPEN ? ')' : ']';
     return new std::string(
@@ -107,27 +107,27 @@ std::string *SimpleInterval::non_empty_to_string() const {
 }
 
 
-bool SimpleInterval::operator<(const SimpleInterval &other) const {
+bool SimpleInterval::operator<(const SimpleInterval &other) {
     if (lower == other.lower) {
         return upper < other.upper;
     }
     return lower < other.lower;
 }
 
-bool SimpleInterval::operator<(const AbstractSimpleSet &other) const {
+bool SimpleInterval::operator<(const AbstractSimpleSet &other) {
     const auto derived_other = (SimpleInterval *) &other;
     return *this < *derived_other;
 }
 
 
-bool SimpleInterval::operator<=(const SimpleInterval &other) const {
+bool SimpleInterval::operator<=(const SimpleInterval &other) {
     if (lower == other.lower) {
         return upper <= other.upper;
     }
     return lower <= other.lower;
 }
 
-bool SimpleInterval::operator<=(const AbstractSimpleSet &other) const {
+bool SimpleInterval::operator<=(const AbstractSimpleSet &other) {
     const auto derived_other = (SimpleInterval *) &other;
     return *this <= *derived_other;
 }
@@ -137,7 +137,7 @@ Interval::~Interval() {
     simple_sets->clear();
 }
 
-AbstractCompositeSetPtr_t Interval::simplify() const {
+AbstractCompositeSetPtr_t Interval::simplify() {
     SimpleSetSetPtr_t result;
     bool first_iteration = true;
 
@@ -165,11 +165,11 @@ AbstractCompositeSetPtr_t Interval::simplify() const {
     return make_shared_interval(result, all_elements);
 }
 
-AbstractCompositeSetPtr_t Interval::make_new_empty(AbstractAllElements *all_elements) const {
+AbstractCompositeSetPtr_t Interval::make_new_empty(AbstractAllElements *all_elements) {
     return make_shared_interval();
 }
 
 AbstractCompositeSetPtr_t
-Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_) const {
+Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_) {
     return make_shared_interval();
 }

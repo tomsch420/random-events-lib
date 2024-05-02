@@ -1,7 +1,7 @@
 #include "sigma_algebra.h"
 
 
-SimpleSetSetPtr_t AbstractSimpleSet::difference_with(const AbstractSimpleSetPtr_t &other) const {
+SimpleSetSetPtr_t AbstractSimpleSet::difference_with(const AbstractSimpleSetPtr_t &other){
 
     // get the intersection of both atomic simple_sets
     auto intersection = intersection_with(other);
@@ -10,7 +10,7 @@ SimpleSetSetPtr_t AbstractSimpleSet::difference_with(const AbstractSimpleSetPtr_
     if (intersection->is_empty()) {
         auto result = make_shared_simple_set_set();
         auto po = share_more();
-        result->insert();
+        result->insert(po);
         return result;
     }
 
@@ -35,7 +35,7 @@ SimpleSetSetPtr_t AbstractSimpleSet::difference_with(const AbstractSimpleSetPtr_
 
 }
 
-std::string *AbstractSimpleSet::to_string() const {
+std::string *AbstractSimpleSet::to_string(){
     if (is_empty()) {
         return &EMPTY_SET_SYMBOL;
     }
@@ -44,19 +44,19 @@ std::string *AbstractSimpleSet::to_string() const {
     return result;
 }
 
-bool AbstractSimpleSet::operator!=(const AbstractSimpleSet &other) const {
+bool AbstractSimpleSet::operator!=(const AbstractSimpleSet &other){
     return !operator==(other);
 }
 
-bool AbstractSimpleSet::operator>(const AbstractSimpleSet &other) const {
+bool AbstractSimpleSet::operator>(const AbstractSimpleSet &other){
     return !operator<=(other);
 }
 
-bool AbstractSimpleSet::operator>=(const AbstractSimpleSet &other) const {
+bool AbstractSimpleSet::operator>=(const AbstractSimpleSet &other){
     return !operator<(other);
 }
 
-bool AbstractCompositeSet::is_disjoint() const {
+bool AbstractCompositeSet::is_disjoint(){
     std::vector<AbstractSimpleSetPtr_t> simple_sets_vector = std::vector<AbstractSimpleSetPtr_t>(simple_sets->begin(),
                                                                                                  simple_sets->end());
     for (const auto &[first, second]: unique_combinations<AbstractSimpleSetPtr_t>(simple_sets_vector)) {
@@ -67,11 +67,11 @@ bool AbstractCompositeSet::is_disjoint() const {
     return true;
 }
 
-bool AbstractCompositeSet::is_empty() const {
+bool AbstractCompositeSet::is_empty(){
     return simple_sets->empty();
 }
 
-std::string *AbstractCompositeSet::to_string() const {
+std::string *AbstractCompositeSet::to_string(){
     if (is_empty()) {
         return &EMPTY_SET_SYMBOL;
     }
@@ -91,7 +91,7 @@ std::string *AbstractCompositeSet::to_string() const {
 }
 
 std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t>
-AbstractCompositeSet::split_into_disjoint_and_non_disjoint() const {
+AbstractCompositeSet::split_into_disjoint_and_non_disjoint(){
 
     // initialize result for disjoint and non-disjoint sets
     auto disjoint = make_new_empty(all_elements);
@@ -141,7 +141,7 @@ AbstractCompositeSet::split_into_disjoint_and_non_disjoint() const {
     return std::make_tuple(disjoint, non_disjoint);
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::make_disjoint() const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::make_disjoint(){
 
     // initialize disjoint, non-disjoint and current sets
     AbstractCompositeSetPtr_t disjoint;
@@ -165,7 +165,7 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::make_disjoint() const {
     return disjoint->simplify();
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const AbstractSimpleSetPtr_t &simple_set) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const AbstractSimpleSetPtr_t &simple_set){
     auto result = make_new_empty(all_elements);
     for (const auto& current_simple_set: *simple_sets) {
         auto intersection = current_simple_set->intersection_with(simple_set);
@@ -176,7 +176,7 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const Abstract
     return result;
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const SimpleSetSetPtr_t &other) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const SimpleSetSetPtr_t &other){
     auto result = make_new_empty(all_elements);
     for (const auto& current_simple_set: *other) {
         auto current_result = intersection_with(current_simple_set);
@@ -185,11 +185,11 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const SimpleSe
     return result;
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const AbstractCompositeSetPtr_t &other) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const AbstractCompositeSetPtr_t &other){
     return intersection_with(other->simple_sets);
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::complement() const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::complement(){
     auto result = make_new_empty(all_elements);
     bool first_iteration = true;
     for (const auto& simple_set: *simple_sets) {
@@ -204,21 +204,21 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::complement() const {
     return result->make_disjoint();
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other){
     auto result = make_new_empty(all_elements);
     result->simple_sets->insert(simple_sets->begin(), simple_sets->end());
     result->simple_sets->insert(other);
     return result->make_disjoint();
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractCompositeSetPtr_t &other) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractCompositeSetPtr_t &other){
     auto result = make_new_empty(all_elements);
     result->simple_sets->insert(simple_sets->begin(), simple_sets->end());
     result->simple_sets->insert(other->simple_sets->begin(), other->simple_sets->end());
     return result->make_disjoint();
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractSimpleSetPtr_t &other) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractSimpleSetPtr_t &other){
     auto result = make_new_empty(all_elements);
     for (const auto& simple_set: *simple_sets) {
         const auto difference = simple_set->difference_with(other);
@@ -227,7 +227,7 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractSi
     return result->make_disjoint();
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractCompositeSetPtr_t &other) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractCompositeSetPtr_t &other){
     auto result = make_new_empty(all_elements);
 
     for (const auto &own_simple_set: *simple_sets) {
@@ -254,6 +254,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractCo
     return result->make_disjoint();
 }
 
-bool AbstractCompositeSet::contains(const AbstractCompositeSetPtr_t &other) const {
+bool AbstractCompositeSet::contains(const AbstractCompositeSetPtr_t &other){
     return intersection_with(other) == other;
 }
