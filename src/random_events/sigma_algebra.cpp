@@ -210,8 +210,9 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::complement(){
         }
         result = result->intersection_with(simple_set_complement);
     }
-    auto intermediate = result->simplify();
-    return intermediate;
+    return result;
+    //auto intermediate = result->simplify();
+    //return intermediate;
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other){

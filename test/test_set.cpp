@@ -85,12 +85,11 @@ TEST(Set, Constructor) {
     EXPECT_EQ(set->simple_sets, sets);
     EXPECT_EQ(set->all_elements, all_elements);
     EXPECT_EQ(set->simple_sets->size(), 2);
-    auto b = set->simplify()->simplify();
+    auto b = set->simplify();
     auto b2 = b->simplify();
     EXPECT_EQ(b2->simple_sets->size(), 2);
     AllSetElementsPtr_t temp = std::static_pointer_cast<AllSetElements>(set->get_all_elements());
     auto a = set->complement();
 
     EXPECT_EQ(a->simple_sets->size(), 1);
-
 }
