@@ -165,11 +165,11 @@ AbstractCompositeSetPtr_t Interval::simplify() {
     return make_shared_interval(result, all_elements);
 }
 
-AbstractCompositeSetPtr_t Interval::make_new_empty(AbstractAllElements *all_elements) {
-    return make_shared_interval();
+AbstractCompositeSetPtr_t Interval::make_new_empty(AbstractAllElementsPtr_t &all_elements) {
+    return make_shared_interval(all_elements);
 }
 
 AbstractCompositeSetPtr_t
-Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_) {
+Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_,  AbstractAllElementsPtr_t &all_elements_) {
     return make_shared_interval();
 }

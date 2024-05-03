@@ -5,19 +5,21 @@
 
 //FORWARD DECLARE
 class SimpleInterval;
+
 class Interval;
 
 // TYPEDEFS
 typedef std::shared_ptr<SimpleInterval> SimpleIntervalPtr_t;
 
 template<typename... Args>
-std::shared_ptr<SimpleInterval> make_shared_simple_interval(Args&&... args) {
+std::shared_ptr<SimpleInterval> make_shared_simple_interval(Args &&... args) {
     return std::make_shared<SimpleInterval>(std::forward<Args>(args)...);
 }
 
 typedef std::shared_ptr<Interval> IntervalPtr_t;
+
 template<typename... Args>
-std::shared_ptr<Interval> make_shared_interval(Args&&... args) {
+std::shared_ptr<Interval> make_shared_interval(Args &&... args) {
     return std::make_shared<Interval>(std::forward<Args>(args)...);
 }
 
@@ -145,8 +147,9 @@ namespace std {
     template<>
     struct hash<SimpleInterval> {
         size_t operator()(const SimpleInterval &interval) const {
-            return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^ std::hash<int>()(
-                    static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
+            return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^
+                   std::hash<int>()(static_cast<int>(interval.left)) ^
+                   std::hash<int>()(static_cast<int>(interval.right));
         }
     };
 }
@@ -166,12 +169,18 @@ public:
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
+    explicit Interval(AbstractAllElementsPtr_t &all_elements) {
+        this->simple_sets = make_shared_simple_set_set();
+        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
+        this->all_elements = all_elements;
+    }
+
     explicit Interval(SimpleInterval &simple_interval) {
         simple_sets->insert(std::make_shared<SimpleInterval>(simple_interval));
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
-    explicit Interval(const SimpleSetSetPtr_t &simple_sets, AbstractAllElements *all_elements) {
+    explicit Interval(SimpleSetSetPtr_t &simple_sets, AbstractAllElementsPtr_t &all_elements) {
         this->simple_sets = simple_sets;
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
         this->all_elements = all_elements;
@@ -181,10 +190,10 @@ public:
 
     AbstractCompositeSetPtr_t simplify() override;
 
-    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElements *all_elements) override;
+    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements) override;
 
-    AbstractCompositeSetPtr_t make_new(std::set<AbstractSimpleSet *> *simple_sets_,
-                       AbstractAllElements *all_elements_) override;
+    AbstractCompositeSetPtr_t
+    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElementsPtr_t &all_elements_) override;
 
 
     /**
@@ -192,54 +201,80 @@ public:
      */
     SimpleInterval simple_interval;
 };
-//
-//class RealLine : public AbstractAllElements {
-//
-//    Interval all_elements;
-//public:
-//    RealLine() {
-//        auto all_elements_ = new SimpleInterval{-std::numeric_limits<float>::infinity(),
-//                                                std::numeric_limits<float>::infinity(),
-//                                                BorderType::OPEN, BorderType::OPEN};
-//        all_elements = Interval(SimpleSetSet_t{all_elements_});
-//    }
-//};
-//
-//
-//inline Interval closed(const float lower, const float upper) {
-//    auto interval = new SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::CLOSED};
-//    return Interval({interval});
-//}
 
-//inline Interval open(const float lower, const float upper) {
-//    return Interval(
-//            SimpleSetType < SimpleInterval > {SimpleInterval{lower, upper, BorderType::OPEN, BorderType::OPEN}});
-//}
-//
-//inline Interval open_closed(const float lower, const float upper) {
-//    return Interval(
-//            SimpleSetType < SimpleInterval > {SimpleInterval{lower, upper, BorderType::OPEN, BorderType::CLOSED}});
-//}
-//
-//inline Interval closed_open(const float lower, const float upper) {
-//    return Interval(
-//            SimpleSetType < SimpleInterval > {SimpleInterval{lower, upper, BorderType::CLOSED, BorderType::OPEN}});
-//}
-//
-//inline Interval singleton(const float value) {
-//    return Interval(
-//            SimpleSetType < SimpleInterval > {SimpleInterval{value, value, BorderType::CLOSED, BorderType::CLOSED}});
-//}
-//
-//inline Interval empty() {
-//    return Interval(SimpleSetType < SimpleInterval > {});
-//}
-//
-//inline Interval reals() {
-//    return Interval(SimpleSetType < SimpleInterval > {
-//            SimpleInterval{
-//                    -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
-//                    BorderType::OPEN, BorderType::OPEN
-//            }
-//    });
-//}
+
+/**
+ * Class for holding an unfinished interval that represents the real line.
+ */
+class RealLine : public AbstractAllElements {
+
+    IntervalPtr_t all_elements;
+
+public:
+    RealLine() {
+        auto all_elements_ = make_shared_simple_interval(-std::numeric_limits<float>::infinity(),
+                                                std::numeric_limits<float>::infinity(),
+                                                BorderType::OPEN, BorderType::OPEN);
+        auto intervals = make_shared_simple_set_set();
+        intervals->insert(all_elements_);
+        all_elements = make_shared_interval(intervals);
+    }
+};
+
+/**
+ * The real line that can be used as all_elements member in intervals.
+ */
+static AbstractAllElementsPtr_t real_line_ptr = std::make_shared<AbstractAllElements>(RealLine());
+
+
+
+inline IntervalPtr_t closed(const float lower, const float upper) {
+    auto interval = make_shared_simple_interval(lower, upper, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval);
+    return make_shared_interval(intervals, real_line_ptr);
+}
+
+inline IntervalPtr_t open(const float lower, const float upper) {
+    auto interval = make_shared_simple_interval(lower, upper, BorderType::OPEN, BorderType::OPEN);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval);
+    return make_shared_interval(intervals, real_line_ptr);
+}
+
+inline IntervalPtr_t open_closed(const float lower, const float upper) {
+    auto interval = make_shared_simple_interval(lower, upper, BorderType::OPEN, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval);
+    return make_shared_interval(intervals, real_line_ptr);
+}
+
+inline IntervalPtr_t closed_open(const float lower, const float upper) {
+    auto interval = make_shared_simple_interval(lower, upper, BorderType::CLOSED, BorderType::OPEN);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval);
+    return make_shared_interval(intervals, real_line_ptr);
+}
+
+inline IntervalPtr_t singleton(const float value) {
+    auto interval = make_shared_simple_interval(value, value, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval);
+    return make_shared_interval(intervals, real_line_ptr);
+}
+
+inline IntervalPtr_t empty() {
+    auto interval = make_shared_simple_interval();
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval);
+    return make_shared_interval(intervals, real_line_ptr);
+}
+
+inline IntervalPtr_t reals() {
+    auto interval = make_shared_simple_interval(-std::numeric_limits<float>::infinity(),
+                                                std::numeric_limits<float>::infinity(), BorderType::CLOSED,
+                                                BorderType::OPEN);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval);
+    return make_shared_interval(intervals, real_line_ptr);
+}

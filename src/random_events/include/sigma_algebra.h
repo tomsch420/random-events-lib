@@ -49,6 +49,8 @@ typedef std::shared_ptr<AbstractCompositeSet> AbstractCompositeSetPtr_t;
 typedef std::set<AbstractSimpleSetPtr_t, PointerLess<AbstractSimpleSetPtr_t>> SimpleSetSet_t;
 typedef std::shared_ptr<SimpleSetSet_t> SimpleSetSetPtr_t;
 
+typedef std::shared_ptr<AbstractAllElements> AbstractAllElementsPtr_t;
+
 template<typename... Args>
 SimpleSetSetPtr_t make_shared_simple_set_set(Args&&... args) {
     return std::make_shared<SimpleSetSet_t>(std::forward<Args>(args)...);
@@ -70,7 +72,7 @@ public:
     /**
      * Some description of all elements.
      */
-    AbstractAllElements *all_elements = nullptr;
+    AbstractAllElementsPtr_t all_elements = nullptr;
 
     /**
     * Intersect this with another simple set.
@@ -174,7 +176,7 @@ public:
     /**
      * Some description of all elements.
      */
-    AbstractAllElements *all_elements = nullptr;
+    AbstractAllElementsPtr_t all_elements = nullptr;
 
     /**
      * Empty simple set.
@@ -190,8 +192,7 @@ public:
         simple_sets->clear();
     }
 
-    explicit AbstractCompositeSet(const AbstractAllElements *all_elements) : all_elements(
-            const_cast<AbstractAllElements *>(all_elements)) {}
+    explicit AbstractCompositeSet(AbstractAllElementsPtr_t &all_elements) : all_elements(all_elements) {}
 
     /**
     * @return True if this is empty.
@@ -215,7 +216,7 @@ public:
      * @param all_elements All elements that are possible.
      * @return A **new** empty composite set given all elements that are possible.
      */
-    virtual AbstractCompositeSetPtr_t make_new_empty(AbstractAllElements *all_elements)= 0;
+    virtual AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements)= 0;
 
 
     /**
@@ -224,7 +225,7 @@ public:
      * @return A **new** composite set given the contained simple sets and all elements that are possible.
      */
     virtual AbstractCompositeSetPtr_t
-    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElements *all_elements_)= 0;
+    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElementsPtr_t &all_elements_)= 0;
 
     /**
      * @return A string representation of this.

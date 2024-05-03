@@ -160,94 +160,132 @@ TEST(SplitIntervalTestSuit, Interval) {
 
     EXPECT_TRUE(disjoint->is_disjoint());
 }
-//
-// TEST(IntervalMakeDisjointTestSuite, Interval){
-//     auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval3 = SimpleInterval{1.5, 2.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval4 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto composed_interval = Interval{SimpleSetSet_t{&interval1, &interval2, &interval3, &interval4}};
-//     auto disjoint_interval = (Interval*) composed_interval.make_disjoint();
-//     EXPECT_EQ(disjoint_interval->simple_sets.size(), 1);
-//     EXPECT_TRUE(disjoint_interval->is_disjoint());
-// }
-//
-// TEST(IntervalIntersectionSimple, Interval){
-//     auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval3 = SimpleInterval{0.5, 2.5, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval = Interval{SimpleSetSet_t {&interval1, &interval2}};
-//     auto intersection = interval.intersection_with(&interval3);
-//     EXPECT_TRUE(intersection->is_disjoint());
-//     EXPECT_EQ(intersection->simple_sets.size(), 2);
-// }
-//
-// TEST(IntervalIntersectionInterval, Interval){
-//     auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval3 = SimpleInterval{4, 5, BorderType::CLOSED, BorderType::CLOSED};
-//     auto composite_interval1 = Interval{SimpleSetSet_t{&interval1, &interval2}};
-//     auto composite_interval2 = Interval{SimpleSetSet_t{&interval2, &interval3}};
-//     auto intersection = composite_interval1.intersection_with(&composite_interval2);
-//     EXPECT_TRUE(intersection->is_disjoint());
-//     EXPECT_EQ(intersection->simple_sets.size(), 1);
-// }
-//
-// TEST(IntervalComplement, Interval){
-//     auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval = Interval{SimpleSetSet_t{&interval1, &interval2}};
-//     auto complement = interval.complement();
-//     EXPECT_EQ(complement->simple_sets.size(), 3);
-//     EXPECT_TRUE(complement->is_disjoint());
-//     EXPECT_TRUE(complement->intersection_with(&interval)->is_empty());
-// }
-//
-// TEST(IntervalUnion, Interval){
-//     auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval3 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval = Interval{SimpleSetSet_t{&interval1}};
-//     auto other_interval = Interval{SimpleSetSet_t{&interval2, &interval3}};
-//     auto union_ = interval.union_with(&interval2);
-//     EXPECT_EQ(union_->simple_sets.size(), 1);
-//     EXPECT_TRUE(union_->is_disjoint());
-//
-//     auto union_2 = union_->union_with(&other_interval);
-//     EXPECT_EQ(union_2->simple_sets.size(), 2);
-//     EXPECT_TRUE(union_2->is_disjoint());
-// }
-//
-// TEST(IntervalDifference, Interval){
-//     auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval2 = SimpleInterval{0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval3 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval = Interval{SimpleSetType<SimpleInterval>{interval1}};
-//     auto other_interval = Interval{SimpleSetType<SimpleInterval>{interval2, interval3}};
-//     auto difference = other_interval.difference_with(interval1);
-//     EXPECT_EQ(difference.simple_sets.size(), 2);
-//     EXPECT_TRUE(difference.is_disjoint());
-//
-//     auto difference_2 = other_interval.difference_with(difference);
-//     EXPECT_EQ(difference_2.simple_sets.size(), 1);
-//     EXPECT_TRUE(difference_2.is_disjoint());
-// }
-//
-//
+
+TEST(IntervalMakeDisjointTestSuite, Interval) {
+    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval2 = make_shared_simple_interval(0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval3 = make_shared_simple_interval(1.5, 2.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval4 = make_shared_simple_interval(2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval1);
+    intervals->insert(interval2);
+    intervals->insert(interval3);
+    intervals->insert(interval4);
+
+    auto composed_interval = make_shared_interval(intervals);
+    auto disjoint_interval = composed_interval->make_disjoint();
+    EXPECT_EQ(disjoint_interval->simple_sets->size(), 1);
+    EXPECT_TRUE(disjoint_interval->is_disjoint());
+}
+
+TEST(IntervalIntersectionSimple, Interval) {
+    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval2 = make_shared_simple_interval(2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval3 = make_shared_simple_interval(0.5, 2.5, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval1);
+    intervals->insert(interval2);
+
+    auto interval = make_shared_interval(intervals);
+    auto intersection = interval->intersection_with(interval3);
+    EXPECT_TRUE(intersection->is_disjoint());
+    EXPECT_EQ(intersection->simple_sets->size(), 2);
+}
+
+TEST(IntervalIntersectionInterval, Interval) {
+    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval2 = make_shared_simple_interval(2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval3 = make_shared_simple_interval(4, 5, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals1 = make_shared_simple_set_set();
+    intervals1->insert(interval1);
+    intervals1->insert(interval2);
+
+    auto intervals2 = make_shared_simple_set_set();
+    intervals2->insert(interval2);
+    intervals2->insert(interval3);
+    auto composite_interval1 = make_shared_interval(intervals1);
+    auto composite_interval2 = make_shared_interval(intervals2);
+    auto intersection = composite_interval1->intersection_with(composite_interval2);
+    EXPECT_TRUE(intersection->is_disjoint());
+    EXPECT_EQ(intersection->simple_sets->size(), 1);
+}
+
+TEST(IntervalComplement, Interval) {
+    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval2 = make_shared_simple_interval(2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval1);
+    intervals->insert(interval2);
+    auto interval = make_shared_interval(intervals);
+    auto complement = interval->complement();
+    EXPECT_EQ(complement->simple_sets->size(), 3);
+    EXPECT_TRUE(complement->is_disjoint());
+    EXPECT_TRUE(complement->intersection_with(interval)->is_empty());
+}
+
+TEST(IntervalUnion, Interval) {
+    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval2 = make_shared_simple_interval(0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval3 = make_shared_simple_interval(2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval1);
+    intervals->insert(interval2);
+    auto interval = make_shared_interval(intervals);
+    auto other_intervals = make_shared_simple_set_set();
+    other_intervals->insert(interval2);
+    other_intervals->insert(interval3);
+    auto other_interval = make_shared_interval(other_intervals);
+    auto union_ = interval->union_with(interval2);
+    EXPECT_EQ(union_->simple_sets->size(), 1);
+    EXPECT_TRUE(union_->is_disjoint());
+
+    auto union_2 = union_->union_with(other_interval);
+    EXPECT_EQ(union_2->simple_sets->size(), 2);
+    EXPECT_TRUE(union_2->is_disjoint());
+}
+
+TEST(IntervalDifference, Interval) {
+    auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval2 = make_shared_simple_interval(0.5, 1.5, BorderType::CLOSED, BorderType::CLOSED);
+    auto interval3 = make_shared_simple_interval(2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED);
+    auto intervals = make_shared_simple_set_set();
+    intervals->insert(interval1);
+    intervals->insert(interval2);
+    auto interval = make_shared_interval(intervals);
+
+    auto other_intervals = make_shared_simple_set_set();
+    other_intervals->insert(interval2);
+    other_intervals->insert(interval3);
+
+
+    auto other_interval = make_shared_interval(other_intervals);
+    auto difference = other_interval->difference_with(interval1);
+    EXPECT_EQ(difference->simple_sets->size(), 2);
+    EXPECT_TRUE(difference->is_disjoint());
+
+    auto difference_2 = other_interval->difference_with(difference);
+    EXPECT_EQ(difference_2->simple_sets->size(), 1);
+    EXPECT_TRUE(difference_2->is_disjoint());
+}
+
+
 // TEST(IntervalContainment, Interval){
-//     auto interval1 = SimpleInterval{0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval2 = SimpleInterval{2.0, 3.0, BorderType::CLOSED, BorderType::CLOSED};
-//     auto interval = Interval{SimpleSetType<SimpleInterval>{interval1, interval2}};
-//     EXPECT_TRUE(interval.contains(0.5));
-//     EXPECT_FALSE(interval.contains(1.5));
+//     auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+//     auto interval2 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::CLOSED);
+//     auto intervals = make_shared_simple_set_set();
+//        intervals->insert(interval1);
+//        intervals->insert(interval2);
+//
+//
+//     auto interval = make_shared_interval(intervals);
+////     EXPECT_TRUE(interval->contains(0.5));
+////     EXPECT_FALSE(interval->contains(1.5));
 //
 //     auto interval3 = closed(2.5, 2.7);
-//     EXPECT_TRUE(interval.contains(interval3));
+//     EXPECT_TRUE(interval->contains(interval3));
 //
 //     auto interval4 = closed(0.5, 1.5);
 //     EXPECT_FALSE(interval.contains(interval4));
 //
 //     EXPECT_TRUE(interval.contains(interval));
-//
-//
-// }
+//     }
