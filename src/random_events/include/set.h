@@ -20,9 +20,8 @@ public:
 
 
 // TYPEDEFS
-typedef std::shared_ptr<AllSetElements> AllSetElementsPtr_t;
-
-typedef std::shared_ptr<SetElement> SetElementPtr_t;
+using AllSetElementsPtr_t = std::shared_ptr<AllSetElements>;
+using SetElementPtr_t = std::shared_ptr<SetElement>;
 
 template<typename... Args>
 SetElementPtr_t make_shared_set_element(Args &&... args) {
@@ -52,11 +51,11 @@ public:
      */
     int element_index;
 
-    explicit SetElement(AllSetElementsPtr_t &all_elements_);
+    explicit SetElement(AllSetElementsPtr_t all_elements_);
 
-    SetElement(int element_, AllSetElementsPtr_t &all_elements_);
+    SetElement(int element_, AllSetElementsPtr_t all_elements_);
 
-    SetElement(const std::string &element_, AllSetElementsPtr_t &all_elements_);
+    SetElement(const std::string &element_, AllSetElementsPtr_t all_elements_);
 
     ~SetElement() override;
 
@@ -114,20 +113,17 @@ public:
     AllSetElementsPtr_t all_elements;
     AbstractAllElementsPtr_t get_all_elements() override;
 
-    explicit Set(AbstractAllElementsPtr_t &all_elements_);
-
-    explicit Set(AllSetElementsPtr_t &all_elements_);
-
-    Set(SetElementPtr_t &element_, AllSetElementsPtr_t &all_elements_);
-
-    Set(SimpleSetSetPtr_t &elements, AllSetElementsPtr_t &all_elements_);
+    explicit Set(const AbstractAllElementsPtr_t& all_elements_);
+    explicit Set(const AllSetElementsPtr_t& all_elements_);
+    Set(const SetElementPtr_t& element_, const AllSetElementsPtr_t& all_elements_);
+    Set(const SimpleSetSetPtr_t& elements, const AllSetElementsPtr_t& all_elements_);
 
     ~Set() override;
 
     AbstractCompositeSetPtr_t simplify() override;
 
-    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements_) override;
+    AbstractCompositeSetPtr_t make_new_empty(const AbstractAllElementsPtr_t& all_elements_) override;
 
     AbstractCompositeSetPtr_t
-    make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_) override;
+    make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_) override;
 };

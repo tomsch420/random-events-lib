@@ -215,7 +215,7 @@ public:
      * @param all_elements All elements that are possible.
      * @return A **new** empty composite set given all elements that are possible.
      */
-    virtual AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements)= 0;
+    virtual AbstractCompositeSetPtr_t make_new_empty(const AbstractAllElementsPtr_t& all_elements_)= 0;
 
 
     /**
@@ -224,7 +224,7 @@ public:
      * @return A **new** composite set given the contained simple sets and all elements that are possible.
      */
     virtual AbstractCompositeSetPtr_t
-    make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_)= 0;
+    make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_)= 0;
 
     /**
      * @return A string representation of this.

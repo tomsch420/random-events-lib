@@ -24,7 +24,7 @@ std::shared_ptr<Interval> make_shared_interval(Args &&... args) {
     return std::make_shared<Interval>(std::forward<Args>(args)...);
 }
 
-typedef std::shared_ptr<RealLine> RealLinePtr_t;
+using RealLinePtr_t = std::shared_ptr<RealLine>;
 
 /**
  * Enum for border types of simple_sets.
@@ -173,36 +173,36 @@ public:
 
     AbstractAllElementsPtr_t get_all_elements() override;
 
-    explicit Interval(const SimpleSetSetPtr_t &simple_sets) {
-        this->simple_sets = simple_sets;
+    explicit Interval(const SimpleSetSetPtr_t &simple_sets_) {
+        this->simple_sets = simple_sets_;
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
-    explicit Interval(std::shared_ptr<RealLine> all_elements) {
+    explicit Interval(const RealLinePtr_t& all_elements_) {
         this->simple_sets = make_shared_simple_set_set();
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
-        this->all_elements = std::move(all_elements);
+        this->all_elements = all_elements_;
     }
 
-    explicit Interval(SimpleInterval &simple_interval) {
+    explicit Interval(const SimpleInterval &simple_interval) {
         simple_sets->insert(std::make_shared<SimpleInterval>(simple_interval));
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
-    explicit Interval(SimpleSetSetPtr_t &simple_sets, std::shared_ptr<RealLine> &all_elements) {
-        this->simple_sets = simple_sets;
+    explicit Interval(SimpleSetSetPtr_t &simple_sets_, const RealLinePtr_t& all_elements_) {
+        this->simple_sets = simple_sets_;
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
-        this->all_elements = all_elements;
+        this->all_elements = all_elements_;
     }
 
     ~Interval() override;
 
     AbstractCompositeSetPtr_t simplify() override;
 
-    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements) override;
+    AbstractCompositeSetPtr_t make_new_empty(const AbstractAllElementsPtr_t& all_elements_) override;
 
     AbstractCompositeSetPtr_t
-    make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_) override;
+    make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_) override;
 
 
     /**
@@ -232,11 +232,9 @@ public:
     /**
     * The real line that can be used as all_elements member in intervals.
     */
-    static std::shared_ptr<RealLine> real_line_ptr;
+    static RealLinePtr_t real_line_ptr;
 
 };
-
-
 
 
 inline IntervalPtr_t closed(const float lower, const float upper) {

@@ -7,7 +7,7 @@
 #include "interval.h"
 #include "sigma_algebra.h"
 
-std::shared_ptr<RealLine> RealLine::real_line_ptr = std::make_shared<RealLine>(RealLine());
+RealLinePtr_t RealLine::real_line_ptr = std::make_shared<RealLine>(RealLine());
 
 SimpleInterval::SimpleInterval(const float lower, const float upper, const BorderType left, const BorderType right)
         : lower(lower), upper(upper), left(left), right(right) {
@@ -170,13 +170,12 @@ AbstractCompositeSetPtr_t Interval::simplify() {
     return make_shared_interval(result, all_elements);
 }
 
-AbstractCompositeSetPtr_t Interval::make_new_empty(AbstractAllElementsPtr_t &all_elements) {
-
+AbstractCompositeSetPtr_t Interval::make_new_empty(const AbstractAllElementsPtr_t& all_elements_) {
     return make_shared_interval(std::static_pointer_cast<RealLine> (all_elements));
 }
 
 AbstractCompositeSetPtr_t
-Interval::make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_) {
+Interval::make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_) {
     return make_shared_interval();
 }
 
