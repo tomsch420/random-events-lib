@@ -80,7 +80,6 @@ TEST(AtomicIntervalInvertTestSuite, SimpleInterval) {
     inverted_by_hand->insert(element_1);
     inverted_by_hand->insert(element_2);
     inverted_by_hand->insert(element_3);
-    //EXPECT_EQ(*inverted, inverted_by_hand);
     EXPECT_TRUE(compare_simple_set_set(inverted, inverted_by_hand));
 }
 
@@ -118,16 +117,19 @@ TEST(AtomicIntervalDifferenceTest, SimpleInterval) {
 }
 
 TEST(SimplifyIntervalTestSuite, Interval) {
+
+    EXPECT_TRUE(RealLine::real_line_ptr != nullptr);
     auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
     auto interval2 = make_shared_simple_interval(1.0, 1.5, BorderType::CLOSED, BorderType::OPEN);
     auto interval3 = make_shared_simple_interval(1.5, 2.0, BorderType::OPEN, BorderType::CLOSED);
     auto interval4 = make_shared_simple_interval(3.0, 5.0, BorderType::CLOSED, BorderType::CLOSED);
 
-    auto interval = make_shared_interval(make_shared_simple_set_set());
+    auto interval = empty();
     interval->simple_sets->insert(interval1);
     interval->simple_sets->insert(interval2);
     interval->simple_sets->insert(interval3);
     interval->simple_sets->insert(interval4);
+    EXPECT_TRUE(interval->all_elements != nullptr);
 
     auto simplified = interval->simplify();
 
@@ -139,6 +141,7 @@ TEST(SimplifyIntervalTestSuite, Interval) {
     result_by_hand->simple_sets->insert(sbh1);
     result_by_hand->simple_sets->insert(sbh2);
     result_by_hand->simple_sets->insert(sbh3);
+
 
     EXPECT_TRUE(compare_simple_set_set(simplified->simple_sets, result_by_hand->simple_sets));
 }

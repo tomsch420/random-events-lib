@@ -2,10 +2,11 @@
 
 #include "sigma_algebra.h"
 #include <memory>
+#include <utility>
 
 //FORWARD DECLARE
 class SimpleInterval;
-
+class RealLine;
 class Interval;
 
 // TYPEDEFS
@@ -59,7 +60,7 @@ inline BorderType invert_border(const BorderType border) {
 
 
 /**
- * Class that represents an atomic interval.
+ * Class that represents a simple interval.
  */
 class SimpleInterval : public AbstractSimpleSet {
 public:
@@ -154,7 +155,6 @@ namespace std {
     };
 }
 
-
 /**
  * Class that represents a composite interval.
  * An interval is an (automatically simplified) union of simple simple_sets.
@@ -163,16 +163,17 @@ class Interval : public AbstractCompositeSet {
 public:
     Interval() = default;
 
+    std::shared_ptr<RealLine> all_elements;
 
     explicit Interval(const SimpleSetSetPtr_t &simple_sets) {
         this->simple_sets = simple_sets;
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
-    explicit Interval(AbstractAllElementsPtr_t &all_elements) {
+    explicit Interval(std::shared_ptr<RealLine> all_elements) {
         this->simple_sets = make_shared_simple_set_set();
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
-        this->all_elements = all_elements;
+        this->all_elements = std::move(all_elements);
     }
 
     explicit Interval(SimpleInterval &simple_interval) {
@@ -180,7 +181,7 @@ public:
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
-    explicit Interval(SimpleSetSetPtr_t &simple_sets, AbstractAllElementsPtr_t &all_elements) {
+    explicit Interval(SimpleSetSetPtr_t &simple_sets, std::shared_ptr<RealLine> &all_elements) {
         this->simple_sets = simple_sets;
         empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
         this->all_elements = all_elements;
@@ -212,19 +213,21 @@ class RealLine : public AbstractAllElements {
 
 public:
     RealLine() {
-        auto all_elements_ = make_shared_simple_interval(-std::numeric_limits<float>::infinity(),
-                                                std::numeric_limits<float>::infinity(),
-                                                BorderType::OPEN, BorderType::OPEN);
+        auto reals = make_shared_simple_interval(-std::numeric_limits<float>::infinity(),
+                                                         std::numeric_limits<float>::infinity(), BorderType::OPEN,
+                                                         BorderType::OPEN);
         auto intervals = make_shared_simple_set_set();
-        intervals->insert(all_elements_);
+        intervals->insert(reals);
         all_elements = make_shared_interval(intervals);
     }
+
+    /**
+    * The real line that can be used as all_elements member in intervals.
+    */
+    static std::shared_ptr<RealLine> real_line_ptr;
+
 };
 
-/**
- * The real line that can be used as all_elements member in intervals.
- */
-static AbstractAllElementsPtr_t real_line_ptr = std::make_shared<AbstractAllElements>(RealLine());
 
 
 
@@ -232,42 +235,40 @@ inline IntervalPtr_t closed(const float lower, const float upper) {
     auto interval = make_shared_simple_interval(lower, upper, BorderType::CLOSED, BorderType::CLOSED);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals, real_line_ptr);
+    return make_shared_interval(intervals, RealLine::real_line_ptr);
 }
 
 inline IntervalPtr_t open(const float lower, const float upper) {
     auto interval = make_shared_simple_interval(lower, upper, BorderType::OPEN, BorderType::OPEN);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals, real_line_ptr);
+    return make_shared_interval(intervals, RealLine::real_line_ptr);
 }
 
 inline IntervalPtr_t open_closed(const float lower, const float upper) {
     auto interval = make_shared_simple_interval(lower, upper, BorderType::OPEN, BorderType::CLOSED);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals, real_line_ptr);
+    return make_shared_interval(intervals, RealLine::real_line_ptr);
 }
 
 inline IntervalPtr_t closed_open(const float lower, const float upper) {
     auto interval = make_shared_simple_interval(lower, upper, BorderType::CLOSED, BorderType::OPEN);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals, real_line_ptr);
+    return make_shared_interval(intervals, RealLine::real_line_ptr);
 }
 
 inline IntervalPtr_t singleton(const float value) {
     auto interval = make_shared_simple_interval(value, value, BorderType::CLOSED, BorderType::CLOSED);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals, real_line_ptr);
+    return make_shared_interval(intervals, RealLine::real_line_ptr);
 }
 
 inline IntervalPtr_t empty() {
-    auto interval = make_shared_simple_interval();
     auto intervals = make_shared_simple_set_set();
-    intervals->insert(interval);
-    return make_shared_interval(intervals, real_line_ptr);
+    return make_shared_interval(intervals, RealLine::real_line_ptr);
 }
 
 inline IntervalPtr_t reals() {
@@ -276,5 +277,5 @@ inline IntervalPtr_t reals() {
                                                 BorderType::OPEN);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals, real_line_ptr);
+    return make_shared_interval(intervals, RealLine::real_line_ptr);
 }
