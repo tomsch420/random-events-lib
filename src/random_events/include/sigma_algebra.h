@@ -68,11 +68,10 @@ class AbstractSimpleSet : public std::enable_shared_from_this<AbstractSimpleSet>
 public:
     virtual ~AbstractSimpleSet() = default;
 
-
     /**
      * Some description of all elements.
      */
-    AbstractAllElementsPtr_t all_elements = nullptr;
+    virtual AbstractAllElementsPtr_t get_all_elements()  = 0 ;
 
     /**
     * Intersect this with another simple set.
@@ -92,8 +91,8 @@ public:
     /**
     * Check if an elementary event is contained in this.
     *
-    * @param element The element to check.
-    * @return True if the element is contained in this.
+    * @param element The element_index to check.
+    * @return True if the element_index is contained in this.
     */
     virtual bool contains(const ElementaryVariant *element)= 0;
 
@@ -154,7 +153,7 @@ std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements
     // for every pair of elements
     for (std::size_t i = 0; i < elements.size(); ++i) {
 
-        // get element from first vector
+        // get element_index from first vector
         T current_element1 = elements[i];
         for (std::size_t j = 0; j < i; ++j) {
             T current_element2 = elements[j];
@@ -176,7 +175,7 @@ public:
     /**
      * Some description of all elements.
      */
-    AbstractAllElementsPtr_t all_elements = nullptr;
+    virtual AbstractAllElementsPtr_t get_all_elements() = 0;
 
     /**
      * Empty simple set.
@@ -192,7 +191,7 @@ public:
         simple_sets->clear();
     }
 
-    explicit AbstractCompositeSet(AbstractAllElementsPtr_t &all_elements) : all_elements(all_elements) {}
+    //explicit AbstractCompositeSet(AbstractAllElementsPtr_t &all_elements) : all_elements(all_elements) {}
 
     /**
     * @return True if this is empty.
@@ -225,7 +224,7 @@ public:
      * @return A **new** composite set given the contained simple sets and all elements that are possible.
      */
     virtual AbstractCompositeSetPtr_t
-    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElementsPtr_t &all_elements_)= 0;
+    make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_)= 0;
 
     /**
      * @return A string representation of this.

@@ -1,108 +1,133 @@
-//#pragma once
-//
-//#include "sigma_algebra.h"
-//#include <set>
-//#include <utility>
-//#include <algorithm>
-//
-//class Set; // Forward declaration
-//
-//class SimpleSet : public SimpleSetWrapper<Set, SimpleSet, std::string> {
-//public:
-//
-//    /**
-//     * A set that contains all elements that are possible. In Kolmogorov's terms, this is the set of elementary events.
-//     */
-//    const std::set<std::string> all_elements;
-//
-//    /**
-//     * The element itself as string.
-//     */
-//    std::string element;
-//
-//    SimpleSet() = default;
-//
-//    explicit SimpleSet(std::string element, std::set<std::string> all_elements) : element(std::move(element)),
-//                                                                                  all_elements(
-//                                                                                          std::move(all_elements)) {}
-//
-//    explicit SimpleSet(std::set<std::string> all_elements) : all_elements(std::move(all_elements)) {}
-//
-//    [[nodiscard]] SimpleSet simple_set_intersection_with(const SimpleSet &other) const;
-//
-//    [[nodiscard]] Set simple_set_complement() const;
-//
-//    [[nodiscard]] bool simple_set_contains(const std::string &other_element) const;
-//
-//    [[nodiscard]] bool simple_set_is_empty() const;
-//
-//    bool operator==(const SimpleSet &other) const;
-//
-//    [[nodiscard]] std::string to_string() const;
-//
-//    explicit operator std::string() const;
-//
-//    bool operator<(const SimpleSet &other) const override {
-//        return element < other.element;
-//    }
-//
-//    bool operator<=(const SimpleSet &other) const override {
-//        return element <= other.element;
-//    }
-//
-//    SimpleSet& operator=(const SimpleSet &other){
-//        this->element = other.element;
-//        return *this;
-//    }
-//
-//};
-//
-///**
-// * Hash function for strings.
-// */
-//namespace std {
-//    template<>
-//    struct hash<SimpleSet> {
-//        size_t operator()(const SimpleSet &simple_set) const {
-//            return hash<std::string>()(simple_set.element);
-//        }
-//    };
-//}
-//
-//class Set : public CompositeSetWrapper<Set, SimpleSet, std::string> {
-//public:
-//
-//    std::set<std::string> all_elements;
-//
-//    explicit Set() = default;
-//
-//    explicit Set(const SimpleSetType<SimpleSet> &simple_sets, const std::set<std::string> &all_elements) :
-//            empty_simple_set(SimpleSet(all_elements)) {
-//        this->simple_sets = simple_sets;
-//        this->all_elements = all_elements;
-//        this->empty_simple_set_ptr = &empty_simple_set;
-//    }
-//
-//    explicit Set(std::set<std::string> all_elements) :
-//            empty_simple_set(SimpleSet(std::move(all_elements))) {
-//        this->all_elements = all_elements;
-//        this->empty_simple_set_ptr = &empty_simple_set;
-//    }
-//
-//    Set composite_set_simplify();
-//
-//    SimpleSet empty_simple_set;
-//
-//
-//    Set& operator=(const Set &other){
-//        this->simple_sets = other.simple_sets;
-//        return *this;
-//    }
-//
-//    Set(const SimpleSet &other){
-//        this->simple_sets = {other};
-//        this->all_elements = other.all_elements;
-//    }
-//
-//
-//};
+#pragma once
+
+#include "sigma_algebra.h"
+#include <set>
+#include <utility>
+#include <algorithm>
+
+// FORWARD DECLARATIONS
+class SetElement;
+
+class Set;
+
+class AllSetElements : public AbstractAllElements {
+public:
+    /**
+     * The set of all possible strings
+     */
+    std::set<std::string> all_elements_set;
+};
+
+
+// TYPEDEFS
+typedef std::shared_ptr<AllSetElements> AllSetElementsPtr_t;
+
+typedef std::shared_ptr<SetElement> SetElementPtr_t;
+
+template<typename... Args>
+SetElementPtr_t make_shared_set_element(Args &&... args) {
+    return std::make_shared<SetElement>(std::forward<Args>(args)...);
+}
+
+typedef std::shared_ptr<Set> SetPtr_t;
+
+template<typename... Args>
+SetPtr_t make_shared_set(Args &&... args) {
+    return std::make_shared<Set>(std::forward<Args>(args)...);
+}
+
+
+class SetElement : public AbstractSimpleSet {
+public:
+
+    /**
+     * The set of all possible strings
+     */
+    AllSetElementsPtr_t all_elements;
+
+    AbstractAllElementsPtr_t get_all_elements() override;
+
+    /**
+     * The index of the element_index in the all_elements set
+     */
+    int element_index;
+
+    explicit SetElement(AllSetElementsPtr_t &all_elements_);
+
+    SetElement(int element_, AllSetElementsPtr_t &all_elements_);
+
+    SetElement(const std::string &element_, AllSetElementsPtr_t &all_elements_);
+
+    ~SetElement() override;
+
+    AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override;
+
+    SimpleSetSetPtr_t complement() override;
+
+    bool contains(const ElementaryVariant *element) override;
+
+    bool is_empty() override;
+
+    /**
+     * Two simple sets are equal if the element_index is equal. The all_elements set is not considered.
+     *
+     * @param other The other simple set.
+     * @return True if they are equal.
+     */
+    bool operator==(const AbstractSimpleSet &other) override;
+
+    bool operator==(const SetElement &other);
+
+    std::string *non_empty_to_string() override;
+
+    bool operator<(const AbstractSimpleSet &other) override;
+
+    /**
+     * Compare two set elements. Set elements are ordered by their element index.
+     *
+     * Note that all elements set is ignored in ordering.
+     *
+     * @param other The other interval
+     * @return True if this interval is less than the other interval.
+     */
+    bool operator<(const SetElement &other);
+
+
+    bool operator<=(const AbstractSimpleSet &other) override;
+
+    /**
+    * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
+    * ordered by upper bound.
+    *
+    * Note that border types are ignored in ordering.
+    *
+    * @param other The other interval
+    * @return True if this interval is less or equal to the other interval.
+    */
+    bool operator<=(const SetElement &other);
+
+};
+
+class Set : public AbstractCompositeSet {
+public:
+
+    AllSetElementsPtr_t all_elements;
+    AbstractAllElementsPtr_t get_all_elements() override;
+
+    explicit Set(AbstractAllElementsPtr_t &all_elements_);
+
+    explicit Set(AllSetElementsPtr_t &all_elements_);
+
+    Set(SetElementPtr_t &element_, AllSetElementsPtr_t &all_elements_);
+
+    Set(SimpleSetSetPtr_t &elements, AllSetElementsPtr_t &all_elements_);
+
+    ~Set() override;
+
+    AbstractCompositeSetPtr_t simplify() override;
+
+    AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements_) override;
+
+    AbstractCompositeSetPtr_t
+    make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_) override;
+};

@@ -133,6 +133,10 @@ bool SimpleInterval::operator<=(const AbstractSimpleSet &other) {
     return *this <= *derived_other;
 }
 
+AbstractAllElementsPtr_t SimpleInterval::get_all_elements() {
+    return RealLine::real_line_ptr;
+}
+
 
 Interval::~Interval() {
     simple_sets->clear();
@@ -172,6 +176,10 @@ AbstractCompositeSetPtr_t Interval::make_new_empty(AbstractAllElementsPtr_t &all
 }
 
 AbstractCompositeSetPtr_t
-Interval::make_new(std::set<AbstractSimpleSet *> *simple_sets_,  AbstractAllElementsPtr_t &all_elements_) {
+Interval::make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_) {
     return make_shared_interval();
+}
+
+AbstractAllElementsPtr_t Interval::get_all_elements() {
+    return all_elements;
 }

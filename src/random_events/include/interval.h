@@ -24,6 +24,8 @@ std::shared_ptr<Interval> make_shared_interval(Args &&... args) {
     return std::make_shared<Interval>(std::forward<Args>(args)...);
 }
 
+typedef std::shared_ptr<RealLine> RealLinePtr_t;
+
 /**
  * Enum for border types of simple_sets.
  */
@@ -138,6 +140,10 @@ public:
     */
     bool operator<=(const SimpleInterval &other);
 
+    RealLinePtr_t all_elements;
+
+    AbstractAllElementsPtr_t get_all_elements() override;
+
 };
 
 
@@ -163,7 +169,9 @@ class Interval : public AbstractCompositeSet {
 public:
     Interval() = default;
 
-    std::shared_ptr<RealLine> all_elements;
+    RealLinePtr_t all_elements;
+
+    AbstractAllElementsPtr_t get_all_elements() override;
 
     explicit Interval(const SimpleSetSetPtr_t &simple_sets) {
         this->simple_sets = simple_sets;
@@ -194,7 +202,7 @@ public:
     AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements) override;
 
     AbstractCompositeSetPtr_t
-    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElementsPtr_t &all_elements_) override;
+    make_new(SimpleSetSetPtr_t &simple_sets_, AbstractAllElementsPtr_t &all_elements_) override;
 
 
     /**
