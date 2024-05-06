@@ -279,7 +279,7 @@ inline IntervalPtr_t empty() {
 
 inline IntervalPtr_t reals() {
     auto interval = make_shared_simple_interval(-std::numeric_limits<float>::infinity(),
-                                                std::numeric_limits<float>::infinity(), BorderType::CLOSED,
+                                                std::numeric_limits<float>::infinity(), BorderType::OPEN,
                                                 BorderType::OPEN);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);

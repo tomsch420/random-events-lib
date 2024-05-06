@@ -91,6 +91,25 @@ std::string *AbstractCompositeSet::to_string(){
     return result;
 }
 
+
+bool AbstractCompositeSet::operator==(const AbstractCompositeSet &other) const {
+    if (simple_sets->size() != other.simple_sets->size()) {
+        return false;
+    }
+    auto it_lhs = simple_sets->begin();
+    auto end_lhs = simple_sets->end();
+    auto it_rhs = other.simple_sets->begin();
+
+    while (it_lhs != end_lhs) {
+        if (**it_lhs != **it_rhs) {
+            return false;
+        }
+        ++it_lhs;
+        ++it_rhs;
+    }
+    return true;
+}
+
 std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t>
 AbstractCompositeSet::split_into_disjoint_and_non_disjoint(){
 

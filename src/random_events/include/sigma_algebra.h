@@ -231,12 +231,7 @@ public:
      */
     std::string *to_string();
 
-
-    /**
-     * @param other The other composite set.
-     * @return True if this is equal to the other composite set.
-     */
-    bool operator==(const AbstractCompositeSetPtr_t other);
+    bool operator==(const AbstractCompositeSet &other) const;
 
     /**
     * Split this composite set into disjoint and non-disjoint parts.
