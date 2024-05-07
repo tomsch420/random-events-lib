@@ -117,4 +117,7 @@ public:
     AbstractCompositeSetPtr_t simplify() override;
 
     AbstractCompositeSetPtr_t make_new_empty() override;
+
+    std::string *to_string() override;
+
 };

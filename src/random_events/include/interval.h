@@ -189,10 +189,6 @@ public:
 
     AbstractCompositeSetPtr_t make_new_empty() override;
 
-    /**
-     * The empty simple interval.
-     */
-    SimpleInterval simple_interval;
 };
 
 
