@@ -177,12 +177,6 @@ public:
      */
     virtual AbstractAllElementsPtr_t get_all_elements() = 0;
 
-    /**
-     * Empty simple set.
-     */
-    AbstractSimpleSetPtr_t empty_simple_set_ptr = nullptr;
-
-
     SimpleSetSetPtr_t simple_sets;
 
     AbstractCompositeSet() = default;
@@ -215,7 +209,7 @@ public:
      * @param all_elements All elements that are possible.
      * @return A **new** empty composite set given all elements that are possible.
      */
-    virtual AbstractCompositeSetPtr_t make_new_empty(const AbstractAllElementsPtr_t& all_elements_)= 0;
+    virtual AbstractCompositeSetPtr_t make_new_empty()= 0;
 
 
     /**

@@ -122,7 +122,7 @@ public:
 
     AbstractCompositeSetPtr_t simplify() override;
 
-    AbstractCompositeSetPtr_t make_new_empty(const AbstractAllElementsPtr_t& all_elements_) override;
+    AbstractCompositeSetPtr_t make_new_empty() override;
 
     AbstractCompositeSetPtr_t
     make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_) override;

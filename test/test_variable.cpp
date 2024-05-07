@@ -18,7 +18,7 @@ TEST(Symbolic, ConstructorAndCompartor) {
     auto all_elements2 = std::make_shared<AllSetElements>();
     all_elements2->all_elements_set = {"a", "b"};
     auto symbol2 = make_shared_symbolic(name2, all_elements2);
-    EXPECT_NE(symbol, symbol2);
+    EXPECT_NE(symbol.get(), symbol2.get());
     EXPECT_LT(symbol, symbol2);
 }
 

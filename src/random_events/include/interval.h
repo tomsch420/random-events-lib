@@ -167,7 +167,9 @@ namespace std {
  */
 class Interval : public AbstractCompositeSet {
 public:
-    Interval() = default;
+    Interval(){
+        this->simple_sets = make_shared_simple_set_set();
+    };
 
     RealLinePtr_t all_elements;
 
@@ -175,23 +177,19 @@ public:
 
     explicit Interval(const SimpleSetSetPtr_t &simple_sets_) {
         this->simple_sets = simple_sets_;
-        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
     explicit Interval(const RealLinePtr_t& all_elements_) {
         this->simple_sets = make_shared_simple_set_set();
-        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
         this->all_elements = all_elements_;
     }
 
     explicit Interval(const SimpleInterval &simple_interval) {
         simple_sets->insert(std::make_shared<SimpleInterval>(simple_interval));
-        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
     }
 
     explicit Interval(SimpleSetSetPtr_t &simple_sets_, const RealLinePtr_t& all_elements_) {
         this->simple_sets = simple_sets_;
-        empty_simple_set_ptr = std::make_shared<SimpleInterval>(simple_interval);
         this->all_elements = all_elements_;
     }
 
@@ -199,7 +197,7 @@ public:
 
     AbstractCompositeSetPtr_t simplify() override;
 
-    AbstractCompositeSetPtr_t make_new_empty(const AbstractAllElementsPtr_t& all_elements_) override;
+    AbstractCompositeSetPtr_t make_new_empty() override;
 
     AbstractCompositeSetPtr_t
     make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_) override;

@@ -117,8 +117,8 @@ Set::Set(const SimpleSetSetPtr_t& elements_, const AllSetElementsPtr_t& all_elem
     this->all_elements = all_elements_;
 }
 
-AbstractCompositeSetPtr_t Set::make_new_empty(const AbstractAllElementsPtr_t& all_elements_) {
-    return make_shared_set(all_elements_);
+AbstractCompositeSetPtr_t Set::make_new_empty() {
+    return make_shared_set(all_elements);
 }
 
 Set::~Set() {

@@ -170,8 +170,8 @@ AbstractCompositeSetPtr_t Interval::simplify() {
     return make_shared_interval(result, all_elements);
 }
 
-AbstractCompositeSetPtr_t Interval::make_new_empty(const AbstractAllElementsPtr_t& all_elements_) {
-    return make_shared_interval(std::static_pointer_cast<RealLine> (all_elements));
+AbstractCompositeSetPtr_t Interval::make_new_empty() {
+    return make_shared_interval();
 }
 
 AbstractCompositeSetPtr_t

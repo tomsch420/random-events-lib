@@ -68,7 +68,7 @@ TEST(Set, MakeNewEmpty) {
     sets->insert(set_element2);
     auto set = make_shared_set(sets, all_elements);
     auto casted = std::static_pointer_cast<AbstractAllElements> (set->all_elements);
-    auto result = set->make_new_empty(casted);
+    auto result = set->make_new_empty();
 
 }
 
