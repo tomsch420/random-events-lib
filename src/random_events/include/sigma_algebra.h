@@ -11,9 +11,6 @@ class AbstractSimpleSet;
 
 class AbstractCompositeSet;
 
-class AbstractAllElements {
-};
-
 
 template<class T, bool (*comp)(const T *, const T *)>
 class set_funcomp {
@@ -50,8 +47,6 @@ typedef std::shared_ptr<AbstractCompositeSet> AbstractCompositeSetPtr_t;
 typedef std::set<AbstractSimpleSetPtr_t, PointerLess<AbstractSimpleSetPtr_t>> SimpleSetSet_t;
 typedef std::shared_ptr<SimpleSetSet_t> SimpleSetSetPtr_t;
 
-typedef std::shared_ptr<AbstractAllElements> AbstractAllElementsPtr_t;
-
 template<typename... Args>
 SimpleSetSetPtr_t make_shared_simple_set_set(Args&&... args) {
     return std::make_shared<SimpleSetSet_t>(std::forward<Args>(args)...);
@@ -68,12 +63,6 @@ union ElementaryVariant {
 class AbstractSimpleSet : public std::enable_shared_from_this<AbstractSimpleSet>{
 public:
     virtual ~AbstractSimpleSet() = default;
-
-
-    /**
-     * Some description of all elements.
-     */
-    AbstractAllElementsPtr_t all_elements = nullptr;
 
     /**
     * Intersect this with another simple set.
@@ -93,8 +82,8 @@ public:
     /**
     * Check if an elementary event is contained in this.
     *
-    * @param element The element to check.
-    * @return True if the element is contained in this.
+    * @param element The element_index to check.
+    * @return True if the element_index is contained in this.
     */
     virtual bool contains(const ElementaryVariant *element)= 0;
 
@@ -155,7 +144,7 @@ std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements
     // for every pair of elements
     for (std::size_t i = 0; i < elements.size(); ++i) {
 
-        // get element from first vector
+        // get element_index from first vector
         T current_element1 = elements[i];
         for (std::size_t j = 0; j < i; ++j) {
             T current_element2 = elements[j];
@@ -174,17 +163,6 @@ std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements
 class AbstractCompositeSet {
 public:
 
-    /**
-     * Some description of all elements.
-     */
-    AbstractAllElementsPtr_t all_elements = nullptr;
-
-    /**
-     * Empty simple set.
-     */
-    AbstractSimpleSetPtr_t empty_simple_set_ptr = nullptr;
-
-
     SimpleSetSetPtr_t simple_sets;
 
     AbstractCompositeSet() = default;
@@ -192,8 +170,6 @@ public:
     virtual ~AbstractCompositeSet() {
         simple_sets->clear();
     }
-
-    explicit AbstractCompositeSet(AbstractAllElementsPtr_t &all_elements) : all_elements(all_elements) {}
 
     /**
     * @return True if this is empty.
@@ -214,31 +190,17 @@ public:
     virtual AbstractCompositeSetPtr_t simplify()= 0;
 
     /**
-     * @param all_elements All elements that are possible.
-     * @return A **new** empty composite set given all elements that are possible.
-     */
-    virtual AbstractCompositeSetPtr_t make_new_empty(AbstractAllElementsPtr_t &all_elements)= 0;
 
-
-    /**
-     * @param simple_sets_ The simple sets to contain.
-     * @param all_elements_ All elements that are possible.
-     * @return A **new** composite set given the contained simple sets and all elements that are possible.
+     * @return A **new** empty composite set
      */
-    virtual AbstractCompositeSetPtr_t
-    make_new(std::set<AbstractSimpleSet *> *simple_sets_, AbstractAllElementsPtr_t &all_elements_)= 0;
+    virtual AbstractCompositeSetPtr_t make_new_empty()= 0;
 
     /**
      * @return A string representation of this.
      */
     std::string *to_string();
 
-
-    /**
-     * @param other The other composite set.
-     * @return True if this is equal to the other composite set.
-     */
-    bool operator==(const AbstractCompositeSetPtr_t other);
+    bool operator==(const AbstractCompositeSet &other) const;
 
     /**
     * Split this composite set into disjoint and non-disjoint parts.

@@ -1,5 +1,5 @@
-#include "interval.h"
 #include "pybind11/pybind11.h"
+#include "interval.h"
 
 namespace py = pybind11;
 
@@ -8,12 +8,10 @@ PYBIND11_MODULE(random_events, handle) {
     py::class_<Interval, std::shared_ptr<Interval>>(handle, "Interval")
             .def(py::init<>())
             .def(py::init<const SimpleSetSetPtr_t &>())
-            .def(py::init<std::shared_ptr<RealLine> &>())
-            .def(py::init<SimpleInterval &>())
-            .def(py::init<SimpleSetSetPtr_t &, std::shared_ptr<RealLine> &>())
+            .def(py::init<const SimpleInterval &>())
+            .def(py::init<SimpleSetSetPtr_t &>())
             .def("simplify", &Interval::simplify)
             .def("make_new_empty", &Interval::make_new_empty)
-            .def("make_new", &Interval::make_new)
             .def("__repr__", &Interval::to_string);
     handle.def("closed", &closed, "Create a closed interval");
     handle.def("open", &open, "Create an open interval");

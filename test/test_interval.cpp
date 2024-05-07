@@ -117,8 +117,6 @@ TEST(AtomicIntervalDifferenceTest, SimpleInterval) {
 }
 
 TEST(SimplifyIntervalTestSuite, Interval) {
-
-    EXPECT_TRUE(RealLine::real_line_ptr != nullptr);
     auto interval1 = make_shared_simple_interval(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
     auto interval2 = make_shared_simple_interval(1.0, 1.5, BorderType::CLOSED, BorderType::OPEN);
     auto interval3 = make_shared_simple_interval(1.5, 2.0, BorderType::OPEN, BorderType::CLOSED);
@@ -129,7 +127,6 @@ TEST(SimplifyIntervalTestSuite, Interval) {
     interval->simple_sets->insert(interval2);
     interval->simple_sets->insert(interval3);
     interval->simple_sets->insert(interval4);
-    EXPECT_TRUE(interval->all_elements != nullptr);
 
     auto simplified = interval->simplify();
 

@@ -1,137 +1,118 @@
-// #pragma once
-//
-// #include "sigma_algebra.h"
-// #include "interval.h"
-// #include "set.h"
-// #include <string>
-// #include <utility>
-// #include <iostream>
-// #include <variant>
-//
-//
-// class AbstractVariable {
-// public:
-//     /**
-//      * The (virtual) name of the variable.
-//      */
-//     std::string name;
-//
-//     explicit AbstractVariable(std::string name) : name(std::move(name)){};
-// };
-//
-//
-//
-// /**
-//  * Template class for variables.
-//  */
-// template<typename T_Variable, typename T_Domain>
-// class Variable: public AbstractVariable {
-// public:
-//     Variable(std::string name, T_Domain domain) : AbstractVariable(name), domain(std::move(domain)) {};
-//
-//     /**
-//      * The domain of the variable.
-//      * The domain is the set of all possible values.
-//      */
-//     const T_Domain domain;
-//
-//     template<typename T>
-//     bool operator==(const T &other) const {
-//         return name == other.name;
-//     }
-//
-//     template<typename T>
-//     bool operator!=(const T &other) const {
-//         return name != other.name;
-//     }
-//
-//     [[nodiscard]] std::string to_string() const {
-//         return name;
-//     }
-//
-//     template<typename T>
-//     bool operator<(const T &other) const {
-//         return name < other.name;
-//     }
-//
-//     template<typename T>
-//     bool operator>(const T &other) const {
-//         return name > other.name;
-//     }
-//
-//     template<typename T>
-//     bool operator<=(const T &other) const {
-//         return name <= other.name;
-//     }
-//
-//     template<typename T>
-//     bool operator>=(const T &other) const {
-//         return name >= other.name;
-//     }
-//
-// };
-//
-// /**
-//  * Class that represents a symbolic variable.
-//  */
-// class Symbolic : public Variable<Symbolic, Set> {
-// public:
-//     explicit Symbolic(std::string name, Set domain) : Variable<Symbolic, Set>(std::move(name), std::move(domain)) {};
-// };
-//
-//
-// /**
-//  * Class that represents an integer variable.
-//  */
-// class Integer : public Variable<Integer, Interval> {
-// public:
-//
-//     [[maybe_unused]] const Interval domain = reals();
-//
-//     explicit Integer(std::string name) : Variable(name, reals()) {
-//         Variable<Integer, Interval>::name = std::move(name);
-//     };
-// };
-//
-// /**
-//  * Class that represents a continuous variable.
-//  */
-// class Continuous : public Variable<Continuous, Interval> {
-// public:
-//
-//     [[maybe_unused]] const Interval domain = reals();
-//
-//     explicit Continuous(std::string name) : Variable(name, reals()) {
-//         Variable<Continuous, Interval>::name = std::move(name);
-//     };
-//
-// };
-//
-// using VariableVariant = std::variant<std::monostate, Continuous, Integer, Symbolic>;
-//
-// struct VisitVariableVariant {
-//     VariableVariant variable_variant;
-//
-//     VisitVariableVariant() = default;
-//
-//     VisitVariableVariant(VariableVariant variable) : variable_variant(std::move(variable)) {};
-//
-//     bool operator==(const VisitVariableVariant &other) const {
-//         return variable_variant == other.variable_variant;
-//     }
-//
-//     bool operator<(const VisitVariableVariant &other) const {
-//         return variable_variant < other.variable_variant;
-//     }
-//
-//     bool operator>(const VisitVariableVariant &other) const {
-//         return variable_variant > other.variable_variant;
-//     }
-//
-//     Continuous operator()(Continuous &v) { return std::get<Continuous>(variable_variant); }
-//
-//     Integer operator()(Integer &v) { return std::get<Integer>(variable_variant); }
-//
-//     Symbolic operator()(Symbolic &v) { return std::get<Symbolic>(variable_variant); }
-//
-// };
+#pragma once
+#include <string>
+#include <memory>
+#include "sigma_algebra.h"
+#include "interval.h"
+#include "set.h"
+
+using NamePtr_t = std::shared_ptr<std::string>;
+
+
+class AbstractVariable {
+public:
+    virtual ~AbstractVariable() = default;
+
+    NamePtr_t name;
+
+    virtual AbstractCompositeSetPtr_t get_domain() const = 0;
+
+    bool operator==(const AbstractVariable &other) const {
+        return this->name.get() == other.name.get();
+    }
+
+    /**
+     * Compare two variables. Variables are ordered by their name.
+     *
+     * Note that the domain is ignored in ordering.
+     *
+     * @param other The other variable
+     * @return True if this variable is less than the other variable.
+     */
+    bool operator<(const AbstractVariable &other) const {
+        return *name < *other.name;
+    }
+
+    /**
+     * Compare two variables. Variables are ordered by their name.
+     *
+     * Note that the domain is ignored in ordering.
+     *
+     * @param other The other variable
+     * @return True if this variable is less or equal than the other variable.
+     */
+    bool operator<=(const AbstractVariable &other) const {
+        return *name <= *name;
+    }
+
+};
+
+class Symbolic : public AbstractVariable {
+public:
+    SetPtr_t domain;
+
+    Symbolic(const NamePtr_t name, const SetPtr_t domain) {
+        this->name = name;
+        this->domain = domain;
+    }
+
+    Symbolic(const NamePtr_t name, const AllSetElementsPtr_t all_set_elements) {
+        this->name = name;
+        auto domain = make_shared_set(all_set_elements);
+        for (const auto element: *all_set_elements) {
+            auto set_element = make_shared_set_element(element, all_set_elements);
+            domain->simple_sets->insert(set_element);
+        }
+        this->domain = domain;
+    }
+
+    AbstractCompositeSetPtr_t get_domain() const override {
+        return domain;
+    }
+};
+
+class Continuous : public AbstractVariable {
+public:
+    const IntervalPtr_t domain = reals();
+
+    explicit Continuous(const NamePtr_t name) {
+        this->name = name;
+    }
+
+    AbstractCompositeSetPtr_t get_domain() const override {
+        return domain;
+    }
+};
+
+class Integer : public AbstractVariable {
+public:
+    const IntervalPtr_t domain = reals();
+
+    explicit Integer(const NamePtr_t name) {
+        this->name = name;
+    }
+
+    AbstractCompositeSetPtr_t get_domain() const override {
+        return domain;
+    }
+};
+
+using AbstractVariablePtr_t = std::shared_ptr<AbstractVariable>;
+using SymbolicPtr_t = std::shared_ptr<Symbolic>;
+using IntegerPtr_t = std::shared_ptr<Integer>;
+using ContinuousPtr_t = std::shared_ptr<Continuous>;
+
+template<typename... Args>
+SymbolicPtr_t make_shared_symbolic(Args &&... args) {
+    return std::make_shared<Symbolic>(std::forward<Args>(args)...);
+}
+
+template<typename... Args>
+IntegerPtr_t make_shared_integer(Args &&... args) {
+    return std::make_shared<Integer>(std::forward<Args>(args)...);
+}
+
+template<typename... Args>
+ContinuousPtr_t make_shared_continuous(Args &&... args) {
+    return std::make_shared<Continuous>(std::forward<Args>(args)...);
+}
+

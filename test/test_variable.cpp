@@ -1,33 +1,28 @@
-// #include "gtest/gtest.h"
-// #include "interval.h"
-// #include "variable.h"
-// #include "set.h"
-//
-// TEST(Variable, Continuous) {
-//     Continuous continuous("x");
-//     EXPECT_EQ(continuous.name, "x");
-//     EXPECT_EQ(continuous.domain, reals());
-// }
-//
-// TEST(Variable, Symbolic) {
-//     auto variable = Symbolic("x", Set({"a", "b", "c"}));
-//     EXPECT_EQ(variable.name, "x");
-//     EXPECT_EQ(variable.domain, Set({"a", "b", "c"}));
-// }
-//
-// TEST(Variable, Integer) {
-//     auto variable = Integer("x");
-//     EXPECT_EQ(variable.name, "x");
-//     EXPECT_EQ(variable.domain, reals());
-// }
-//
-// TEST(Variable, Comparison){
-//     auto variable1 = Symbolic("x", Set({"a", "b", "c"}));
-//     auto variable2 = Symbolic("y", Set({"a", "b", "c"}));
-//     auto variable3 = Continuous("x");
-//     EXPECT_TRUE(variable1 != variable2);
-//     EXPECT_TRUE(variable1 == variable3);
-//     EXPECT_TRUE(variable2 != variable3);
-//     EXPECT_TRUE(variable1 < variable2);
-//     EXPECT_TRUE(variable2 > variable3);
-// }
+#include "gtest/gtest.h"
+#include "sigma_algebra.h"
+#include "interval.h"
+#include "variable.h"
+#include "set.h"
+
+TEST(Symbolic, ConstructorAndCompartor) {
+    auto name = std::make_shared<std::string>("x");
+    auto all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
+    auto symbol = make_shared_symbolic(name, all_elements);
+    EXPECT_EQ(symbol->name, name);
+    EXPECT_EQ(symbol->domain->all_elements, all_elements);
+    EXPECT_EQ(symbol->domain->simple_sets->size(), 3);
+
+    auto name2 = std::make_shared<std::string>("y");
+    auto all_elements2 = make_shared_all_elements(std::set<std::string>{"a", "b", });
+    auto symbol2 = make_shared_symbolic(name2, all_elements2);
+    EXPECT_NE(symbol.get(), symbol2.get());
+    EXPECT_LT(*symbol, *symbol2);
+}
+
+TEST(Continuous, Constructor) {
+    auto name = std::make_shared<std::string>("x");
+    auto real = make_shared_continuous(name);
+    auto reals_to_compare = reals();
+    EXPECT_EQ(real->name.get()->compare("x"), 0);
+    EXPECT_EQ(*reals_to_compare, *real.get()->domain.get());
+}

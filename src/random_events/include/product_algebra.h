@@ -27,7 +27,7 @@
 //
 //     Event simple_set_complement() const;
 //
-//     bool simple_set_contains(const std::tuple<> &element) const;
+//     bool simple_set_contains(const std::tuple<> &element_index) const;
 //
 //     bool simple_set_is_empty();
 //
