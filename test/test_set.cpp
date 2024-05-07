@@ -3,8 +3,7 @@
 #include <set>
 
 TEST(SetElement, Constructor) {
-    AllSetElementsPtr_t all_elements = std::make_shared<AllSetElements>();
-    all_elements->all_elements_set = {"a", "b", "c"};
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
     SetElement set_element(1, all_elements);
     EXPECT_EQ(set_element.element_index, 1);
     EXPECT_EQ(set_element.all_elements, all_elements);
@@ -19,8 +18,7 @@ TEST(SetElement, Constructor) {
 }
 
 TEST(SetElement, IntersectionWith) {
-    AllSetElementsPtr_t all_elements = std::make_shared<AllSetElements>();
-    all_elements->all_elements_set = {"a", "b", "c"};
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto set_element3 = make_shared_set_element(1, all_elements);
@@ -35,8 +33,7 @@ TEST(SetElement, IntersectionWith) {
 }
 
 TEST(SetElement, Complement) {
-    AllSetElementsPtr_t all_elements = std::make_shared<AllSetElements>();
-    all_elements->all_elements_set = {"a", "b", "c"};
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
 
@@ -47,8 +44,7 @@ TEST(SetElement, Complement) {
 }
 
 TEST(Set, Simplify){
-    AllSetElementsPtr_t all_elements = std::make_shared<AllSetElements>();
-    all_elements->all_elements_set = {"a", "b", "c"};
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto sets = make_shared_simple_set_set();
@@ -59,8 +55,7 @@ TEST(Set, Simplify){
 }
 
 TEST(Set, MakeNewEmpty) {
-    AllSetElementsPtr_t all_elements = std::make_shared<AllSetElements>();
-    all_elements->all_elements_set = {"a", "b", "c"};
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto sets = make_shared_simple_set_set();
@@ -73,8 +68,7 @@ TEST(Set, MakeNewEmpty) {
 
 
 TEST(Set, Constructor) {
-    AllSetElementsPtr_t all_elements = std::make_shared<AllSetElements>();
-    all_elements->all_elements_set = {"a", "b", "c"};
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto sets = make_shared_simple_set_set();

@@ -10,18 +10,16 @@ class SetElement;
 
 class Set;
 
-class AllSetElements {
-public:
-    /**
-     * The set of all possible strings
-     */
-    std::set<std::string> all_elements_set;
-};
-
 
 // TYPEDEFS
-using AllSetElementsPtr_t = std::shared_ptr<AllSetElements>;
+using AllSetElementsPtr_t = std::shared_ptr<std::set<std::string>>;
 using SetElementPtr_t = std::shared_ptr<SetElement>;
+
+template<typename... Args>
+AllSetElementsPtr_t make_shared_all_elements(Args &&... args) {
+    return std::make_shared<std::set<std::string>>(std::forward<Args>(args)...);
+}
+
 
 template<typename... Args>
 SetElementPtr_t make_shared_set_element(Args &&... args) {

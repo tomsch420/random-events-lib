@@ -29,7 +29,7 @@ public:
      * @return True if this variable is less than the other variable.
      */
     bool operator<(const AbstractVariable &other) const {
-        return name.get() < other.name.get();
+        return *name < *other.name;
     }
 
     /**
@@ -41,7 +41,7 @@ public:
      * @return True if this variable is less or equal than the other variable.
      */
     bool operator<=(const AbstractVariable &other) const {
-        return name.get() <= other.name.get();
+        return *name <= *name;
     }
 
 };
@@ -58,7 +58,7 @@ public:
     Symbolic(const NamePtr_t name, const AllSetElementsPtr_t all_set_elements) {
         this->name = name;
         auto domain = make_shared_set(all_set_elements);
-        for (const auto element: all_set_elements->all_elements_set) {
+        for (const auto element: *all_set_elements) {
             auto set_element = make_shared_set_element(element, all_set_elements);
             domain->simple_sets->insert(set_element);
         }

@@ -9,7 +9,7 @@ SetElement::SetElement(int element_, AllSetElementsPtr_t all_elements_) {
         throw std::invalid_argument("element_index must be non-negative");
     }
 
-    if (element_index >= all_elements->all_elements_set.size()) {
+    if (element_index >= all_elements->size()) {
         throw std::invalid_argument("element_index must be less than the number of elements in the all_elements set");
     }
 }
@@ -21,12 +21,12 @@ SetElement::SetElement(const std::string &element_, AllSetElementsPtr_t all_elem
         throw std::invalid_argument("element_index must not be empty");
     }
 
-    auto it = std::find(all_elements->all_elements_set.begin(), all_elements->all_elements_set.end(), element_);
-    if (it == all_elements->all_elements_set.end()) {
+    auto it = std::find(all_elements->begin(), all_elements->end(), element_);
+    if (it == all_elements->end()) {
         throw std::invalid_argument("element_index must be in the all_elements set");
     }
 
-    this->element_index = std::distance(all_elements->all_elements_set.begin(), it);
+    this->element_index = std::distance(all_elements->begin(), it);
 
 }
 
@@ -43,7 +43,7 @@ AbstractSimpleSetPtr_t SetElement::intersection_with(const AbstractSimpleSetPtr_
 
 SimpleSetSetPtr_t SetElement::complement() {
     auto result = make_shared_simple_set_set();
-    for (int i = 0; i < all_elements->all_elements_set.size(); i++) {
+    for (int i = 0; i < all_elements->size(); i++) {
         if (i == element_index) {
             continue;
         }
