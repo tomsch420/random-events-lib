@@ -10,7 +10,7 @@ class SetElement;
 
 class Set;
 
-class AllSetElements : public AbstractAllElements {
+class AllSetElements {
 public:
     /**
      * The set of all possible strings
@@ -43,8 +43,6 @@ public:
      * The set of all possible strings
      */
     AllSetElementsPtr_t all_elements;
-
-    AbstractAllElementsPtr_t get_all_elements() override;
 
     /**
      * The index of the element_index in the all_elements set
@@ -111,9 +109,7 @@ class Set : public AbstractCompositeSet {
 public:
 
     AllSetElementsPtr_t all_elements;
-    AbstractAllElementsPtr_t get_all_elements() override;
 
-    explicit Set(const AbstractAllElementsPtr_t& all_elements_);
     explicit Set(const AllSetElementsPtr_t& all_elements_);
     Set(const SetElementPtr_t& element_, const AllSetElementsPtr_t& all_elements_);
     Set(const SimpleSetSetPtr_t& elements, const AllSetElementsPtr_t& all_elements_);
@@ -123,7 +119,4 @@ public:
     AbstractCompositeSetPtr_t simplify() override;
 
     AbstractCompositeSetPtr_t make_new_empty() override;
-
-    AbstractCompositeSetPtr_t
-    make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_) override;
 };

@@ -97,10 +97,6 @@ SetElement::SetElement(AllSetElementsPtr_t all_elements_) {
     this->element_index = -1;
 }
 
-AbstractAllElementsPtr_t SetElement::get_all_elements() {
-    return all_elements;
-}
-
 Set::Set(const SetElementPtr_t& element_, const AllSetElementsPtr_t& all_elements_) {
     this->simple_sets = make_shared_simple_set_set();
     this->simple_sets->insert(element_);
@@ -131,17 +127,3 @@ AbstractCompositeSetPtr_t Set::simplify()
     return result;
 }
 
-AbstractCompositeSetPtr_t
-Set::make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_) {
-    AllSetElementsPtr_t casted = std::static_pointer_cast<AllSetElements>(all_elements_);
-    return make_shared_set(simple_sets_, casted);
-}
-
-AbstractAllElementsPtr_t Set::get_all_elements() {
-    return this->all_elements;
-}
-
-Set::Set(const AbstractAllElementsPtr_t& all_elements_) {
-    this->simple_sets = make_shared_simple_set_set();
-    this->all_elements = std::static_pointer_cast<AllSetElements>(all_elements_);
-}

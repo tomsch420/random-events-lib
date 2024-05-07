@@ -192,7 +192,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::make_disjoint(){
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const AbstractSimpleSetPtr_t &simple_set){
-    auto all_elements = get_all_elements();
     auto result = make_new_empty();
     for (const auto& current_simple_set: *simple_sets) {
         auto intersection = current_simple_set->intersection_with(simple_set);
@@ -204,7 +203,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const Abstract
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const SimpleSetSetPtr_t &other){
-    auto all_elements = get_all_elements();
     auto result = make_new_empty();
     for (const auto& current_simple_set: *other) {
         auto current_result = intersection_with(current_simple_set);
@@ -219,8 +217,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const Abstract
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::complement(){
-    // HERE IS A PROBLEM WITH MAKING A NEW EMPTY SET
-    auto all_elements = get_all_elements();
     auto result = make_new_empty();
     bool first_iteration = true;
     for (const auto& simple_set: *simple_sets) {
@@ -238,7 +234,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::complement(){
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other){
-    auto all_elements = get_all_elements();
     auto result = make_new_empty();
     result->simple_sets->insert(simple_sets->begin(), simple_sets->end());
     result->simple_sets->insert(other);
@@ -246,7 +241,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleS
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractCompositeSetPtr_t &other){
-    auto all_elements = get_all_elements();
     auto result = make_new_empty();
     result->simple_sets->insert(simple_sets->begin(), simple_sets->end());
     result->simple_sets->insert(other->simple_sets->begin(), other->simple_sets->end());
@@ -254,7 +248,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractComposi
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractSimpleSetPtr_t &other){
-    auto all_elements = get_all_elements();
     auto result = make_new_empty();
     for (const auto& simple_set: *simple_sets) {
         const auto difference = simple_set->difference_with(other);
@@ -264,7 +257,6 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractSi
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::difference_with(const AbstractCompositeSetPtr_t &other){
-    auto all_elements = get_all_elements();
     auto result = make_new_empty();
 
     for (const auto &own_simple_set: *simple_sets) {

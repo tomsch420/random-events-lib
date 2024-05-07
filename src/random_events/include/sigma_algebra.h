@@ -10,9 +10,6 @@ class AbstractSimpleSet;
 
 class AbstractCompositeSet;
 
-class AbstractAllElements {
-};
-
 
 template<class T, bool (*comp)(const T *, const T *)>
 class set_funcomp {
@@ -49,8 +46,6 @@ typedef std::shared_ptr<AbstractCompositeSet> AbstractCompositeSetPtr_t;
 typedef std::set<AbstractSimpleSetPtr_t, PointerLess<AbstractSimpleSetPtr_t>> SimpleSetSet_t;
 typedef std::shared_ptr<SimpleSetSet_t> SimpleSetSetPtr_t;
 
-typedef std::shared_ptr<AbstractAllElements> AbstractAllElementsPtr_t;
-
 template<typename... Args>
 SimpleSetSetPtr_t make_shared_simple_set_set(Args&&... args) {
     return std::make_shared<SimpleSetSet_t>(std::forward<Args>(args)...);
@@ -67,11 +62,6 @@ union ElementaryVariant {
 class AbstractSimpleSet : public std::enable_shared_from_this<AbstractSimpleSet>{
 public:
     virtual ~AbstractSimpleSet() = default;
-
-    /**
-     * Some description of all elements.
-     */
-    virtual AbstractAllElementsPtr_t get_all_elements()  = 0 ;
 
     /**
     * Intersect this with another simple set.
@@ -172,11 +162,6 @@ std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements
 class AbstractCompositeSet {
 public:
 
-    /**
-     * Some description of all elements.
-     */
-    virtual AbstractAllElementsPtr_t get_all_elements() = 0;
-
     SimpleSetSetPtr_t simple_sets;
 
     AbstractCompositeSet() = default;
@@ -184,8 +169,6 @@ public:
     virtual ~AbstractCompositeSet() {
         simple_sets->clear();
     }
-
-    //explicit AbstractCompositeSet(AbstractAllElementsPtr_t &all_elements) : all_elements(all_elements) {}
 
     /**
     * @return True if this is empty.
@@ -206,19 +189,10 @@ public:
     virtual AbstractCompositeSetPtr_t simplify()= 0;
 
     /**
-     * @param all_elements All elements that are possible.
-     * @return A **new** empty composite set given all elements that are possible.
+
+     * @return A **new** empty composite set
      */
     virtual AbstractCompositeSetPtr_t make_new_empty()= 0;
-
-
-    /**
-     * @param simple_sets_ The simple sets to contain.
-     * @param all_elements_ All elements that are possible.
-     * @return A **new** composite set given the contained simple sets and all elements that are possible.
-     */
-    virtual AbstractCompositeSetPtr_t
-    make_new(const SimpleSetSetPtr_t& simple_sets_, const AbstractAllElementsPtr_t& all_elements_)= 0;
 
     /**
      * @return A string representation of this.

@@ -67,7 +67,6 @@ TEST(Set, MakeNewEmpty) {
     sets->insert(set_element1);
     sets->insert(set_element2);
     auto set = make_shared_set(sets, all_elements);
-    auto casted = std::static_pointer_cast<AbstractAllElements> (set->all_elements);
     auto result = set->make_new_empty();
 
 }
@@ -88,7 +87,6 @@ TEST(Set, Constructor) {
     auto b = set->simplify();
     auto b2 = b->simplify();
     EXPECT_EQ(b2->simple_sets->size(), 2);
-    AllSetElementsPtr_t temp = std::static_pointer_cast<AllSetElements>(set->get_all_elements());
     auto a = set->complement();
 
     EXPECT_EQ(a->simple_sets->size(), 1);
