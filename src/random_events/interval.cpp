@@ -1,11 +1,9 @@
-#include <vector>
 #include <limits>
 #include <stdexcept>
 #include <algorithm>
 #include <memory>
-#include <iostream>
-#include "interval.h"
-#include "sigma_algebra.h"
+#include "include/interval.h"
+#include "include/sigma_algebra.h"
 
 std::shared_ptr<RealLine> RealLine::real_line_ptr = std::make_shared<RealLine>(RealLine());
 

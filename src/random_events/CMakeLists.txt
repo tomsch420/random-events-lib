@@ -1,9 +1,7 @@
-add_library(random_events_lib interval.cpp
-        include/variable.h
-        include/set.h
+add_library(random_events_lib
+        interval.cpp
         set.cpp
-        include/product_algebra.h
         product_algebra.cpp
         sigma_algebra.cpp
 )
-target_include_directories(random_events_lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(random_events_lib PUBLIC include)

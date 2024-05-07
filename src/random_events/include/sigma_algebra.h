@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <string>
 
 // FORWARD DECLARATIONS
 class AbstractSimpleSet;

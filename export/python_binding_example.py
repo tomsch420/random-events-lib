@@ -1,0 +1,16 @@
+from build.export import random_events as re
+
+a = re.closed(1, 8)
+print(a)
+b = re.open(1, 5)
+print(b)
+c = re.closed_open(1, 12)
+print(c)
+d = re.open_closed(1, 3)
+print(d)
+e = re.singleton(5)
+print(e)
+f = re.empty()
+print(f)
+g = re.reals()
+print(g)

@@ -3,6 +3,7 @@
 #include "sigma_algebra.h"
 #include <memory>
 #include <utility>
+#include <limits>
 
 //FORWARD DECLARE
 class SimpleInterval;
@@ -227,9 +228,6 @@ public:
     static std::shared_ptr<RealLine> real_line_ptr;
 
 };
-
-
-
 
 inline IntervalPtr_t closed(const float lower, const float upper) {
     auto interval = make_shared_simple_interval(lower, upper, BorderType::CLOSED, BorderType::CLOSED);
