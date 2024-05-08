@@ -200,6 +200,7 @@ public:
     std::string *to_string();
 
     bool operator==(const AbstractCompositeSet &other) const;
+    bool operator!=(const AbstractCompositeSet &other) const;
 
     /**
     * Split this composite set into disjoint and non-disjoint parts.

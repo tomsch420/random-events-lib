@@ -54,3 +54,28 @@ TEST(ProductAlgebra, Complement){
     complement = event->complement();
     ASSERT_EQ(complement->size(), 2);
 }
+
+TEST(ProductAlgebra, SimplifyOnce){
+    auto variables = VariableSet({x, y});
+    auto event1 = make_shared_simple_event(variables);
+    (*event1->variable_map)[x] = closed(0, 1);
+    (*event1->variable_map)[y] = closed(0, 1);
+
+    auto event2 = make_shared_simple_event(variables);
+    (*event2->variable_map)[x] = closed(0, 1);
+    (*event2->variable_map)[y] = closed(1, 2);
+    auto composite_event = make_shared_event(event1);
+    composite_event->simple_sets->insert(event2);
+    auto [result, changed] = composite_event->simplify_once();
+    ASSERT_TRUE(changed);
+    ASSERT_EQ(result->simple_sets->size(), 1);
+
+    auto contained_event = std::static_pointer_cast<SimpleEvent>(*result->simple_sets->begin());
+    ASSERT_EQ(contained_event->variable_map->size(), 2);
+    ASSERT_EQ(contained_event->variable_map->at(x)->simple_sets->size(), 1);
+    ASSERT_EQ(*contained_event->variable_map->at(y), *closed(0, 2));
+
+    auto simplified = composite_event->simplify();
+    ASSERT_EQ(*simplified, *result);
+
+}

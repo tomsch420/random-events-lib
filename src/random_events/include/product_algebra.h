@@ -81,6 +81,7 @@ public:
     VariableSetPtr_t all_variables;
 
     Event();
+    Event(Event const &event);
     explicit Event(const SimpleSetSetPtr_t &simple_events);
     explicit Event(const SimpleEventPtr_t &simple_event);
     explicit Event(const VariableSetPtr_t &variables);
@@ -88,5 +89,6 @@ public:
     VariableSet get_variables_from_simple_events() const;
 
     AbstractCompositeSetPtr_t simplify() override;
+    std::tuple<EventPtr_t , bool> simplify_once();
     AbstractCompositeSetPtr_t make_new_empty() override;
 };
