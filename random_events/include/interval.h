@@ -3,6 +3,7 @@
 #include "sigma_algebra.h"
 #include <memory>
 #include <utility>
+#include <limits>
 
 //FORWARD DECLARE
 class SimpleInterval;

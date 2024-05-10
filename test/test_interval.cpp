@@ -4,6 +4,7 @@
 #include <set>
 #include <memory>
 
+
 bool compare_simple_set_set(const SimpleSetSetPtr_t &lhs, const SimpleSetSetPtr_t &rhs) {
     if (lhs->size() != rhs->size()) {
         return false;
