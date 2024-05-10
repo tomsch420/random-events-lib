@@ -98,18 +98,18 @@ SetElement::SetElement(AllSetElementsPtr_t all_elements_) {
     this->element_index = -1;
 }
 
-Set::Set(const SetElementPtr_t& element_, const AllSetElementsPtr_t& all_elements_) {
+Set::Set(const SetElementPtr_t &element_, const AllSetElementsPtr_t &all_elements_) {
     this->simple_sets = make_shared_simple_set_set();
     this->simple_sets->insert(element_);
     this->all_elements = all_elements_;
 }
 
-Set::Set(const AllSetElementsPtr_t& all_elements_) {
+Set::Set(const AllSetElementsPtr_t &all_elements_) {
     this->simple_sets = make_shared_simple_set_set();
     this->all_elements = all_elements_;
 }
 
-Set::Set(const SimpleSetSetPtr_t& elements_, const AllSetElementsPtr_t& all_elements_) {
+Set::Set(const SimpleSetSetPtr_t &elements_, const AllSetElementsPtr_t &all_elements_) {
     this->simple_sets = elements_;
     this->all_elements = all_elements_;
 }
@@ -122,9 +122,30 @@ Set::~Set() {
     simple_sets->clear();
 }
 
-AbstractCompositeSetPtr_t Set::simplify()
-{
+AbstractCompositeSetPtr_t Set::simplify() {
     auto result = make_shared_set(simple_sets, all_elements);
+    return result;
+}
+
+std::string *Set::to_string() {
+    if (is_empty()) {
+        return &EMPTY_SET_SYMBOL;
+    }
+    auto result = new std::string("{");
+
+    bool first_iteration = true;
+
+    for (const auto &simple_set: *simple_sets) {
+        if (first_iteration) {
+            first_iteration = false;
+        } else {
+            result->append(", ");
+        }
+        result->append(*simple_set->to_string());
+    }
+
+    result->append("}");
+
     return result;
 }
 

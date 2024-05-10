@@ -105,7 +105,7 @@ public:
 
     virtual std::string *non_empty_to_string()= 0;
 
-    virtual std::string *to_string();
+    std::string *to_string();
 
     virtual bool operator==(const AbstractSimpleSet &other)= 0;
 
@@ -195,12 +195,13 @@ public:
      */
     virtual AbstractCompositeSetPtr_t make_new_empty()= 0;
 
-    /**
+    virtual /**
      * @return A string representation of this.
      */
     std::string *to_string();
 
     bool operator==(const AbstractCompositeSet &other) const;
+    bool operator!=(const AbstractCompositeSet &other) const;
 
     /**
     * Split this composite set into disjoint and non-disjoint parts.

@@ -1,0 +1,10 @@
+cc_library(
+    name = "random_events",
+    srcs = glob(["random_events/src/*.cpp"]),
+    hdrs = glob(["random_events/include/*h"]),
+    visibility = ["//visibility:public"],
+    includes = [
+        "random_events",
+        "random_events/include"
+    ],
+)

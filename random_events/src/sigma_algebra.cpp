@@ -109,6 +109,13 @@ bool AbstractCompositeSet::operator==(const AbstractCompositeSet &other) const {
     return true;
 }
 
+
+bool AbstractCompositeSet::operator!=(const AbstractCompositeSet &other) const {
+    return !operator==(other);
+}
+
+
+
 std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t>
 AbstractCompositeSet::split_into_disjoint_and_non_disjoint(){
 
