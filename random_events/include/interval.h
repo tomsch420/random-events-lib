@@ -5,27 +5,23 @@
 #include <utility>
 #include <limits>
 
+
+typedef double DefaultOrderable_T;
+
 //FORWARD DECLARE
+template<typename Orderable_T = DefaultOrderable_T>
 class SimpleInterval;
-class RealLine;
+template<typename  Orderable_T = DefaultOrderable_T>
 class Interval;
 
 // TYPEDEFS
-typedef std::shared_ptr<SimpleInterval> SimpleIntervalPtr_t;
+template<typename Orderable_T>
+using SimpleIntervalPtr_t = std::shared_ptr<SimpleInterval<Orderable_T>>;
 
-template<typename... Args>
-std::shared_ptr<SimpleInterval> make_shared_simple_interval(Args &&... args) {
-    return std::make_shared<SimpleInterval>(std::forward<Args>(args)...);
-}
+template<typename Orderable_T>
+using IntervalPtr_t = std::shared_ptr<Interval<Orderable_T>>;
 
-typedef std::shared_ptr<Interval> IntervalPtr_t;
 
-template<typename... Args>
-std::shared_ptr<Interval> make_shared_interval(Args &&... args) {
-    return std::make_shared<Interval>(std::forward<Args>(args)...);
-}
-
-using RealLinePtr_t = std::shared_ptr<RealLine>;
 
 /**
  * Enum for border types of simple_sets.
@@ -65,17 +61,18 @@ inline BorderType invert_border(const BorderType border) {
 /**
  * Class that represents a simple interval.
  */
+template<typename Orderable_T>
 class SimpleInterval : public AbstractSimpleSet {
 public:
     /**
      * The lower value.
      */
-    float lower = 0;
+    Orderable_T lower = 0;
 
     /**
      * The upper value.
      */
-    float upper = 0;
+    Orderable_T upper = 0;
 
     /**
      * THe left border type.
@@ -90,15 +87,22 @@ public:
     /**
      * Construct an atomic interval.
      */
-    explicit SimpleInterval(float lower = 0, float upper = 0, BorderType left = BorderType::OPEN,
-                            BorderType right = BorderType::OPEN);
+    explicit SimpleInterval(Orderable_T lower = 0, Orderable_T upper = 0, BorderType left = BorderType::OPEN,
+                            BorderType right = BorderType::OPEN) {
+        this->lower = lower;
+        this->upper = upper;
+        this->left = left;
+        this->right = right;
+    }
 
 
-    AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override;
+    inline AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override;
 
     SimpleSetSetPtr_t complement() override;
 
     bool contains(const ElementaryVariant *element) override;
+
+    bool contains(Orderable_T element) const;
 
     bool is_empty() override;
 
@@ -141,19 +145,20 @@ public:
     */
     bool operator<=(const SimpleInterval &other);
 
-    RealLinePtr_t all_elements;
+    template<typename... Args>
+    static SimpleIntervalPtr_t<Orderable_T> make_shared(Args &&... args);
 
 };
-
+template class SimpleInterval<double>;
 
 /**
  * Hash function for simple intervals.
  */
 namespace std {
-    template<>
-    struct hash<SimpleInterval> {
-        size_t operator()(const SimpleInterval &interval) const {
-            return std::hash<float>()(interval.lower) ^ std::hash<float>()(interval.upper) ^
+    template<typename  Orderable_T>
+    struct hash<SimpleInterval<Orderable_T>> {
+        size_t operator()(const SimpleInterval<Orderable_T> &interval) const {
+            return std::hash<Orderable_T>()(interval.lower) ^ std::hash<Orderable_T>()(interval.upper) ^
                    std::hash<int>()(static_cast<int>(interval.left)) ^
                    std::hash<int>()(static_cast<int>(interval.right));
         }
@@ -164,6 +169,7 @@ namespace std {
  * Class that represents a composite interval.
  * An interval is an (automatically simplified) union of simple simple_sets.
  */
+template<typename  Orderable_T>
 class Interval : public AbstractCompositeSet {
 public:
 
@@ -176,8 +182,8 @@ public:
     }
 
 
-    explicit Interval(const SimpleInterval &simple_interval) {
-        simple_sets->insert(std::make_shared<SimpleInterval>(simple_interval));
+    explicit Interval(const SimpleInterval<Orderable_T> &simple_interval) {
+        simple_sets->insert(std::make_shared<SimpleInterval<Orderable_T>>(simple_interval));
     }
 
     explicit Interval(SimpleSetSetPtr_t &simple_sets_) {
@@ -190,54 +196,71 @@ public:
 
     AbstractCompositeSetPtr_t make_new_empty() override;
 
+    Orderable_T lower() const;
+
+    Orderable_T upper() const;
+
+    bool contains(Orderable_T element) const;
+
+    template<typename... Args>
+    static std::shared_ptr<Interval<Orderable_T>> make_shared(Args &&... args);
+
 };
 
+template class Interval<double>;
 
-inline IntervalPtr_t closed(const float lower, const float upper) {
-    auto interval = make_shared_simple_interval(lower, upper, BorderType::CLOSED, BorderType::CLOSED);
+template<typename Orderable_T = DefaultOrderable_T>
+inline IntervalPtr_t<Orderable_T> closed(const Orderable_T lower, const Orderable_T upper) {
+    auto interval = SimpleInterval<Orderable_T>::make_shared(lower, upper, BorderType::CLOSED, BorderType::CLOSED);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals);
+    return Interval<Orderable_T>::make_shared(intervals);
 }
 
-inline IntervalPtr_t open(const float lower, const float upper) {
-    auto interval = make_shared_simple_interval(lower, upper, BorderType::OPEN, BorderType::OPEN);
+template<typename Orderable_T = DefaultOrderable_T>
+inline IntervalPtr_t<Orderable_T> open(const Orderable_T lower, const Orderable_T upper) {
+    auto interval = SimpleInterval<Orderable_T>::make_shared(lower, upper, BorderType::OPEN, BorderType::OPEN);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals);
+    return Interval<Orderable_T>::make_shared(intervals);
 }
 
-inline IntervalPtr_t open_closed(const float lower, const float upper) {
-    auto interval = make_shared_simple_interval(lower, upper, BorderType::OPEN, BorderType::CLOSED);
+template<typename Orderable_T = DefaultOrderable_T>
+inline IntervalPtr_t<Orderable_T>  open_closed(const Orderable_T lower, const Orderable_T upper) {
+    auto interval = SimpleInterval<Orderable_T>::make_shared(lower, upper, BorderType::OPEN, BorderType::CLOSED);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals);
+    return Interval<Orderable_T>::make_shared(intervals);
 }
 
-inline IntervalPtr_t closed_open(const float lower, const float upper) {
-    auto interval = make_shared_simple_interval(lower, upper, BorderType::CLOSED, BorderType::OPEN);
+template<typename Orderable_T = DefaultOrderable_T>
+inline IntervalPtr_t<Orderable_T>  closed_open(const Orderable_T lower, const Orderable_T upper) {
+    auto interval = SimpleInterval<Orderable_T>::make_shared(lower, upper, BorderType::CLOSED, BorderType::OPEN);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals);
+    return Interval<Orderable_T>::make_shared(intervals);
 }
 
-inline IntervalPtr_t singleton(const float value) {
-    auto interval = make_shared_simple_interval(value, value, BorderType::CLOSED, BorderType::CLOSED);
+template<typename Orderable_T = DefaultOrderable_T>
+inline IntervalPtr_t<Orderable_T>  singleton(const Orderable_T value) {
+    auto interval = SimpleInterval<Orderable_T>::make_shared(value, value, BorderType::CLOSED, BorderType::CLOSED);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals);
+    return Interval<Orderable_T>::make_shared(intervals);
 }
 
-inline IntervalPtr_t empty() {
+template<typename Orderable_T = DefaultOrderable_T>
+inline IntervalPtr_t<Orderable_T>  empty() {
     auto intervals = make_shared_simple_set_set();
-    return make_shared_interval(intervals);
+    return Interval<Orderable_T>::make_shared(intervals);
 }
 
-inline IntervalPtr_t reals() {
-    auto interval = make_shared_simple_interval(-std::numeric_limits<float>::infinity(),
-                                                std::numeric_limits<float>::infinity(), BorderType::OPEN,
+template<typename Orderable_T = DefaultOrderable_T>
+inline IntervalPtr_t<Orderable_T> reals() {
+    auto interval = SimpleInterval<Orderable_T>::make_shared(-std::numeric_limits<Orderable_T>::infinity(),
+                                                std::numeric_limits<Orderable_T>::infinity(), BorderType::OPEN,
                                                 BorderType::OPEN);
     auto intervals = make_shared_simple_set_set();
     intervals->insert(interval);
-    return make_shared_interval(intervals);
+    return Interval<Orderable_T>::make_shared(intervals);
 }

@@ -50,19 +50,19 @@ class Symbolic : public AbstractVariable {
 public:
     SetPtr_t domain;
 
-    Symbolic(const NamePtr_t name, const SetPtr_t domain) {
+    Symbolic(const NamePtr_t& name, const SetPtr_t& domain) {
         this->name = name;
         this->domain = domain;
     }
 
-    Symbolic(const NamePtr_t name, const AllSetElementsPtr_t all_set_elements) {
+    Symbolic(const NamePtr_t& name, const AllSetElementsPtr_t& all_set_elements) {
         this->name = name;
-        auto domain = make_shared_set(all_set_elements);
-        for (const auto element: *all_set_elements) {
+        auto domain_ = make_shared_set(all_set_elements);
+        for (const auto& element: *all_set_elements) {
             auto set_element = make_shared_set_element(element, all_set_elements);
-            domain->simple_sets->insert(set_element);
+            domain_->simple_sets->insert(set_element);
         }
-        this->domain = domain;
+        this->domain = domain_;
     }
 
     AbstractCompositeSetPtr_t get_domain() const override {
@@ -72,9 +72,9 @@ public:
 
 class Continuous : public AbstractVariable {
 public:
-    const IntervalPtr_t domain = reals();
+    const IntervalPtr_t<double> domain = reals<double>();
 
-    explicit Continuous(const NamePtr_t name) {
+    explicit Continuous(const NamePtr_t &name) {
         this->name = name;
     }
 
@@ -85,9 +85,9 @@ public:
 
 class Integer : public AbstractVariable {
 public:
-    const IntervalPtr_t domain = reals();
+    const IntervalPtr_t<int> domain = reals<int>();
 
-    explicit Integer(const NamePtr_t name) {
+    explicit Integer(const NamePtr_t &name) {
         this->name = name;
     }
 

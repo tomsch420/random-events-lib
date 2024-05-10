@@ -7,29 +7,8 @@
 
 // FORWARD DECLARATIONS
 class AbstractSimpleSet;
-
 class AbstractCompositeSet;
 
-
-template<class T, bool (*comp)(const T *, const T *)>
-class set_funcomp {
-    struct functor {
-        bool operator()(const T *l, const T *r) { return comp(l, r); }
-    };
-
-public:
-    typedef std::set<T, functor> t;
-};
-
-//bool simple_set_less(const AbstractSimpleSet* lhs,const AbstractSimpleSet* rhs){
-//    return lhs < rhs;
-//}
-// typedef set_funcomp<const AbstractSimpleSet, simple_set_less>::t SimpleSetSet_t;
-
-template<typename T>
-bool cmp_less(const T *lhs, const T *rhs) {
-    return *lhs < *rhs;
-}
 
 // TYPE DEFINITIONS
 template<typename T>

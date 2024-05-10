@@ -1,1 +1,1 @@
---cxxopt='-std=c++17'
+--cxxopt='-std=c++23'
