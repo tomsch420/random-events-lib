@@ -1,2 +1,0 @@
-pybind11_add_module(random_events bindings.cpp)
-target_link_libraries(random_events PUBLIC random_events_lib)

@@ -1,5 +1,5 @@
 #include "pybind11/pybind11.h"
-#include "interval.h"
+#include "random_events/include/interval.h"
 
 namespace py = pybind11;
 

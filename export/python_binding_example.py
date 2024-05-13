@@ -1,4 +1,4 @@
-from build.export import random_events as re
+from export import random_events as re
 
 a = re.closed(1, 8)
 print(a)

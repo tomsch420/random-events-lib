@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "product_algebra.h"
 
 AbstractSimpleSetPtr_t SimpleEvent::intersection_with(const AbstractSimpleSetPtr_t &other) {

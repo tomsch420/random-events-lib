@@ -2,6 +2,6 @@ cc_test(
   name = "test_all",
   size = "small",
   srcs = glob(["*.cpp"]),
-  deps = ["@com_google_googletest//:gtest_main",
+  deps = ["@googletest//:gtest_main",
           "//:random_events"]
 )
