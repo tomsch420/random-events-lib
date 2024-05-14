@@ -334,7 +334,7 @@ public:
         return Interval::make_shared(result);
     };
 
-    AbstractCompositeSetPtr_t make_new_empty() override {
+    AbstractCompositeSetPtr_t make_new_empty() const override {
         return Interval::make_shared();
     };
 

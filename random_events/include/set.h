@@ -47,11 +47,11 @@ public:
      */
     int element_index;
 
-    explicit SetElement(AllSetElementsPtr_t all_elements_);
+    explicit SetElement(const AllSetElementsPtr_t &all_elements_);
 
-    SetElement(int element_, AllSetElementsPtr_t all_elements_);
+    SetElement(int element_, const AllSetElementsPtr_t &all_elements_);
 
-    SetElement(const std::string &element_, AllSetElementsPtr_t all_elements_);
+    SetElement(const std::string &element_, const AllSetElementsPtr_t &all_elements_);
 
     ~SetElement() override;
 
@@ -116,7 +116,7 @@ public:
 
     AbstractCompositeSetPtr_t simplify() override;
 
-    AbstractCompositeSetPtr_t make_new_empty() override;
+    AbstractCompositeSetPtr_t make_new_empty() const override;
 
     std::string *to_string() override;
 

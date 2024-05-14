@@ -46,12 +46,19 @@ public:
 
 };
 
+using AbstractVariablePtr_t = std::shared_ptr<AbstractVariable>;
+
 class Symbolic : public AbstractVariable {
 public:
     SetPtr_t domain;
 
     Symbolic(const NamePtr_t& name, const SetPtr_t& domain) {
         this->name = name;
+        this->domain = domain;
+    }
+
+    Symbolic(const char* name, const SetPtr_t& domain) {
+        this->name = std::make_shared<std::string>(name);
         this->domain = domain;
     }
 
@@ -78,6 +85,10 @@ public:
         this->name = name;
     }
 
+    explicit Continuous(const char* name) {
+        this->name = std::make_shared<std::string>(name);
+    }
+
     AbstractCompositeSetPtr_t get_domain() const override {
         return domain;
     }
@@ -91,12 +102,17 @@ public:
         this->name = name;
     }
 
+    explicit Integer(const char* name) {
+        this->name = std::make_shared<std::string>(name);
+    }
+
     AbstractCompositeSetPtr_t get_domain() const override {
         return domain;
     }
+
 };
 
-using AbstractVariablePtr_t = std::shared_ptr<AbstractVariable>;
+
 using SymbolicPtr_t = std::shared_ptr<Symbolic>;
 using IntegerPtr_t = std::shared_ptr<Integer>;
 using ContinuousPtr_t = std::shared_ptr<Continuous>;

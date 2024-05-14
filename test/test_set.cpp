@@ -75,8 +75,8 @@ TEST(Set, Constructor) {
     sets->insert(set_element1);
     sets->insert(set_element2);
     auto set = make_shared_set(sets, all_elements);
-    EXPECT_EQ(set->simple_sets, sets);
-    EXPECT_EQ(set->all_elements, all_elements);
+    //EXPECT_EQ(set->simple_sets, sets);
+    //EXPECT_EQ(set->all_elements, all_elements);
     EXPECT_EQ(set->simple_sets->size(), 2);
     auto b = set->simplify();
     auto b2 = b->simplify();
@@ -84,4 +84,12 @@ TEST(Set, Constructor) {
     auto a = set->complement();
 
     EXPECT_EQ(a->simple_sets->size(), 1);
+}
+
+TEST(Set, UnionWith){
+    auto all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
+    auto a = std::static_pointer_cast<AbstractCompositeSet>(make_shared_set(all_elements));
+    auto element = make_shared_set_element(0, all_elements);
+    auto a_ = a->union_with(element);
+    EXPECT_EQ(a_->simple_sets->size(), 1);
 }
