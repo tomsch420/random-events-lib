@@ -8,29 +8,8 @@
 
 // FORWARD DECLARATIONS
 class AbstractSimpleSet;
-
 class AbstractCompositeSet;
 
-
-template<class T, bool (*comp)(const T *, const T *)>
-class set_funcomp {
-    struct functor {
-        bool operator()(const T *l, const T *r) { return comp(l, r); }
-    };
-
-public:
-    typedef std::set<T, functor> t;
-};
-
-//bool simple_set_less(const AbstractSimpleSet* lhs,const AbstractSimpleSet* rhs){
-//    return lhs < rhs;
-//}
-// typedef set_funcomp<const AbstractSimpleSet, simple_set_less>::t SimpleSetSet_t;
-
-template<typename T>
-bool cmp_less(const T *lhs, const T *rhs) {
-    return *lhs < *rhs;
-}
 
 // TYPE DEFINITIONS
 template<typename T>
@@ -193,7 +172,7 @@ public:
 
      * @return A **new** empty composite set
      */
-    virtual AbstractCompositeSetPtr_t make_new_empty()= 0;
+    virtual AbstractCompositeSetPtr_t make_new_empty() const = 0;
 
     virtual /**
      * @return A string representation of this.
@@ -258,7 +237,7 @@ public:
     * @param other The other simple set.
     * @return The union as disjoint composite set.
     */
-    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other);
+    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other) const;
 
     /**
     * Form the union with another composite set.

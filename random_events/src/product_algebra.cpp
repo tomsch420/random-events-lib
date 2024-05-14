@@ -187,7 +187,7 @@ Event::Event(const SimpleEventPtr_t &simple_event) {
 }
 
 
-AbstractCompositeSetPtr_t Event::make_new_empty() {
+AbstractCompositeSetPtr_t Event::make_new_empty() const {
     auto result = make_shared_event(all_variables);
     return result;
 }

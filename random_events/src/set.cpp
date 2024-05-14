@@ -1,7 +1,7 @@
 #include "set.h"
 #include <stdexcept>
 
-SetElement::SetElement(int element_, AllSetElementsPtr_t all_elements_) {
+SetElement::SetElement(int element_, const AllSetElementsPtr_t &all_elements_) {
 
     this->element_index = element_;
     this->all_elements = all_elements_;
@@ -15,7 +15,7 @@ SetElement::SetElement(int element_, AllSetElementsPtr_t all_elements_) {
     }
 }
 
-SetElement::SetElement(const std::string &element_, AllSetElementsPtr_t all_elements_) {
+SetElement::SetElement(const std::string &element_, const AllSetElementsPtr_t &all_elements_) {
     this->all_elements = all_elements_;
 
     if (element_.empty()) {
@@ -93,7 +93,7 @@ std::string *SetElement::non_empty_to_string() {
     return new std::string(std::to_string(element_index));
 }
 
-SetElement::SetElement(AllSetElementsPtr_t all_elements_) {
+SetElement::SetElement(const AllSetElementsPtr_t &all_elements_) {
     this->all_elements = all_elements_;
     this->element_index = -1;
 }
@@ -110,11 +110,12 @@ Set::Set(const AllSetElementsPtr_t &all_elements_) {
 }
 
 Set::Set(const SimpleSetSetPtr_t &elements_, const AllSetElementsPtr_t &all_elements_) {
-    this->simple_sets = elements_;
+    this->simple_sets = make_shared_simple_set_set();
+    this->simple_sets->insert(elements_->begin(), elements_->end());
     this->all_elements = all_elements_;
 }
 
-AbstractCompositeSetPtr_t Set::make_new_empty() {
+AbstractCompositeSetPtr_t Set::make_new_empty() const {
     return make_shared_set(all_elements);
 }
 
@@ -123,8 +124,7 @@ Set::~Set() {
 }
 
 AbstractCompositeSetPtr_t Set::simplify() {
-    auto result = make_shared_set(simple_sets, all_elements);
-    return result;
+    return std::make_shared<Set>(simple_sets, all_elements);
 }
 
 std::string *Set::to_string() {

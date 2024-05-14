@@ -192,9 +192,8 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::make_disjoint(){
         disjoint->simple_sets->insert(current_disjoint->simple_sets->begin(), current_disjoint->simple_sets->end());
     }
 
-    auto intermediate = disjoint->simplify();
     // simplify and return the disjoint set
-    return intermediate;
+    return disjoint->simplify();;
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::intersection_with(const AbstractSimpleSetPtr_t &simple_set){
@@ -239,11 +238,12 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::complement(){
     //return intermediate;
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other){
+AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other) const {
     auto result = make_new_empty();
     result->simple_sets->insert(simple_sets->begin(), simple_sets->end());
     result->simple_sets->insert(other);
-    return result->make_disjoint();
+    auto result2 = result->make_disjoint();
+    return result2;
 }
 
 AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractCompositeSetPtr_t &other){

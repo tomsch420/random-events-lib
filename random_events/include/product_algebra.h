@@ -90,5 +90,5 @@ public:
 
     AbstractCompositeSetPtr_t simplify() override;
     std::tuple<EventPtr_t , bool> simplify_once();
-    AbstractCompositeSetPtr_t make_new_empty() override;
+    AbstractCompositeSetPtr_t make_new_empty() const override;
 };
