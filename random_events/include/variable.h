@@ -17,7 +17,7 @@ public:
     virtual AbstractCompositeSetPtr_t get_domain() const = 0;
 
     bool operator==(const AbstractVariable &other) const {
-        return this->name.get() == other.name.get();
+        return *this->name == *other.name;
     }
 
     /**
