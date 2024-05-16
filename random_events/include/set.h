@@ -12,7 +12,8 @@ class Set;
 
 
 // TYPEDEFS
-using AllSetElementsPtr_t = std::shared_ptr<std::set<std::string>>;
+typedef std::set<std::string> AllSetElements_t;
+using AllSetElementsPtr_t = std::shared_ptr<AllSetElements_t>;
 using SetElementPtr_t = std::shared_ptr<SetElement>;
 
 template<typename... Args>
