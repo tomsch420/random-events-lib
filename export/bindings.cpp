@@ -10,6 +10,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(random_events, handle) {
     handle.doc()= "A module for handling random events";
     py::class_<AbstractSimpleSet, std::shared_ptr<AbstractSimpleSet>>(handle, "AbstractSimpleSet");
+    py::class_<AbstractCompositeSet, std::shared_ptr<AbstractCompositeSet>>(handle, "AbstractCompositeSet");
     py::enum_<BorderType>(handle, "BorderType")
         .value("OPEN", BorderType::OPEN)
         .value("CLOSED", BorderType::CLOSED);
@@ -19,7 +20,7 @@ PYBIND11_MODULE(random_events, handle) {
         .def("complement", [](SimpleInterval<> &x){return * x.complement();})
         .def("is_empty", &SimpleInterval<>::is_empty)
         .def("__repr__", &SimpleInterval<>::to_string);
-    py::class_<Interval<>, std::shared_ptr<Interval<>>>(handle, "Interval")
+    py::class_<Interval<>, AbstractCompositeSet, std::shared_ptr<Interval<>>>(handle, "Interval")
         .def(py::init<>())
         .def(py::init([](SimpleSetSet_t const &x) {
             auto p = std::make_shared<SimpleSetSet_t>(x);

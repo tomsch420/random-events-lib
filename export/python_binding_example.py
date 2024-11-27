@@ -18,6 +18,11 @@ print("intersect two simple intervals", si.intersect_with(si2))
 print("complement of closed interval %s" % si.complement())
 print("complement of open interval %s" % si2.complement())
 
+x = re.Interval({si, si2})
+
+for e in si2.complement().simple_sets:
+    print(e)
+
 print("closed interval %s" % re.closed(1, 8))
 print("open interval %s" % re.open(1, 5))
 print("closed_open interval %s" % re.closed_open(1, 12))

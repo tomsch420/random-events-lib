@@ -31,7 +31,7 @@ EventPtr_t make_shared_event(Args &&... args) {
 }
 
 template<typename... Args>
-VariableSetPtr_t make_variable_set(Args &&... args) {
+VariableSetPtr_t make_shared_variable_set(Args &&... args) {
     return std::make_shared<VariableSet>(std::forward<Args>(args)...);
 }
 
@@ -40,19 +40,19 @@ class SimpleEvent : public AbstractSimpleSet {
 public:
     SimpleEvent();
 
-    explicit SimpleEvent(VariableMapPtr_t variable_map);
+    explicit SimpleEvent(VariableMapPtr_t &variable_map);
 
     /**
      * Create a Simple Event where every variable is assigned to its domain.
      * @param variables
      */
-    explicit SimpleEvent(const VariableSet &variables);
+    explicit SimpleEvent(const VariableSetPtr_t &variables);
 
     VariableMapPtr_t variable_map;
 
-    VariableSet get_variables() const;
+    VariableSetPtr_t get_variables() const;
 
-    VariableSet merge_variables(const VariableSet &other) const;
+    VariableSetPtr_t merge_variables(const VariableSetPtr_t &other) const;
 
 
     AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override;

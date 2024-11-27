@@ -5,3 +5,24 @@ cc_test(
   deps = ["@googletest//:gtest_main",
           "//:random_events"]
 )
+
+cc_test(
+  name = "test_interval",
+  size = "small",
+  srcs = ["test_interval.cpp"],
+  deps = ["@googletest//:gtest_main",
+          "//:random_events"])
+
+cc_test(
+    name = "test_set",
+    size = "small",
+    srcs = ["test_set.cpp"],
+    deps = ["@googletest//:gtest_main",
+            "//:random_events"])
+
+cc_test(
+    name = "test_product_algebra",
+    size = "small",
+    srcs = ["test_product_algebra.cpp"],
+    deps = ["@googletest//:gtest_main",
+            "//:random_events"])

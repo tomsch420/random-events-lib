@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "sigma_algebra.h"
 #include <memory>
 #include <utility>
@@ -131,6 +133,7 @@ public:
 
     SimpleSetSetPtr_t complement() override {
         auto resulting_intervals = make_shared_simple_set_set();
+        std::cout << "complement" << std::endl;
 
         // if the interval is the real line, return an empty set
         if (lower == -std::numeric_limits<Orderable_T>::infinity() and

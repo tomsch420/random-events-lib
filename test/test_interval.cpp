@@ -3,6 +3,7 @@
 #include "sigma_algebra.h"
 #include <set>
 #include <memory>
+#include <iostream>
 
 
 bool compare_simple_set_set(const SimpleSetSetPtr_t &lhs, const SimpleSetSetPtr_t &rhs) {

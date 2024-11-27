@@ -12,22 +12,19 @@ class Set;
 
 
 // TYPEDEFS
-typedef std::set<std::string> AllSetElements_t;
-using AllSetElementsPtr_t = std::shared_ptr<AllSetElements_t>;
+using AllSetElementsPtr_t = std::shared_ptr<int>;
 using SetElementPtr_t = std::shared_ptr<SetElement>;
+using SetPtr_t = std::shared_ptr<Set>;
 
 template<typename... Args>
 AllSetElementsPtr_t make_shared_all_elements(Args &&... args) {
-    return std::make_shared<std::set<std::string>>(std::forward<Args>(args)...);
+    return std::make_shared<int>(std::forward<Args>(args)...);
 }
-
 
 template<typename... Args>
 SetElementPtr_t make_shared_set_element(Args &&... args) {
     return std::make_shared<SetElement>(std::forward<Args>(args)...);
 }
-
-typedef std::shared_ptr<Set> SetPtr_t;
 
 template<typename... Args>
 SetPtr_t make_shared_set(Args &&... args) {
@@ -39,20 +36,20 @@ class SetElement : public AbstractSimpleSet {
 public:
 
     /**
-     * The set of all possible strings
-     */
-    AllSetElementsPtr_t all_elements;
-
-    /**
-     * The index of the element_index in the all_elements set
+     * The element to be chose from the all_elements set
      */
     int element_index;
 
-    explicit SetElement(const AllSetElementsPtr_t &all_elements_);
+    /**
+     * The length of the set of all elements defined in the python object.
+     */
+    AllSetElementsPtr_t all_elements_length;
 
-    SetElement(int element_, const AllSetElementsPtr_t &all_elements_);
 
-    SetElement(const std::string &element_, const AllSetElementsPtr_t &all_elements_);
+
+    explicit SetElement(const AllSetElementsPtr_t &all_elements_length);
+
+    SetElement(int element_index, const AllSetElementsPtr_t &all_elements_length);
 
     ~SetElement() override;
 
@@ -107,11 +104,17 @@ public:
 class Set : public AbstractCompositeSet {
 public:
 
-    AllSetElementsPtr_t all_elements;
+    AllSetElementsPtr_t all_elements_length;
 
-    explicit Set(const AllSetElementsPtr_t& all_elements_);
-    Set(const SetElementPtr_t& element_, const AllSetElementsPtr_t& all_elements_);
-    Set(const SimpleSetSetPtr_t& elements, const AllSetElementsPtr_t& all_elements_);
+    Set(){
+        this->simple_sets = make_shared_simple_set_set();
+    }
+
+    explicit Set(const AllSetElementsPtr_t &all_elements_length);
+
+    Set(const SetElementPtr_t& element_, const AllSetElementsPtr_t &all_elements_length);
+
+    Set(const SimpleSetSetPtr_t& elements, const AllSetElementsPtr_t &all_elements_length);
 
     ~Set() override;
 
