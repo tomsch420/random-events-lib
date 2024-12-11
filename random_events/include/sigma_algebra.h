@@ -39,6 +39,25 @@ union ElementaryVariant {
     std::string s;
 };
 
+template <typename T>
+bool compare_sets(const T &lhs, const T &rhs) {
+    if (lhs->size() != rhs->size()) {
+        return false;
+    }
+    auto it_lhs = lhs->begin();
+    auto end_lhs = lhs->end();
+    auto it_rhs = rhs->begin();
+
+    while (it_lhs != end_lhs) {
+        if (**it_lhs != **it_rhs) {
+            return false;
+        }
+        ++it_lhs;
+        ++it_rhs;
+    }
+    return true;
+}
+
 class AbstractSimpleSet : public std::enable_shared_from_this<AbstractSimpleSet>{
 public:
     virtual ~AbstractSimpleSet() = default;
@@ -90,13 +109,7 @@ public:
 
     virtual bool operator<(const AbstractSimpleSet &other)= 0;
 
-    virtual bool operator<=(const AbstractSimpleSet &other)= 0;
-
     bool operator!=(const AbstractSimpleSet &other);
-
-    bool operator>(const AbstractSimpleSet &other);
-
-    bool operator>=(const AbstractSimpleSet &other);
 
     std::shared_ptr<AbstractSimpleSet> share_more()
     {
@@ -181,6 +194,7 @@ public:
 
     bool operator==(const AbstractCompositeSet &other) const;
     bool operator!=(const AbstractCompositeSet &other) const;
+    bool operator<(const AbstractCompositeSet &other) const;
 
     /**
     * Split this composite set into disjoint and non-disjoint parts.

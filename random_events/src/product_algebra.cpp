@@ -6,30 +6,30 @@ AbstractSimpleSetPtr_t SimpleEvent::intersection_with(const AbstractSimpleSetPtr
     auto variables = derived_other->get_variables();
     auto all_variables = merge_variables(variables);
 
-    auto result = make_shared_simple_event(all_variables);
-    auto final_result = make_shared_simple_event();
+    auto result = make_shared_simple_event();
 
     for (auto const &variable: *all_variables) {
+        auto own_variable = variable_map->find(variable);
+        auto other_variable = derived_other->variable_map->find(variable);
 
-        // default assignment is the domain of the variable
-        auto assignment = result->variable_map->at(variable);
+        // if variable is in self and other
+        if (other_variable != derived_other->variable_map->end() and
+            own_variable != variable_map->end()) {
 
+            // get and intersect assignments
+            result->variable_map->insert({variable, variable_map->at(variable)->intersection_with(derived_other->variable_map->at(variable))});
+            }
         // if the variable is in self
-        if (variable_map->find(variable) != variable_map->end()) {
+        else if (own_variable != variable_map->end()) {
             // get and intersect assignments
-            auto self_assignment = variable_map->at(variable);
-            assignment = self_assignment->intersection_with(assignment);
+            result->variable_map->insert({variable, variable_map->at(variable)});
         }
-
-        // if variable is in other
-        if (derived_other->variable_map->find(variable) != derived_other->variable_map->end()) {
-            // get and intersect assignments
-            auto other_assignment = derived_other->variable_map->at(variable);
-            assignment = other_assignment->intersection_with(assignment);
+        else
+        {
+            result->variable_map->insert({variable, derived_other->variable_map->at(variable)});
         }
-        final_result->variable_map->insert({variable, assignment});
     }
-    return final_result;
+    return result;
 }
 
 VariableSetPtr_t SimpleEvent::get_variables() const {
@@ -74,10 +74,13 @@ SimpleSetSetPtr_t SimpleEvent::complement() {
 
         auto variables_self = get_variables();
         for (auto const &other_variable: *variables_self) {
+            if (other_variable == variable) {
+                continue;
+            }
             if (processed_variables.find(other_variable) == processed_variables.end()) {
-                current_complement->variable_map->insert({other_variable, variable_map->at(other_variable)});
-            } else {
                 current_complement->variable_map->insert({other_variable, other_variable->get_domain()});
+            } else {
+                current_complement->variable_map->insert({other_variable, variable_map->at(other_variable)});
             }
         }
 
@@ -133,11 +136,12 @@ bool SimpleEvent::operator==(const AbstractSimpleSet &other) {
     auto derived_other = (SimpleEvent *) &other;
     auto own_variables = get_variables();
     auto other_variables = derived_other->get_variables();
-    if (own_variables != other_variables) {
+    if (!compare_sets(own_variables, other_variables)) {
         return false;
     }
     for (auto const &[variable, assignment]: *variable_map) {
-        if (*assignment != *derived_other->variable_map->at(variable)) {
+        auto other_assignment = derived_other->variable_map->at(variable);
+        if (*assignment != *other_assignment) {
             return false;
         }
     }
@@ -146,19 +150,18 @@ bool SimpleEvent::operator==(const AbstractSimpleSet &other) {
 
 bool SimpleEvent::operator<(const AbstractSimpleSet &other) {
     auto derived_other = (SimpleEvent *) &other;
-    for (auto const &[variable, assignment]: *variable_map) {
-        if (assignment < derived_other->variable_map->at(variable)) {
-            return true;
-        }
+    auto own_variables = get_variables();
+    auto other_variables = derived_other->get_variables();
+    if (own_variables->size() != other_variables->size()) {
+        return false;
     }
-    return false;
-}
-
-bool SimpleEvent::operator<=(const AbstractSimpleSet &other) {
-    auto derived_other = (SimpleEvent *) &other;
     for (auto const &[variable, assignment]: *variable_map) {
-        if (assignment <= derived_other->variable_map->at(variable)) {
-            return true;
+        auto other_assignment = derived_other->variable_map->at(variable);
+        if (*assignment == *other_assignment) {
+        }
+        else
+        {
+            return *assignment < *other_assignment;
         }
     }
     return false;

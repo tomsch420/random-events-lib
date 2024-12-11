@@ -13,7 +13,7 @@ class Event;
 
 
 // TYPEDEFS
-using VariableMap = std::map<AbstractVariablePtr_t, AbstractCompositeSetPtr_t>;
+using VariableMap = std::map<AbstractVariablePtr_t, AbstractCompositeSetPtr_t, PointerLess<AbstractVariablePtr_t>>;
 using VariableMapPtr_t = std::shared_ptr<VariableMap>;
 using SimpleEventPtr_t = std::shared_ptr<SimpleEvent>;
 using EventPtr_t = std::shared_ptr<Event>;
@@ -68,8 +68,6 @@ public:
     bool operator==(const AbstractSimpleSet &other) override;
 
     bool operator<(const AbstractSimpleSet &other) override;
-
-    bool operator<=(const AbstractSimpleSet &other) override;
 };
 
 class Event: public AbstractCompositeSet {

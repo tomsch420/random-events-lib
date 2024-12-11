@@ -6,25 +6,6 @@
 #include <iostream>
 
 
-bool compare_simple_set_set(const SimpleSetSetPtr_t &lhs, const SimpleSetSetPtr_t &rhs) {
-    if (lhs->size() != rhs->size()) {
-        return false;
-    }
-    auto it_lhs = lhs->begin();
-    auto end_lhs = lhs->end();
-    auto it_rhs = rhs->begin();
-
-    while (it_lhs != end_lhs) {
-        if (**it_lhs != **it_rhs) {
-            return false;
-        }
-        ++it_lhs;
-        ++it_rhs;
-    }
-    return true;
-}
-
-
 TEST(AtomicIntervalCreationTestSuite, SimpleInterval) {
     auto interval = SimpleInterval<double>();
     interval.lower = 0.0;
@@ -83,7 +64,7 @@ TEST(AtomicIntervalInvertTestSuite, SimpleInterval) {
     inverted_by_hand->insert(element_1);
     inverted_by_hand->insert(element_2);
     inverted_by_hand->insert(element_3);
-    EXPECT_TRUE(compare_simple_set_set(inverted, inverted_by_hand));
+    EXPECT_TRUE(compare_sets(inverted, inverted_by_hand));
 }
 
 TEST(AtomicIntervalIsEmptyTestSuite, SimpleInterval) {
@@ -116,7 +97,7 @@ TEST(AtomicIntervalDifferenceTest, SimpleInterval) {
             SimpleInterval<>::make_shared(0., 1., BorderType::OPEN, BorderType::CLOSED));
     difference_from_middle_element_by_hand->insert(
             SimpleInterval<>::make_shared(2., 3., BorderType::OPEN, BorderType::CLOSED));
-    EXPECT_TRUE(compare_simple_set_set(difference_from_middle_element, difference_from_middle_element_by_hand));
+    EXPECT_TRUE(compare_sets(difference_from_middle_element, difference_from_middle_element_by_hand));
 }
 
 TEST(SimplifyIntervalTestSuite, Interval) {
@@ -143,7 +124,7 @@ TEST(SimplifyIntervalTestSuite, Interval) {
     result_by_hand->simple_sets->insert(sbh3);
 
 
-    EXPECT_TRUE(compare_simple_set_set(simplified->simple_sets, result_by_hand->simple_sets));
+    EXPECT_TRUE(compare_sets(simplified->simple_sets, result_by_hand->simple_sets));
 }
 
 TEST(SplitIntervalTestSuit, Interval) {

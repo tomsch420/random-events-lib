@@ -59,15 +59,6 @@ bool SetElement::operator<(const SetElement &other) {
     return element_index < other.element_index;
 }
 
-bool SetElement::operator<=(const AbstractSimpleSet &other) {
-    const auto derived_other = (SetElement *) &other;
-    return *this <= *derived_other;
-}
-
-bool SetElement::operator<=(const SetElement &other) {
-    return element_index <= other.element_index;
-}
-
 std::string *SetElement::non_empty_to_string() {
     return new std::string(std::to_string(element_index));
 }

@@ -6,16 +6,12 @@
 #include "variable.h"
 #include <memory>
 
-// run with g++ -std=c++17 test_intersection.cpp product_algebra_cpp.cpp interval_cpp.cpp set_cpp.cpp sigma_algebra_cpp.cpp -lgtest -lgtest_main -pthread -o test_intersection
+auto sa = make_shared_set_element(0, make_shared_all_elements(3));
+auto sb = make_shared_set_element(1, make_shared_all_elements(3));
+auto sc = make_shared_set_element(2, make_shared_all_elements(3));
 
 TEST(SimpleEventTest, IntersectionWith) {
-    std::cout << "SimpleEventTest, IntersectionWith" << std::endl;
     // Define the sets and intervals
-    auto sa = make_shared_set_element(1, make_shared_all_elements(4));
-    auto sb = make_shared_set_element(2, make_shared_all_elements(4));
-    auto sc = make_shared_set_element(3, make_shared_all_elements(4));
-    std::cout << "set elements creation works" << std::endl;
-
     auto sabc = make_shared_simple_set_set();
     sabc->insert(sa);
     sabc->insert(sb);
@@ -25,11 +21,11 @@ TEST(SimpleEventTest, IntersectionWith) {
     sab->insert(sa);
     sab->insert(sb);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(4)));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(4)));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(4)));
-    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, make_shared_all_elements(4)));
-    auto c = make_shared_symbolic("c", make_shared_set(sc, make_shared_all_elements(4)));
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
+    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, make_shared_all_elements(3)));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
@@ -56,83 +52,122 @@ TEST(SimpleEventTest, IntersectionWith) {
     auto event_exp = make_shared_simple_event(var_exp);
 
     // Perform intersection
-    std::cout << "before first intersection " << std::endl;
     auto intersection = event1->intersection_with(event2);
-    std::cout << "first intersection " << *intersection->to_string() << std::endl;
+
+    auto var_set_test = make_shared_variable_set();
+    var_set_test->insert(a_a);
+
+    auto var_set_test2 = make_shared_variable_set();
+    var_set_test2->insert(a_ab);
+
+    // ASSERT_EQ(*var_set_test, *var_set_test2);
 
     // Assertions
-    ASSERT_EQ(intersection, event_exp);
-    ASSERT_NE(intersection, event1);
+    ASSERT_TRUE(*intersection == *event_exp);
+    ASSERT_TRUE(*intersection != *event1);
 
     // Test for empty intersection
     auto event3 = make_shared_simple_event(var3);
-    std::cout << "before second intersection " << std::endl;
     auto second_intersection = std::static_pointer_cast<SimpleEvent>(event1->intersection_with(event3));
-    std::cout << "second intersection " << *second_intersection->to_string() << std::endl;
     ASSERT_TRUE(second_intersection->is_empty());
 }
 
-//int main(int argc, char **argv) {
-//    ::testing::InitGoogleTest(&argc, argv);
-//    return RUN_ALL_TESTS();
-//}
+TEST(ProductAlgebra, VariableGetting) {
+    // Define the sets and intervals
+    auto sabc = make_shared_simple_set_set();
+    sabc->insert(sa);
+    sabc->insert(sb);
+    sabc->insert(sc);
 
-//#include "variable.h"
-//#include "gtest/gtest.h"
-//#include "set.h"
-//#include "product_algebra.h"
-//
-//
-//auto x = make_shared_continuous(std::make_shared<std::string>("x"));
-//auto y = make_shared_continuous(std::make_shared<std::string>("y"));
-//
-//
-//auto a = make_shared_symbolic(std::make_shared<std::string>("a"),
-//        make_shared_all_elements(std::set<std::string>{"a", "b", "c"}));
-//auto u = make_shared_symbolic(std::make_shared<std::string>("u"),
-//                              make_shared_all_elements(std::set<std::string>{"u", "v", "w"}));
-//
-//
-//TEST(ProductAlgebra, VariableGetting) {
-//    auto map1 = std::make_shared<VariableMap>();
-//    map1->insert({x, x->domain});
-//    map1->insert({y, y->domain});
-//    map1->insert({y, y->domain});
-//    auto event1 = SimpleEvent(map1);
-//
-//    auto map2 = std::make_shared<VariableMap>();
-//    map2->insert({x, x->domain});
-//    map2->insert({a, a->domain});
-//    auto event2 = SimpleEvent(map2);
-//
-//    ASSERT_TRUE(map1->size() == 2);
-//
-//    auto event2_variables = event2.get_variables();
-//    ASSERT_TRUE(event2_variables.size() == 2);
-//    auto all_variables = event2.merge_variables(event1.get_variables());
-//    ASSERT_TRUE(all_variables.size() == 3);
-//}
-//
-//TEST(ProductAlgebra, Intersection) {
-//    auto variables1 = VariableSet({x, y});
-//    auto variables2 = VariableSet({y, a});
-//    auto event1 = make_shared_simple_event(variables1);
-//    auto event2 = make_shared_simple_event(variables2);
-//    auto intersection = std::static_pointer_cast<SimpleEvent>(event1->intersection_with(event2));
-//    ASSERT_TRUE(intersection->variable_map->size() == 3);
-//    ASSERT_FALSE(intersection->is_empty());
-//}
-//
-//TEST(ProductAlgebra, Complement){
-//    auto variables = VariableSet({x, a});
-//    auto event = make_shared_simple_event(variables);
-//    auto complement = event->complement();
-//    ASSERT_TRUE(complement->empty());
-//    (*event->variable_map)[a] = make_shared_set(make_shared_set_element("a", a->domain->all_elements), a->domain->all_elements);
-//    (*event->variable_map)[x] = closed(0, 1);
-//    complement = event->complement();
-//    ASSERT_EQ(complement->size(), 2);
-//}
+    auto sab = make_shared_simple_set_set();
+    sab->insert(sa);
+    sab->insert(sb);
+
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
+    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, make_shared_all_elements(3)));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
+    auto b_a = make_shared_symbolic("b", make_shared_set(sa, make_shared_all_elements(3)));
+    auto x = make_shared_continuous("x");
+    auto y = make_shared_continuous("y");
+
+    auto map1 = std::make_shared<VariableMap>();
+    map1->insert({a_a, a_a->domain});
+    map1->insert({b_a, b_a->domain});
+    map1->insert({a_ab, a_ab->domain});
+
+    auto event1 = SimpleEvent(map1);
+
+    auto map2 = std::make_shared<VariableMap>();
+    map2->insert({x, x->domain});
+    map2->insert({a_abc, a_abc->domain});
+
+    auto event2 = SimpleEvent(map2);
+
+
+    // should be two due to a_a and a_ab being the same variable
+    ASSERT_TRUE(map1->size() == 2);
+
+    auto event2_variables = event2.get_variables();
+
+    // x, a_abc
+    ASSERT_TRUE(event2_variables->size() == 2);
+
+    auto all_variables = event2.merge_variables(event1.get_variables());
+    // a_a, b_a, x
+    ASSERT_TRUE(all_variables->size() == 3);
+}
+
+TEST(ProductAlgebra, Complement){
+     // Define the sets and intervals
+    auto sab = make_shared_simple_set_set();
+    sab->insert(sa);
+    sab->insert(sb);
+
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
+    auto b_a = make_shared_symbolic("b", make_shared_set(sa, make_shared_all_elements(3)));
+    auto x = make_shared_continuous("x");
+    auto y = make_shared_continuous("y");
+
+
+    auto interval1 = SimpleInterval<>::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
+    auto simple_interval = make_shared_simple_set_set();
+    simple_interval->insert(interval1);
+
+    auto variables = std::make_shared<VariableMap>();
+    variables->insert({a_ab, a_ab->domain});
+    variables->insert({x, Interval<>::make_shared(simple_interval)});
+    variables->insert({y, y->domain});
+
+    auto event = make_shared_simple_event(variables);
+
+    auto complement = event->complement();
+
+    // ASSERT_EQ(complement->size(), 2);
+
+    auto expected_1 = std::make_shared<VariableMap>();
+    expected_1->insert({c, c->domain});
+    expected_1->insert({x, x->domain});
+    expected_1->insert({y, y->domain});
+
+    auto expected_2 = std::make_shared<VariableMap>();
+    expected_2->insert({a_ab, a_ab->domain});
+    expected_2->insert({x, variables->at(x)->complement()});
+    expected_2->insert({y, y->domain});
+
+    auto complement_1 = make_shared_simple_event(expected_1);
+    auto complement_2 = make_shared_simple_event(expected_2);
+
+    auto simple_set_set = make_shared_simple_set_set();
+    simple_set_set->insert(complement_1);
+    simple_set_set->insert(complement_2);
+
+    ASSERT_TRUE(compare_sets(complement, simple_set_set));
+}
 //
 //TEST(ProductAlgebra, SimplifyOnce){
 //    auto variables = VariableSet({x, y});

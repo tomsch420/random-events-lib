@@ -48,14 +48,6 @@ bool AbstractSimpleSet::operator!=(const AbstractSimpleSet &other){
     return !operator==(other);
 }
 
-bool AbstractSimpleSet::operator>(const AbstractSimpleSet &other){
-    return !operator<=(other);
-}
-
-bool AbstractSimpleSet::operator>=(const AbstractSimpleSet &other){
-    return !operator<(other);
-}
-
 bool AbstractCompositeSet::is_disjoint(){
     std::vector<AbstractSimpleSetPtr_t> simple_sets_vector = std::vector<AbstractSimpleSetPtr_t>(simple_sets->begin(),
                                                                                                  simple_sets->end());
@@ -114,6 +106,27 @@ bool AbstractCompositeSet::operator!=(const AbstractCompositeSet &other) const {
     return !operator==(other);
 }
 
+bool AbstractCompositeSet::operator<(const AbstractCompositeSet &other) const {
+    auto it_lhs = simple_sets->begin();
+    auto end_lhs = simple_sets->end();
+    auto it_rhs = other.simple_sets->begin();
+    bool check_value = **it_rhs < **it_lhs;
+    if (simple_sets->size() > other.simple_sets->size()) {
+        it_lhs = other.simple_sets->begin();
+        end_lhs = other.simple_sets->end();
+        it_rhs = simple_sets->begin();
+        check_value = **it_lhs < **it_rhs;
+    }
+    while (it_lhs != end_lhs) {
+        if (check_value) {
+            return false;
+        }
+        ++it_lhs;
+        ++it_rhs;
+    }
+
+    return true;
+}
 
 
 std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t>

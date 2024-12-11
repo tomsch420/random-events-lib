@@ -133,7 +133,6 @@ public:
 
     SimpleSetSetPtr_t complement() override {
         auto resulting_intervals = make_shared_simple_set_set();
-        std::cout << "complement" << std::endl;
 
         // if the interval is the real line, return an empty set
         if (lower == -std::numeric_limits<Orderable_T>::infinity() and
@@ -235,28 +234,6 @@ public:
             return upper < other.upper;
         }
         return lower < other.lower;
-    };
-
-
-    bool operator<=(const AbstractSimpleSet &other) override {
-        const auto derived_other = (SimpleInterval<Orderable_T> *) &other;
-        return *this <= *derived_other;
-    };
-
-    /**
-    * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
-    * ordered by upper bound.
-    *
-    * Note that border types are ignored in ordering.
-    *
-    * @param other The other interval
-    * @return True if this interval is less or equal to the other interval.
-    */
-    bool operator<=(const SimpleInterval &other) {
-        if (lower == other.lower) {
-            return upper <= other.upper;
-        }
-        return lower <= other.lower;
     };
 
     template<typename... Args>

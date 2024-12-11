@@ -84,21 +84,6 @@ public:
      * @return True if this interval is less than the other interval.
      */
     bool operator<(const SetElement &other);
-
-
-    bool operator<=(const AbstractSimpleSet &other) override;
-
-    /**
-    * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
-    * ordered by upper bound.
-    *
-    * Note that border types are ignored in ordering.
-    *
-    * @param other The other interval
-    * @return True if this interval is less or equal to the other interval.
-    */
-    bool operator<=(const SetElement &other);
-
 };
 
 class Set : public AbstractCompositeSet {
