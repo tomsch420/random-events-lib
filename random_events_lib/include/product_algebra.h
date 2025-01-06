@@ -79,7 +79,6 @@ public:
     VariableSetPtr_t all_variables;
 
     Event();
-    Event(Event const &event);
     explicit Event(const SimpleSetSetPtr_t &simple_events);
     explicit Event(const SimpleEventPtr_t &simple_event);
     explicit Event(const VariableSetPtr_t &variables);

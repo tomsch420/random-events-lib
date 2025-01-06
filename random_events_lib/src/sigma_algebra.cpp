@@ -251,7 +251,7 @@ AbstractCompositeSetPtr_t AbstractCompositeSet::complement(){
     //return intermediate;
 }
 
-AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other) const {
+AbstractCompositeSetPtr_t AbstractCompositeSet::union_with(const AbstractSimpleSetPtr_t &other){
     auto result = make_new_empty();
     result->simple_sets->insert(simple_sets->begin(), simple_sets->end());
     result->simple_sets->insert(other);

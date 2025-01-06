@@ -96,7 +96,7 @@ public:
     }
 
 
-    inline AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override {
+    AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override {
         const auto derived_other = (SimpleInterval<Orderable_T> *) other.get();
 
         // get the new lower and upper bounds
@@ -273,12 +273,9 @@ public:
     }
 
 
-    explicit Interval(const SimpleInterval<Orderable_T> &simple_interval) {
-        simple_sets->insert(std::make_shared<SimpleInterval<Orderable_T>>(simple_interval));
-    }
-
-    explicit Interval(SimpleSetSetPtr_t &simple_sets_) {
-        this->simple_sets = simple_sets_;
+    explicit Interval(const SimpleIntervalPtr_t<Orderable_T> &simple_interval) {
+        this->simple_sets = make_shared_simple_set_set();
+        this->simple_sets->insert(simple_interval);
     }
 
     ~Interval() override {

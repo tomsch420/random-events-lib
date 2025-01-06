@@ -168,28 +168,68 @@ TEST(ProductAlgebra, Complement){
 
     ASSERT_TRUE(compare_sets(complement, simple_set_set));
 }
+// def test_simplify(self):
+//         event_1 = SimpleEvent(
+//             {self.a: Set(TestEnum.A, TestEnum.B), self.x: SimpleInterval(0, 1), self.y: SimpleInterval(0, 1)})
+//         event_2 = SimpleEvent(
+//             {self.a: Set(TestEnum.C), self.x: SimpleInterval(0, 1), self.y: Interval(SimpleInterval(0, 1))})
+//         event = Event(event_1, event_2)
+//         simplified = event.simplify()
+//         self.assertEqual(len(simplified.simple_sets), 1)
 //
-//TEST(ProductAlgebra, SimplifyOnce){
-//    auto variables = VariableSet({x, y});
-//    auto event1 = make_shared_simple_event(variables);
-//    (*event1->variable_map)[x] = closed(0, 1);
-//    (*event1->variable_map)[y] = closed(0, 1);
-//
-//    auto event2 = make_shared_simple_event(variables);
-//    (*event2->variable_map)[x] = closed(0, 1);
-//    (*event2->variable_map)[y] = closed(1, 2);
-//    auto composite_event = make_shared_event(event1);
-//    composite_event->simple_sets->insert(event2);
-//    auto [result, changed] = composite_event->simplify_once();
-//    ASSERT_TRUE(changed);
-//    ASSERT_EQ(result->simple_sets->size(), 1);
-//
-//    auto contained_event = std::static_pointer_cast<SimpleEvent>(*result->simple_sets->begin());
-//    ASSERT_EQ(contained_event->variable_map->size(), 2);
-//    ASSERT_EQ(contained_event->variable_map->at(x)->simple_sets->size(), 1);
-//    ASSERT_EQ(*contained_event->variable_map->at(y), *closed(0, 2));
-//
-//    auto simplified = composite_event->simplify();
-//    ASSERT_EQ(*simplified, *result);
-//
-//}
+//         result = Event(SimpleEvent(
+//             {self.a: self.a.domain, self.x: Interval(SimpleInterval(0, 1)), self.y: Interval(SimpleInterval(0, 1))}))
+//         self.assertEqual(simplified, result)
+TEST(ProductAlgebra, Simplify){
+    // Define the sets and intervals
+    auto sabc = make_shared_simple_set_set();
+    sabc->insert(sa);
+    sabc->insert(sb);
+    sabc->insert(sc);
+
+    auto sab = make_shared_simple_set_set();
+    sab->insert(sa);
+    sab->insert(sb);
+
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
+    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, make_shared_all_elements(3)));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
+    auto x = make_shared_continuous("x");
+    auto y = make_shared_continuous("y");
+
+    auto interval1 = SimpleInterval<>::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
+    auto simple_interval = make_shared_simple_set_set();
+    simple_interval->insert(interval1);
+
+    auto variables = std::make_shared<VariableMap>();
+    variables->insert({a_ab, a_ab->domain});
+    variables->insert({x, Interval<>::make_shared(simple_interval)});
+    variables->insert({y, Interval<>::make_shared(simple_interval)});
+
+    auto variables2 = std::make_shared<VariableMap>();
+    variables2->insert({c, c->domain});
+    variables2->insert({x, Interval<>::make_shared(simple_interval)});
+    variables2->insert({y, Interval<>::make_shared(simple_interval)});
+
+    auto event1 = make_shared_simple_event(variables);
+    // (*event1->variable_map)[x] = closed(0, 1);
+    // (*event1->variable_map)[y] = closed(0, 1);
+    auto event2 = make_shared_simple_event(variables2);
+
+
+    auto composite_event = make_shared_event(event1);
+    composite_event->simple_sets->insert(event2);
+    auto result = composite_event->simplify();
+
+    ASSERT_EQ(result->simple_sets->size(), 1);
+
+    auto contained_event = std::static_pointer_cast<SimpleEvent>(*result->simple_sets->begin());
+    ASSERT_EQ(contained_event->variable_map->size(), 3);
+    ASSERT_EQ(contained_event->variable_map->at(x)->simple_sets->size(), 1);
+
+    auto simplified = composite_event->simplify();
+    ASSERT_EQ(*simplified, *result);
+
+}

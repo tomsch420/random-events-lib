@@ -69,19 +69,19 @@ SetElement::SetElement(const AllSetElementsPtr_t &all_elements_length) {
 }
 
 Set::Set(const SetElementPtr_t &element_, const AllSetElementsPtr_t &all_elements_length) {
-    this->simple_sets = make_shared_simple_set_set();
-    this->simple_sets->insert(element_);
+    simple_sets = make_shared_simple_set_set();
+    simple_sets->insert(element_);
     this->all_elements_length = all_elements_length;
 }
 
 Set::Set(const AllSetElementsPtr_t &all_elements_length) {
-    this->simple_sets = make_shared_simple_set_set();
+    simple_sets = make_shared_simple_set_set();
     this->all_elements_length = all_elements_length;
 }
 
-Set::Set(const SimpleSetSetPtr_t &elements_, const AllSetElementsPtr_t &all_elements_length) {
-    this->simple_sets = make_shared_simple_set_set();
-    this->simple_sets->insert(elements_->begin(), elements_->end());
+Set::Set(const SimpleSetSetPtr_t &elements, const AllSetElementsPtr_t &all_elements_length) {
+    simple_sets = make_shared_simple_set_set();
+    simple_sets->insert(elements->begin(), elements->end());
     this->all_elements_length = all_elements_length;
 }
 

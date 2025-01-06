@@ -251,7 +251,7 @@ public:
     * @param other The other simple set.
     * @return The union as disjoint composite set.
     */
-    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other);
 
     /**
     * Form the union with another composite set.
