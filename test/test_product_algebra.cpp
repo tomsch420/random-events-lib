@@ -6,9 +6,11 @@
 #include "variable.h"
 #include <memory>
 
-auto sa = make_shared_set_element(0, make_shared_all_elements(3));
-auto sb = make_shared_set_element(1, make_shared_all_elements(3));
-auto sc = make_shared_set_element(2, make_shared_all_elements(3));
+auto all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
+
+auto sa = make_shared_set_element(0, all_elements);
+auto sb = make_shared_set_element(1, all_elements);
+auto sc = make_shared_set_element(2, all_elements);
 
 TEST(SimpleEventTest, IntersectionWith) {
     // Define the sets and intervals
@@ -21,11 +23,11 @@ TEST(SimpleEventTest, IntersectionWith) {
     sab->insert(sa);
     sab->insert(sb);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
-    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, make_shared_all_elements(3)));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
+    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, all_elements));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
@@ -83,12 +85,12 @@ TEST(ProductAlgebra, VariableGetting) {
     sab->insert(sa);
     sab->insert(sb);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
-    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, make_shared_all_elements(3)));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
-    auto b_a = make_shared_symbolic("b", make_shared_set(sa, make_shared_all_elements(3)));
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
+    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, all_elements));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
+    auto b_a = make_shared_symbolic("b", make_shared_set(sa, all_elements));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
@@ -125,11 +127,11 @@ TEST(ProductAlgebra, Complement){
     sab->insert(sa);
     sab->insert(sb);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
-    auto b_a = make_shared_symbolic("b", make_shared_set(sa, make_shared_all_elements(3)));
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
+    auto b_a = make_shared_symbolic("b", make_shared_set(sa, all_elements));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
@@ -191,11 +193,11 @@ TEST(ProductAlgebra, Simplify){
     sab->insert(sa);
     sab->insert(sb);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, make_shared_all_elements(3)));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, make_shared_all_elements(3)));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, make_shared_all_elements(3)));
-    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, make_shared_all_elements(3)));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, make_shared_all_elements(3)));
+    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
+    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
+    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
+    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, all_elements));
+    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 

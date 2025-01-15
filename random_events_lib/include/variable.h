@@ -53,15 +53,15 @@ public:
         this->domain = domain;
     }
 
-    // Symbolic(const NamePtr_t& name, const AllSetElementsPtr_t& all_set_elements) {
-    //     this->name = name;
-    //     auto domain_ = make_shared_set(all_set_elements);
-    //     for (const auto& element: *all_set_elements) {
-    //         auto set_element = make_shared_set_element(element, all_set_elements);
-    //         domain_->simple_sets->insert(set_element);
-    //     }
-    //     this->domain = domain_;
-    // }
+    Symbolic(const NamePtr_t& name, const AllSetElementsPtr_t& all_set_elements) {
+        this->name = name;
+        auto domain_ = make_shared_set(all_set_elements);
+        for (const auto& element: *all_set_elements) {
+            auto set_element = make_shared_set_element(element, all_set_elements);
+            domain_->simple_sets->insert(set_element);
+        }
+        this->domain = domain_;
+    }
 
     AbstractCompositeSetPtr_t get_domain() const override {
         return domain;

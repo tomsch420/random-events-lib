@@ -30,12 +30,12 @@ enum class BorderType {
     /**
      * Open indicates that a value is included in the interval.
      */
-    OPEN,
+    CLOSED,
 
     /**
      * Close indicates that a value is excluded in the interval.
      */
-    CLOSED
+    OPEN
 };
 
 /**
@@ -282,6 +282,11 @@ public:
         simple_sets->clear();
     };
 
+    bool operator <(const AbstractCompositeSet &other) {
+        const auto derived_other = static_cast<Interval<Orderable_T> *>(&other);
+        return *this < *derived_other;
+    };
+
     AbstractCompositeSetPtr_t simplify() override {
         auto result = make_shared_simple_set_set();
         bool first_iteration = true;
@@ -298,16 +303,16 @@ public:
 
             auto last_simple_interval = std::dynamic_pointer_cast<SimpleInterval<Orderable_T>>(*result->rbegin());
 
-            if (last_simple_interval->upper == current_simple_interval->lower &&
-                !(last_simple_interval->right == BorderType::OPEN and
-                  current_simple_interval->left == BorderType::OPEN)) {
+            if (last_simple_interval->upper > current_simple_interval->lower or (
+                last_simple_interval->upper == current_simple_interval->lower and not (
+                  last_simple_interval->right == BorderType::OPEN and
+                  current_simple_interval->left == BorderType::OPEN))) {
                 last_simple_interval->upper = current_simple_interval->upper;
                 last_simple_interval->right = current_simple_interval->right;
-            } else {
-                result->insert(current_simple_interval);
-            }
+                  } else {
+                      result->insert(current_simple_interval);
+                  }
         }
-
         return Interval::make_shared(result);
     };
 

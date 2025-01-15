@@ -6,14 +6,15 @@
 
 TEST(Symbolic, ConstructorAndCompartor) {
     auto name = std::make_shared<std::string>("x");
-    auto set_element = make_shared_set_element(0, make_shared_all_elements(3));
-    auto symbol = make_shared_symbolic(name, make_shared_set(set_element, make_shared_all_elements(2)));
+    auto all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
+    auto symbol = make_shared_symbolic(name, all_elements);
     EXPECT_EQ(symbol->name, name);
-    EXPECT_EQ(symbol->domain->simple_sets->size(), 1);
+    EXPECT_EQ(symbol->domain->all_elements, all_elements);
+    EXPECT_EQ(symbol->domain->simple_sets->size(), 3);
 
     auto name2 = std::make_shared<std::string>("y");
-    auto set_element2 = make_shared_set_element(0, make_shared_all_elements(2));
-    auto symbol2 = make_shared_symbolic(name2, make_shared_set(set_element2, make_shared_all_elements(2)));
+    auto all_elements2 = make_shared_all_elements(std::set<std::string>{"a", "b", });
+    auto symbol2 = make_shared_symbolic(name2, all_elements2);
     EXPECT_NE(symbol.get(), symbol2.get());
     EXPECT_LT(*symbol, *symbol2);
 }
