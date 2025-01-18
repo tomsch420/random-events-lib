@@ -54,6 +54,8 @@ public:
 
     VariableSetPtr_t merge_variables(const VariableSetPtr_t &other) const;
 
+    AbstractSimpleSetPtr_t marginal(const VariableSetPtr_t &variables) const;
+
 
     AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override;
 
@@ -85,7 +87,11 @@ public:
 
     VariableSet get_variables_from_simple_events() const;
 
+    AbstractCompositeSetPtr_t marginal(const VariableSetPtr_t &variables) const;
+
     AbstractCompositeSetPtr_t simplify() override;
+
     std::tuple<EventPtr_t , bool> simplify_once();
+
     AbstractCompositeSetPtr_t make_new_empty() const override;
 };

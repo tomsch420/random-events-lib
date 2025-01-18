@@ -137,7 +137,11 @@ PYBIND11_MODULE(random_events_lib, handle) {
             return std::make_shared<SimpleEvent>(p);
         }))
         .def_property("variable_map", [](SimpleEvent const &x){return * x.variable_map;},
-            [](SimpleEvent x, VariableMap const &v){x.variable_map = std::make_shared<VariableMap>(v);});
+            [](SimpleEvent x, VariableMap const &v){x.variable_map = std::make_shared<VariableMap>(v);})
+        .def("marginal", [](const SimpleEvent &x, VariableSet const &y) {
+            auto const p = make_shared_variable_set(y);
+            return x.marginal(p);
+        });
 
 
     py::class_<Event, AbstractCompositeSet, std::shared_ptr<Event>>(handle, "Event")
@@ -154,7 +158,13 @@ PYBIND11_MODULE(random_events_lib, handle) {
             auto const p = make_shared_variable_set(x);
             return std::make_shared<Event>(p);
         }))
-        .def("simplify_once", &Event::simplify_once);
+        .def_property("all_variables", [](Event const &x){return *x.all_variables;},
+            [](Event &x, VariableSet const &v){x.all_variables = make_shared_variable_set(v);})
+        .def("simplify_once", &Event::simplify_once)
+        .def("marginal", [](const Event &x, VariableSet const &y) {
+            auto const p = make_shared_variable_set(y);
+            return x.marginal(p);
+        });
 
 
     py::class_<AbstractVariable, std::shared_ptr<AbstractVariable>>(handle, "AbstractVariable")

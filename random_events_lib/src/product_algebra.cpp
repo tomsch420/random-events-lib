@@ -178,6 +178,15 @@ SimpleEvent::SimpleEvent() {
     variable_map = std::make_shared<VariableMap>();
 }
 
+AbstractSimpleSetPtr_t SimpleEvent::marginal(const VariableSetPtr_t &variables) const {
+    auto result = make_shared_simple_event();
+    for (auto const &variable: *variables) {
+        auto assignment = variable_map->at(variable);
+        result->variable_map->insert({variable, assignment});
+    }
+    return result;
+}
+
 Event::Event() {
     simple_sets = make_shared_simple_set_set();
 }
@@ -298,3 +307,13 @@ AbstractCompositeSetPtr_t Event::simplify() {
     }
     return simplified;
 }
+
+AbstractCompositeSetPtr_t Event::marginal(const VariableSetPtr_t& variables) const {
+    auto result = make_new_empty();
+    for (const auto &simple_set: *simple_sets) {
+        auto casted = (SimpleEvent *) simple_set.get();
+        result->simple_sets->insert(casted->marginal(variables));
+    }
+    return result->make_disjoint();
+}
+
