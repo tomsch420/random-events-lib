@@ -60,7 +60,12 @@ bool AbstractCompositeSet::is_disjoint(){
 }
 
 bool AbstractCompositeSet::is_empty(){
-    return simple_sets->empty();
+    for (const auto &simple_set: *simple_sets) {
+        if (!simple_set->is_empty()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::string *AbstractCompositeSet::to_string(){

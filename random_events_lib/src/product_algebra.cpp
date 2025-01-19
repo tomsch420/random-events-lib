@@ -152,17 +152,17 @@ bool SimpleEvent::operator<(const AbstractSimpleSet &other) {
     auto derived_other = (SimpleEvent *) &other;
     auto own_variables = get_variables();
     auto other_variables = derived_other->get_variables();
-    if (own_variables->size() != other_variables->size()) {
-        return false;
+    if (own_variables->size() < other_variables->size()) {
+        return true;
     }
     for (auto const &[variable, assignment]: *variable_map) {
-        auto other_assignment = derived_other->variable_map->at(variable);
-        if (*assignment == *other_assignment) {
+        if (derived_other->variable_map->find(variable) == derived_other->variable_map->end()) {
+            return true;
         }
-        else
-        {
-            return *assignment < *other_assignment;
+        if (*assignment == *derived_other->variable_map->at(variable)) {
+            continue;
         }
+        return *assignment < *derived_other->variable_map->at(variable);
     }
     return false;
 }
@@ -227,16 +227,16 @@ Event::Event(const VariableSetPtr_t &variables) {
 
 std::tuple<EventPtr_t, bool> Event::simplify_once() {
 
-    std::vector<AbstractSimpleSetPtr_t> simple_sets_vector = std::vector<AbstractSimpleSetPtr_t>(simple_sets->begin(),
-                                                                                                 simple_sets->end());
-    EventPtr_t result = make_shared_event(all_variables);
-    for (const auto &[first, second]: unique_combinations<AbstractSimpleSetPtr_t>(simple_sets_vector)) {
-        auto first_simple_event = std::static_pointer_cast<SimpleEvent>(first);
-        auto second_simple_event = std::static_pointer_cast<SimpleEvent>(second);
+    const auto simple_sets_vector = std::vector<AbstractSimpleSetPtr_t>(simple_sets->begin(), simple_sets->end());
+    const auto combinations = unique_combinations<AbstractSimpleSetPtr_t>(simple_sets_vector);
+    for (const auto &[first, second]: combinations) {
+        const auto event_a = std::static_pointer_cast<SimpleEvent>(first);
+        const auto event_b = std::static_pointer_cast<SimpleEvent>(second);
         auto different_variables = VariableSet();
+        const auto all_variables = event_a->get_variables();
         for (const auto &variable: *all_variables) {
-            auto first_assignment = first_simple_event->variable_map->at(variable).get();
-            auto second_assignment = second_simple_event->variable_map->at(variable).get();
+            const auto first_assignment = event_a->variable_map->at(variable).get();
+            const auto second_assignment = event_b->variable_map->at(variable).get();
             if (*first_assignment != *second_assignment) {
                 different_variables.insert(variable);
             }
@@ -251,51 +251,34 @@ std::tuple<EventPtr_t, bool> Event::simplify_once() {
         }
 
         // if the pair of simple events mismatches in exactly one dimension
-        if (different_variables.size() == 1) {
+        auto const different_variable = *different_variables.begin();
 
-            // get the union the two assignments that are different
-            auto different_variable = *different_variables.begin();
-            auto first_assignment = first_simple_event->variable_map->at(different_variable);
-            auto second_assignment = second_simple_event->variable_map->at(different_variable);
-            auto simplified = first_assignment->union_with(second_assignment);
+        auto const simplified_event = make_shared_simple_event();
 
-            // create a simpler map with the union of the two assignments
-            auto new_variable_map = VariableMap();
-            for (const auto &variable: *all_variables) {
-                if (variable == different_variable) {
-                    new_variable_map.insert({variable, simplified});
-                } else {
-                    new_variable_map.insert({variable, first_simple_event->variable_map->at(variable)});
-                }
+        for (const auto &variable: *all_variables) {
+            if (variable == different_variable) {
+                simplified_event->variable_map->insert({variable, event_a->variable_map->at(variable)->union_with(event_b->variable_map->at(variable))});
+            } else {
+                simplified_event->variable_map->insert({variable, event_a->variable_map->at(variable)});
             }
-
-            // convert to simple event
-            auto var_map = std::make_shared<VariableMap>(new_variable_map);
-            auto new_simple_event = make_shared_simple_event(var_map);
-
-            // create new composite event
-            result->simple_sets->insert(new_simple_event);
-            for (const auto &simple_event: *simple_sets) {
-                // skip events that got simplified
-                if (simple_event != first and simple_event != second) {
-                    result->simple_sets->insert(simple_event);
-                }
-            }
-            return std::make_tuple(result, true);
-
         }
 
-        // This should never happen and is here for safety reasons
-        else {
-            throw std::invalid_argument("A composite event should never contain two "
-                                        "simple events that are equal. Composite event was: " + *this->to_string());
+        // create new composite event
+        const EventPtr_t result = make_shared_event();
+        result->simple_sets->insert(simplified_event);
+        for (const auto &simple_event: *simple_sets) {
+            // skip events that got simplified
+            if (simple_event != event_a and simple_event != event_b) {
+                result->simple_sets->insert(simple_event);
+            }
         }
-
+        return std::make_tuple(result, true);
     }
 
     // if nothing changed, return a copy
-    result->simple_sets = make_shared_simple_set_set(*simple_sets);
-    return std::make_tuple(result, false);
+    const auto self = make_shared_event();
+    self->simple_sets = make_shared_simple_set_set(*simple_sets);
+    return std::make_tuple(self, false);
 }
 
 AbstractCompositeSetPtr_t Event::simplify() {
