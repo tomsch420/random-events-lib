@@ -1,126 +1,129 @@
 #include "set.h"
 
-SetElement::SetElement(int element_, const AllSetElementsPtr_t &all_elements_) {
 
-    this->element_index = element_;
+template<typename T>
+SetElement<T>::SetElement(const AllSetElementsPtr_t<T> &all_elements_) {
     this->all_elements = all_elements_;
-
-    if (element_index < 0) {
-        throw std::invalid_argument("element_index must be non-negative");
-    }
-
-    if (element_index >= all_elements->size()) {
-        throw std::invalid_argument("element_index must be less than the number of elements in the all_elements set");
-    }
+    this->element_index = -1;
 }
 
-SetElement::SetElement(const std::string &element_, const AllSetElementsPtr_t &all_elements_) {
+template<typename T>
+SetElement<T>::SetElement(const T &element_, const AllSetElementsPtr_t<T> &all_elements_) {
     this->all_elements = all_elements_;
-
-    if (element_.empty()) {
-        throw std::invalid_argument("element_index must not be empty");
-    }
-
     auto it = std::find(all_elements->begin(), all_elements->end(), element_);
     if (it == all_elements->end()) {
-        throw std::invalid_argument("element_index must be in the all_elements set");
+        throw std::invalid_argument("element_index must be in the set");
     }
-
     this->element_index = std::distance(all_elements->begin(), it);
 }
 
-SetElement::~SetElement() = default;
+template<typename T>
+SetElement<T>::~SetElement() = default;
 
-AbstractSimpleSetPtr_t SetElement::intersection_with(const AbstractSimpleSetPtr_t &other) {
-    const auto derived_other = (SetElement *) other.get();
-    auto result = make_shared_set_element(all_elements);
+template<typename T>
+AbstractSimpleSetPtr_t SetElement<T>::intersection_with(const AbstractSimpleSetPtr_t &other) {
+    const auto derived_other = static_cast<SetElement<T> *>(other.get());
+    auto result = make_shared_set_element<T>(all_elements);
     if (this->element_index == derived_other->element_index) {
         result->element_index = this->element_index;
     }
     return result;
 }
 
-SimpleSetSetPtr_t SetElement::complement() {
+template<typename T>
+SimpleSetSetPtr_t SetElement<T>::complement() {
     auto result = make_shared_simple_set_set();
     for (int i = 0; i < all_elements->size(); i++) {
         if (i == element_index) {
             continue;
         }
-        result->insert(make_shared_set_element(i, all_elements));
+        auto it= std::next(all_elements->begin(), i);
+        T value_at_index = *it;
+        result->insert(make_shared_set_element<T>(value_at_index, all_elements));
     }
 
     return result;
 }
 
-bool SetElement::contains(const ElementaryVariant *element) {
+template<typename T>
+bool SetElement<T>::contains(const ElementaryVariant *element) {
     return false;
 }
 
-bool SetElement::is_empty() {
+template<typename T>
+bool SetElement<T>::is_empty() {
     return this->element_index < 0;
 }
 
-bool SetElement::operator==(const AbstractSimpleSet &other) {
-    auto derived_other = (SetElement *) &other;
+template<typename T>
+bool SetElement<T>::operator==(const AbstractSimpleSet &other) {
+    auto derived_other = (SetElement<T> *) &other;
     return *this == *derived_other;
 }
 
-bool SetElement::operator==(const SetElement &other) {
+template<typename T>
+bool SetElement<T>::operator==(const SetElement &other) {
     return element_index == other.element_index;
 }
 
-bool SetElement::operator<(const AbstractSimpleSet &other) {
-    const auto derived_other = (SetElement *) &other;
+template<typename T>
+bool SetElement<T>::operator<(const AbstractSimpleSet &other) {
+    const auto derived_other = (SetElement<T> *) &other;
     return *this < *derived_other;
 }
 
-bool SetElement::operator<(const SetElement &other) {
+template<typename T>
+bool SetElement<T>::operator<(const SetElement &other) {
     return element_index < other.element_index;
 }
 
-bool SetElement::operator<=(const SetElement &other) {
+template<typename T>
+bool SetElement<T>::operator<=(const SetElement &other) {
     return element_index <= other.element_index;
 }
 
-std::string *SetElement::non_empty_to_string() {
+template<typename T>
+std::string *SetElement<T>::non_empty_to_string() {
     return new std::string(std::to_string(element_index));
 }
 
-SetElement::SetElement(const AllSetElementsPtr_t &all_elements_) {
-    this->all_elements = all_elements_;
-    this->element_index = -1;
-}
-
-Set::Set(const SetElementPtr_t &element_, const AllSetElementsPtr_t &all_elements_) {
+template<typename T>
+Set<T>::Set(const SetElementPtr_t<T> &element_, const AllSetElementsPtr_t<T> &all_elements_) {
     this->simple_sets = make_shared_simple_set_set();
     this->simple_sets->insert(element_);
     this->all_elements = all_elements_;
 }
 
-Set::Set(const AllSetElementsPtr_t &all_elements_) {
+template<typename T>
+Set<T>::Set(const AllSetElementsPtr_t<T> &all_elements_) {
     this->simple_sets = make_shared_simple_set_set();
     this->all_elements = all_elements_;
 }
 
-Set::Set(const SimpleSetSetPtr_t &elements_, const AllSetElementsPtr_t &all_elements_) {
+template<typename T>
+Set<T>::Set(const SimpleSetSetPtr_t &elements_, const AllSetElementsPtr_t<T> &all_elements_) {
     this->simple_sets = make_shared_simple_set_set();
     this->simple_sets->insert(elements_->begin(), elements_->end());
     this->all_elements = all_elements_;
 }
 
-AbstractCompositeSetPtr_t Set::make_new_empty() const {
-    return make_shared_set(all_elements);
+template<typename T>
+AbstractCompositeSetPtr_t Set<T>::make_new_empty() const {
+    return make_shared_set<T>(all_elements);
 }
 
-Set::~Set() {
+template<typename T>
+Set<T>::~Set() {
     simple_sets->clear();
 }
 
-AbstractCompositeSetPtr_t Set::simplify() {
-    return std::make_shared<Set>(simple_sets, all_elements);
+template<typename T>
+AbstractCompositeSetPtr_t Set<T>::simplify() {
+    return std::make_shared<Set<T>>(simple_sets, all_elements);
 }
 
-std::string *Set::to_string() {
+template<typename T>
+std::string *Set<T>::to_string() {
     if (is_empty()) {
         return &EMPTY_SET_SYMBOL;
     }
@@ -141,3 +144,14 @@ std::string *Set::to_string() {
 
     return result;
 }
+
+// Explicit template instantiation
+template class SetElement<int>;
+template class SetElement<float>;
+template class SetElement<double>;
+template class SetElement<std::string>;
+
+template class Set<int>;
+template class Set<float>;
+template class Set<double>;
+template class Set<std::string>;

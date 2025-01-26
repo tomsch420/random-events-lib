@@ -3,55 +3,58 @@
 #include "sigma_algebra.h"
 #include <set>
 #include <utility>
-#include <algorithm>
 
 // FORWARD DECLARATIONS
+template<typename T>
 class SetElement;
 
+template<typename T>
 class Set;
 
 
 // TYPEDEFS
-using AllSetElementsPtr_t = std::shared_ptr<std::set<std::string>>;
-using SetElementPtr_t = std::shared_ptr<SetElement>;
+template<typename T>
+using AllSetElementsPtr_t = std::shared_ptr<std::set<T>>;
+template<typename T>
+using SetElementPtr_t = std::shared_ptr<SetElement<T>>;
 
-template<typename... Args>
-AllSetElementsPtr_t make_shared_all_elements(Args &&... args) {
-    return std::make_shared<std::set<std::string>>(std::forward<Args>(args)...);
+template<typename T, typename... Args>
+AllSetElementsPtr_t<T> make_shared_all_elements(Args &&... args) {
+    return std::make_shared<std::set<T>>(std::forward<Args>(args)...);
 }
 
 
-template<typename... Args>
-SetElementPtr_t make_shared_set_element(Args &&... args) {
-    return std::make_shared<SetElement>(std::forward<Args>(args)...);
+template<typename T, typename... Args>
+SetElementPtr_t<T> make_shared_set_element(Args &&... args) {
+    return std::make_shared<SetElement<T>>(std::forward<Args>(args)...);
 }
 
-typedef std::shared_ptr<Set> SetPtr_t;
+template<typename T>
+using SetPtr_t = std::shared_ptr<Set<T>>;
 
-template<typename... Args>
-SetPtr_t make_shared_set(Args &&... args) {
-    return std::make_shared<Set>(std::forward<Args>(args)...);
+template<typename T, typename... Args>
+SetPtr_t<T> make_shared_set(Args &&... args) {
+    return std::make_shared<Set<T>>(std::forward<Args>(args)...);
 }
 
 
+template<typename T>
 class SetElement : public AbstractSimpleSet {
 public:
 
     /**
      * The set of all possible strings
      */
-    AllSetElementsPtr_t all_elements;
+    AllSetElementsPtr_t<T> all_elements;
 
     /**
      * The index of the element_index in the all_elements set
      */
     int element_index;
 
-    explicit SetElement(const AllSetElementsPtr_t &all_elements_);
+    explicit SetElement(const AllSetElementsPtr_t<T> &all_elements_);
 
-    SetElement(int element_, const AllSetElementsPtr_t &all_elements_);
-
-    SetElement(const std::string &element_, const AllSetElementsPtr_t &all_elements_);
+    SetElement(const T &element_, const AllSetElementsPtr_t<T> &all_elements_);
 
     ~SetElement() override;
 
@@ -101,14 +104,16 @@ public:
 
 };
 
+
+template<typename T>
 class Set : public AbstractCompositeSet {
 public:
 
-    AllSetElementsPtr_t all_elements;
+    AllSetElementsPtr_t<T> all_elements;
 
-    explicit Set(const AllSetElementsPtr_t& all_elements_);
-    Set(const SetElementPtr_t& element_, const AllSetElementsPtr_t& all_elements_);
-    Set(const SimpleSetSetPtr_t& elements, const AllSetElementsPtr_t& all_elements_);
+    explicit Set(const AllSetElementsPtr_t<T>& all_elements_);
+    Set(const SetElementPtr_t<T>& element_, const AllSetElementsPtr_t<T>& all_elements_);
+    Set(const SimpleSetSetPtr_t& elements, const AllSetElementsPtr_t<T>& all_elements_);
 
     ~Set() override;
 

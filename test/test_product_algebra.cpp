@@ -1,33 +1,39 @@
 #include <gtest/gtest.h>
-#include "product_algebra.h"  // Include your SimpleEvent header file
-#include "interval.h"  // Include your CPPInterval header file
-#include "set.h"  // Include your CPPSetElement header file
-#include "sigma_algebra.h"  // Include your CPPAbstractSimpleSet header file
+#include "product_algebra.h"
+#include "interval.h"
+#include "set.h"
+#include "sigma_algebra.h"
 #include "variable.h"
 #include <memory>
 
-auto all_elements = make_shared_all_elements(std::set<std::string>{"a", "b", "c"});
+auto all_elements_string = make_shared_all_elements<std::string>(std::set<std::string>{"a", "b", "c"});
+auto all_elements_int = make_shared_all_elements<int>(std::set{0, 1, 2});
 
-auto sa = make_shared_set_element(0, all_elements);
-auto sb = make_shared_set_element(1, all_elements);
-auto sc = make_shared_set_element(2, all_elements);
+auto s0 = make_shared_set_element<int>(0, all_elements_int);
+auto s1 = make_shared_set_element<int>(1, all_elements_int);
+auto s2 = make_shared_set_element<int>(2, all_elements_int);
+
+auto sa = make_shared_set_element<std::string>("a", all_elements_string);
+auto sb = make_shared_set_element<std::string>("b", all_elements_string);
+auto sc = make_shared_set_element<std::string>("c", all_elements_string);
 
 TEST(SimpleEventTest, IntersectionWith) {
     // Define the sets and intervals
     auto sabc = make_shared_simple_set_set();
-    sabc->insert(sa);
-    sabc->insert(sb);
-    sabc->insert(sc);
+    sabc->insert(s0);
+    sabc->insert(s1);
+    sabc->insert(s2);
 
     auto sab = make_shared_simple_set_set();
-    sab->insert(sa);
-    sab->insert(sb);
+    sab->insert(s0);
+    sab->insert(s1);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
-    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, all_elements));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
+    auto name = std::make_shared<std::string>("a");
+    auto a_a = make_shared_symbolic<int>(name, make_shared_set<int>(s0, all_elements_int));
+    auto a_b = make_shared_symbolic<int>(name, make_shared_set<int>(s1, all_elements_int));
+    auto a_ab = make_shared_symbolic<int>(name, make_shared_set<int>(sab, all_elements_int));
+    auto a_abc = make_shared_symbolic<int>(name, make_shared_set<int>(sabc, all_elements_int));
+    auto c = make_shared_symbolic<int>(name, make_shared_set<int>(s2, all_elements_int));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
@@ -77,20 +83,20 @@ TEST(SimpleEventTest, IntersectionWith) {
 TEST(ProductAlgebra, VariableGetting) {
     // Define the sets and intervals
     auto sabc = make_shared_simple_set_set();
-    sabc->insert(sa);
-    sabc->insert(sb);
-    sabc->insert(sc);
+    sabc->insert(s0);
+    sabc->insert(s1);
+    sabc->insert(s2);
 
     auto sab = make_shared_simple_set_set();
-    sab->insert(sa);
-    sab->insert(sb);
+    sab->insert(s0);
+    sab->insert(s1);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
-    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, all_elements));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
-    auto b_a = make_shared_symbolic("b", make_shared_set(sa, all_elements));
+    auto a_a = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sa, all_elements_string));
+    auto a_b = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sb, all_elements_string));
+    auto a_ab = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sab, all_elements_string));
+    auto a_abc = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sabc, all_elements_string));
+    auto c = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sc, all_elements_string));
+    auto b_a = make_shared_symbolic<std::string>("b", make_shared_set<std::string>(sa, all_elements_string));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
@@ -124,14 +130,14 @@ TEST(ProductAlgebra, VariableGetting) {
 TEST(ProductAlgebra, Complement){
      // Define the sets and intervals
     auto sab = make_shared_simple_set_set();
-    sab->insert(sa);
-    sab->insert(sb);
+    sab->insert(s0);
+    sab->insert(s1);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
-    auto b_a = make_shared_symbolic("b", make_shared_set(sa, all_elements));
+    auto a_a = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sa, all_elements_string));
+    auto a_b = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sb, all_elements_string));
+    auto a_ab = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sab, all_elements_string));
+    auto c = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sc, all_elements_string));
+    auto b_a = make_shared_symbolic<std::string>("b", make_shared_set<std::string>(sa, all_elements_string));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
@@ -170,18 +176,8 @@ TEST(ProductAlgebra, Complement){
 
     ASSERT_TRUE(compare_sets(complement, simple_set_set));
 }
-// def test_simplify(self):
-//         event_1 = SimpleEvent(
-//             {self.a: Set(TestEnum.A, TestEnum.B), self.x: SimpleInterval(0, 1), self.y: SimpleInterval(0, 1)})
-//         event_2 = SimpleEvent(
-//             {self.a: Set(TestEnum.C), self.x: SimpleInterval(0, 1), self.y: Interval(SimpleInterval(0, 1))})
-//         event = Event(event_1, event_2)
-//         simplified = event.simplify()
-//         self.assertEqual(len(simplified.simple_sets), 1)
-//
-//         result = Event(SimpleEvent(
-//             {self.a: self.a.domain, self.x: Interval(SimpleInterval(0, 1)), self.y: Interval(SimpleInterval(0, 1))}))
-//         self.assertEqual(simplified, result)
+
+
 TEST(ProductAlgebra, Simplify){
     // Define the sets and intervals
     auto sabc = make_shared_simple_set_set();
@@ -193,11 +189,11 @@ TEST(ProductAlgebra, Simplify){
     sab->insert(sa);
     sab->insert(sb);
 
-    auto a_a = make_shared_symbolic("a", make_shared_set(sa, all_elements));
-    auto a_b = make_shared_symbolic("a", make_shared_set(sb, all_elements));
-    auto a_ab = make_shared_symbolic("a", make_shared_set(sab, all_elements));
-    auto a_abc = make_shared_symbolic("a", make_shared_set(sabc, all_elements));
-    auto c = make_shared_symbolic("a", make_shared_set(sc, all_elements));
+    auto a_a = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sa, all_elements_string));
+    auto a_b = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sb, all_elements_string));
+    auto a_ab = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sab, all_elements_string));
+    auto a_abc = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sabc, all_elements_string));
+    auto c = make_shared_symbolic<std::string>("a", make_shared_set<std::string>(sc, all_elements_string));
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 

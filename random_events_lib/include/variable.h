@@ -39,25 +39,26 @@ public:
 
 using AbstractVariablePtr_t = std::shared_ptr<AbstractVariable>;
 
+template<typename T>
 class Symbolic : public AbstractVariable {
 public:
-    SetPtr_t domain;
+    SetPtr_t<T> domain;
 
-    Symbolic(const NamePtr_t& name, const SetPtr_t& domain) {
+    Symbolic(const NamePtr_t& name, const SetPtr_t<T>& domain) {
         this->name = name;
         this->domain = domain;
     }
 
-    Symbolic(const char* name, const SetPtr_t& domain) {
+    Symbolic(const char* name, const SetPtr_t<T>& domain) {
         this->name = std::make_shared<std::string>(name);
         this->domain = domain;
     }
 
-    Symbolic(const NamePtr_t& name, const AllSetElementsPtr_t& all_set_elements) {
+    Symbolic(const NamePtr_t& name, const AllSetElementsPtr_t<T>& all_set_elements) {
         this->name = name;
-        auto domain_ = make_shared_set(all_set_elements);
+        auto domain_ = make_shared_set<T>(all_set_elements);
         for (const auto& element: *all_set_elements) {
-            auto set_element = make_shared_set_element(element, all_set_elements);
+            auto set_element = make_shared_set_element<T>(element, all_set_elements);
             domain_->simple_sets->insert(set_element);
         }
         this->domain = domain_;
@@ -104,13 +105,14 @@ public:
 };
 
 
-using SymbolicPtr_t = std::shared_ptr<Symbolic>;
+template<typename T>
+using SymbolicPtr_t = std::shared_ptr<Symbolic<T>>;
 using IntegerPtr_t = std::shared_ptr<Integer>;
 using ContinuousPtr_t = std::shared_ptr<Continuous>;
 
-template<typename... Args>
-SymbolicPtr_t make_shared_symbolic(Args &&... args) {
-    return std::make_shared<Symbolic>(std::forward<Args>(args)...);
+template<typename T, typename... Args>
+SymbolicPtr_t<T> make_shared_symbolic(Args &&... args) {
+    return std::make_shared<Symbolic<T>>(std::forward<Args>(args)...);
 }
 
 template<typename... Args>
