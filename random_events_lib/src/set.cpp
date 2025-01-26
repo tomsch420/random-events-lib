@@ -1,4 +1,5 @@
 #include "set.h"
+#include <algorithm>
 
 
 template<typename T>
