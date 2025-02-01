@@ -17,7 +17,11 @@ public:
     virtual AbstractCompositeSetPtr_t get_domain() const = 0;
 
     bool operator==(const AbstractVariable &other) const {
-        return *this->name == *other.name;
+        return *name == *other.name;
+    }
+
+    bool operator !=(const AbstractVariable &other) const {
+        return !operator==(other);
     }
 
     /**
@@ -31,19 +35,6 @@ public:
     bool operator<(const AbstractVariable &other) const {
         return *name < *other.name;
     }
-
-    /**
-     * Compare two variables. Variables are ordered by their name.
-     *
-     * Note that the domain is ignored in ordering.
-     *
-     * @param other The other variable
-     * @return True if this variable is less or equal than the other variable.
-     */
-    bool operator<=(const AbstractVariable &other) const {
-        return *name <= *name;
-    }
-
 };
 
 using AbstractVariablePtr_t = std::shared_ptr<AbstractVariable>;

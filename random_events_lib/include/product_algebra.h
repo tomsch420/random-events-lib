@@ -13,7 +13,7 @@ class Event;
 
 
 // TYPEDEFS
-using VariableMap = std::map<AbstractVariablePtr_t, AbstractCompositeSetPtr_t>;
+using VariableMap = std::map<AbstractVariablePtr_t, AbstractCompositeSetPtr_t, PointerLess<AbstractVariablePtr_t>>;
 using VariableMapPtr_t = std::shared_ptr<VariableMap>;
 using SimpleEventPtr_t = std::shared_ptr<SimpleEvent>;
 using EventPtr_t = std::shared_ptr<Event>;
@@ -31,7 +31,7 @@ EventPtr_t make_shared_event(Args &&... args) {
 }
 
 template<typename... Args>
-VariableSetPtr_t make_variable_set(Args &&... args) {
+VariableSetPtr_t make_shared_variable_set(Args &&... args) {
     return std::make_shared<VariableSet>(std::forward<Args>(args)...);
 }
 
@@ -40,19 +40,21 @@ class SimpleEvent : public AbstractSimpleSet {
 public:
     SimpleEvent();
 
-    explicit SimpleEvent(VariableMapPtr_t variable_map);
+    explicit SimpleEvent(VariableMapPtr_t &variable_map);
 
     /**
      * Create a Simple Event where every variable is assigned to its domain.
      * @param variables
      */
-    explicit SimpleEvent(const VariableSet &variables);
+    explicit SimpleEvent(const VariableSetPtr_t &variables);
 
     VariableMapPtr_t variable_map;
 
-    VariableSet get_variables() const;
+    VariableSetPtr_t get_variables() const;
 
-    VariableSet merge_variables(const VariableSet &other) const;
+    VariableSetPtr_t merge_variables(const VariableSetPtr_t &other) const;
+
+    AbstractSimpleSetPtr_t marginal(const VariableSetPtr_t &variables) const;
 
 
     AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override;
@@ -68,8 +70,6 @@ public:
     bool operator==(const AbstractSimpleSet &other) override;
 
     bool operator<(const AbstractSimpleSet &other) override;
-
-    bool operator<=(const AbstractSimpleSet &other) override;
 };
 
 class Event: public AbstractCompositeSet {
@@ -81,14 +81,17 @@ public:
     VariableSetPtr_t all_variables;
 
     Event();
-    Event(Event const &event);
     explicit Event(const SimpleSetSetPtr_t &simple_events);
     explicit Event(const SimpleEventPtr_t &simple_event);
     explicit Event(const VariableSetPtr_t &variables);
 
     VariableSet get_variables_from_simple_events() const;
 
+    AbstractCompositeSetPtr_t marginal(const VariableSetPtr_t &variables) const;
+
     AbstractCompositeSetPtr_t simplify() override;
+
     std::tuple<EventPtr_t , bool> simplify_once();
+
     AbstractCompositeSetPtr_t make_new_empty() const override;
 };

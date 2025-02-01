@@ -3,21 +3,20 @@
 #include "sigma_algebra.h"
 #include <set>
 #include <utility>
-#include <algorithm>
 
 // FORWARD DECLARATIONS
 class SetElement;
-
 class Set;
 
 
 // TYPEDEFS
-using AllSetElementsPtr_t = std::shared_ptr<std::set<std::string>>;
+using AllSetElementsPtr_t = std::shared_ptr<std::set<long long>>;
 using SetElementPtr_t = std::shared_ptr<SetElement>;
+using SetPtr_t = std::shared_ptr<Set>;
 
 template<typename... Args>
 AllSetElementsPtr_t make_shared_all_elements(Args &&... args) {
-    return std::make_shared<std::set<std::string>>(std::forward<Args>(args)...);
+    return std::make_shared<std::set<long long>>(std::forward<Args>(args)...);
 }
 
 
@@ -26,7 +25,6 @@ SetElementPtr_t make_shared_set_element(Args &&... args) {
     return std::make_shared<SetElement>(std::forward<Args>(args)...);
 }
 
-typedef std::shared_ptr<Set> SetPtr_t;
 
 template<typename... Args>
 SetPtr_t make_shared_set(Args &&... args) {
@@ -49,9 +47,7 @@ public:
 
     explicit SetElement(const AllSetElementsPtr_t &all_elements_);
 
-    SetElement(int element_, const AllSetElementsPtr_t &all_elements_);
-
-    SetElement(const std::string &element_, const AllSetElementsPtr_t &all_elements_);
+    SetElement(int element_index, const AllSetElementsPtr_t &all_elements_);
 
     ~SetElement() override;
 
@@ -88,8 +84,6 @@ public:
     bool operator<(const SetElement &other);
 
 
-    bool operator<=(const AbstractSimpleSet &other) override;
-
     /**
     * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
     * ordered by upper bound.
@@ -102,6 +96,7 @@ public:
     bool operator<=(const SetElement &other);
 
 };
+
 
 class Set : public AbstractCompositeSet {
 public:

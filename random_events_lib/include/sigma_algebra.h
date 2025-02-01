@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <string>
 
 // FORWARD DECLARATIONS
 class AbstractSimpleSet;
@@ -37,6 +38,25 @@ union ElementaryVariant {
     int i;
     std::string s;
 };
+
+template <typename T>
+bool compare_sets(const T &lhs, const T &rhs) {
+    if (lhs->size() != rhs->size()) {
+        return false;
+    }
+    auto it_lhs = lhs->begin();
+    auto end_lhs = lhs->end();
+    auto it_rhs = rhs->begin();
+
+    while (it_lhs != end_lhs) {
+        if (**it_lhs != **it_rhs) {
+            return false;
+        }
+        ++it_lhs;
+        ++it_rhs;
+    }
+    return true;
+}
 
 class AbstractSimpleSet : public std::enable_shared_from_this<AbstractSimpleSet>{
 public:
@@ -89,13 +109,7 @@ public:
 
     virtual bool operator<(const AbstractSimpleSet &other)= 0;
 
-    virtual bool operator<=(const AbstractSimpleSet &other)= 0;
-
     bool operator!=(const AbstractSimpleSet &other);
-
-    bool operator>(const AbstractSimpleSet &other);
-
-    bool operator>=(const AbstractSimpleSet &other);
 
     std::shared_ptr<AbstractSimpleSet> share_more()
     {
@@ -138,7 +152,7 @@ std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements
 * Abstract class for composite elements.
 * Composite elements contain a **disjoint** union of (abstract) simple sets.
 */
-class AbstractCompositeSet {
+class AbstractCompositeSet : public std::enable_shared_from_this<AbstractCompositeSet>{
 public:
 
     SimpleSetSetPtr_t simple_sets;
@@ -180,6 +194,7 @@ public:
 
     bool operator==(const AbstractCompositeSet &other) const;
     bool operator!=(const AbstractCompositeSet &other) const;
+    bool operator<(const AbstractCompositeSet &other) const;
 
     /**
     * Split this composite set into disjoint and non-disjoint parts.
@@ -196,14 +211,14 @@ public:
     *
     * @return A tuple of disjoint and non-disjoint composite sets.
     */
-    std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t> split_into_disjoint_and_non_disjoint();
+    std::tuple<AbstractCompositeSetPtr_t, AbstractCompositeSetPtr_t> split_into_disjoint_and_non_disjoint() const;
 
     /**
     * Create an equal composite set that contains a disjoint union of simple sets.
     *
     * @return The disjoint composite set.
     */
-    AbstractCompositeSetPtr_t make_disjoint();
+    AbstractCompositeSetPtr_t make_disjoint() const;
 
     /**
      * Form the intersection with an simple set.
@@ -228,7 +243,7 @@ public:
     /**
      * @return the complement of a composite set as disjoint composite set.
      */
-    AbstractCompositeSetPtr_t complement();
+    AbstractCompositeSetPtr_t complement() const;
 
     /**
     * Form the union with a simple set.
@@ -236,7 +251,7 @@ public:
     * @param other The other simple set.
     * @return The union as disjoint composite set.
     */
-    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other) const;
+    AbstractCompositeSetPtr_t union_with(const AbstractSimpleSetPtr_t &other);
 
     /**
     * Form the union with another composite set.
@@ -263,5 +278,7 @@ public:
     AbstractCompositeSetPtr_t difference_with(const AbstractCompositeSetPtr_t &other);
 
     bool contains(const AbstractCompositeSetPtr_t &other);
+
+    void add_new_simple_set(const AbstractSimpleSetPtr_t& simple_set) const;
 
 };

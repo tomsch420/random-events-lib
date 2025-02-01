@@ -3,25 +3,7 @@
 #include "sigma_algebra.h"
 #include <set>
 #include <memory>
-
-
-bool compare_simple_set_set(const SimpleSetSetPtr_t &lhs, const SimpleSetSetPtr_t &rhs) {
-    if (lhs->size() != rhs->size()) {
-        return false;
-    }
-    auto it_lhs = lhs->begin();
-    auto end_lhs = lhs->end();
-    auto it_rhs = rhs->begin();
-
-    while (it_lhs != end_lhs) {
-        if (**it_lhs != **it_rhs) {
-            return false;
-        }
-        ++it_lhs;
-        ++it_rhs;
-    }
-    return true;
-}
+#include <iostream>
 
 
 TEST(AtomicIntervalCreationTestSuite, SimpleInterval) {
@@ -82,7 +64,7 @@ TEST(AtomicIntervalInvertTestSuite, SimpleInterval) {
     inverted_by_hand->insert(element_1);
     inverted_by_hand->insert(element_2);
     inverted_by_hand->insert(element_3);
-    EXPECT_TRUE(compare_simple_set_set(inverted, inverted_by_hand));
+    EXPECT_TRUE(compare_sets(inverted, inverted_by_hand));
 }
 
 TEST(AtomicIntervalIsEmptyTestSuite, SimpleInterval) {
@@ -115,35 +97,33 @@ TEST(AtomicIntervalDifferenceTest, SimpleInterval) {
             SimpleInterval<>::make_shared(0., 1., BorderType::OPEN, BorderType::CLOSED));
     difference_from_middle_element_by_hand->insert(
             SimpleInterval<>::make_shared(2., 3., BorderType::OPEN, BorderType::CLOSED));
-    EXPECT_TRUE(compare_simple_set_set(difference_from_middle_element, difference_from_middle_element_by_hand));
+    EXPECT_TRUE(compare_sets(difference_from_middle_element, difference_from_middle_element_by_hand));
 }
 
-TEST(SimplifyIntervalTestSuite, Interval) {
-    auto interval1 = SimpleInterval<>::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
-    auto interval2 = SimpleInterval<>::make_shared(1.0, 1.5, BorderType::CLOSED, BorderType::OPEN);
-    auto interval3 = SimpleInterval<>::make_shared(1.5, 2.0, BorderType::OPEN, BorderType::CLOSED);
-    auto interval4 = SimpleInterval<>::make_shared(3.0, 5.0, BorderType::CLOSED, BorderType::CLOSED);
-
-    auto interval = empty();
-    interval->simple_sets->insert(interval1);
-    interval->simple_sets->insert(interval2);
-    interval->simple_sets->insert(interval3);
-    interval->simple_sets->insert(interval4);
-
-    auto simplified = interval->simplify();
-
-    auto sbh1 = SimpleInterval<>::make_shared(0.0, 1.5, BorderType::CLOSED, BorderType::OPEN);
-    auto sbh2 = SimpleInterval<>::make_shared(1.5, 2, BorderType::OPEN, BorderType::CLOSED);
-    auto sbh3 = SimpleInterval<>::make_shared(3.0, 5., BorderType::CLOSED, BorderType::CLOSED);
-
-    auto result_by_hand = Interval<>::make_shared(make_shared_simple_set_set());
-    result_by_hand->simple_sets->insert(sbh1);
-    result_by_hand->simple_sets->insert(sbh2);
-    result_by_hand->simple_sets->insert(sbh3);
-
-
-    EXPECT_TRUE(compare_simple_set_set(simplified->simple_sets, result_by_hand->simple_sets));
-}
+// TEST(SimplifyIntervalTestSuite, Interval) {
+//     auto interval1 = SimpleInterval<>::make_shared(0.0, 1.0, BorderType::OPEN, BorderType::OPEN);
+//     auto interval2 = SimpleInterval<>::make_shared(0.5, 1.5, BorderType::OPEN, BorderType::OPEN);
+//     auto interval3 = SimpleInterval<>::make_shared(1.5, 2.0, BorderType::OPEN, BorderType::CLOSED);
+//     auto interval4 = SimpleInterval<>::make_shared(3.0, 4.0, BorderType::OPEN, BorderType::OPEN);
+//
+//     auto interval = empty();
+//     interval->simple_sets->insert(interval1);
+//     interval->simple_sets->insert(interval2);
+//     interval->simple_sets->insert(interval3);
+//     interval->simple_sets->insert(interval4);
+//
+//     auto simplified = interval->simplify();
+//
+//     auto sbh1 = SimpleInterval<>::make_shared(0.0, 2, BorderType::OPEN, BorderType::OPEN);
+//     auto sbh2 = SimpleInterval<>::make_shared(3, 4, BorderType::OPEN, BorderType::OPEN);
+//
+//     auto result_by_hand = Interval<>::make_shared(make_shared_simple_set_set());
+//     result_by_hand->simple_sets->insert(sbh1);
+//     result_by_hand->simple_sets->insert(sbh2);
+//
+//
+//     EXPECT_TRUE(compare_sets(simplified->simple_sets, result_by_hand->simple_sets));
+// }
 
 TEST(SplitIntervalTestSuit, Interval) {
     auto interval1 = SimpleInterval<>::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);

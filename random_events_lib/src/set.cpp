@@ -1,10 +1,15 @@
 #include "set.h"
+#include <algorithm>
 
-SetElement::SetElement(int element_, const AllSetElementsPtr_t &all_elements_) {
 
-    this->element_index = element_;
+SetElement::SetElement(const AllSetElementsPtr_t &all_elements_) {
     this->all_elements = all_elements_;
+    this->element_index = -1;
+}
 
+SetElement::SetElement(int element_index, const AllSetElementsPtr_t &all_elements_) {
+    this->all_elements = all_elements_;
+    this->element_index = element_index;
     if (element_index < 0) {
         throw std::invalid_argument("element_index must be non-negative");
     }
@@ -14,26 +19,10 @@ SetElement::SetElement(int element_, const AllSetElementsPtr_t &all_elements_) {
     }
 }
 
-SetElement::SetElement(const std::string &element_, const AllSetElementsPtr_t &all_elements_) {
-    this->all_elements = all_elements_;
-
-    if (element_.empty()) {
-        throw std::invalid_argument("element_index must not be empty");
-    }
-
-    auto it = std::find(all_elements->begin(), all_elements->end(), element_);
-    if (it == all_elements->end()) {
-        throw std::invalid_argument("element_index must be in the all_elements set");
-    }
-
-    this->element_index = std::distance(all_elements->begin(), it);
-
-}
-
 SetElement::~SetElement() = default;
 
 AbstractSimpleSetPtr_t SetElement::intersection_with(const AbstractSimpleSetPtr_t &other) {
-    const auto derived_other = (SetElement *) other.get();
+    const auto derived_other = (SetElement *)other.get();
     auto result = make_shared_set_element(all_elements);
     if (this->element_index == derived_other->element_index) {
         result->element_index = this->element_index;
@@ -79,22 +68,12 @@ bool SetElement::operator<(const SetElement &other) {
     return element_index < other.element_index;
 }
 
-bool SetElement::operator<=(const AbstractSimpleSet &other) {
-    const auto derived_other = (SetElement *) &other;
-    return *this <= *derived_other;
-}
-
 bool SetElement::operator<=(const SetElement &other) {
     return element_index <= other.element_index;
 }
 
 std::string *SetElement::non_empty_to_string() {
     return new std::string(std::to_string(element_index));
-}
-
-SetElement::SetElement(const AllSetElementsPtr_t &all_elements_) {
-    this->all_elements = all_elements_;
-    this->element_index = -1;
 }
 
 Set::Set(const SetElementPtr_t &element_, const AllSetElementsPtr_t &all_elements_) {
@@ -147,4 +126,3 @@ std::string *Set::to_string() {
 
     return result;
 }
-

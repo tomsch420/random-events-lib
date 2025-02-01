@@ -1,10 +1,12 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 cc_library(
-    name = "random_events",
-    srcs = glob(["random_events/src/*.cpp"]),
-    hdrs = glob(["random_events/include/*h"]),
+    name = "random_events_lib",
+    srcs = glob(["random_events_lib/src/*.cpp"]),
+    hdrs = glob(["random_events_lib/include/*.h"]),
     visibility = ["//visibility:public"],
     includes = [
-        "random_events",
-        "random_events/include"
+        "random_events_lib",
+        "random_events_lib/include"
     ],
 )

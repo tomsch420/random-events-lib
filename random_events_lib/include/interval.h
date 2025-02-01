@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "sigma_algebra.h"
 #include <memory>
 #include <utility>
@@ -28,12 +30,12 @@ enum class BorderType {
     /**
      * Open indicates that a value is included in the interval.
      */
-    OPEN,
+    CLOSED,
 
     /**
      * Close indicates that a value is excluded in the interval.
      */
-    CLOSED
+    OPEN
 };
 
 /**
@@ -94,7 +96,7 @@ public:
     }
 
 
-    inline AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override {
+    AbstractSimpleSetPtr_t intersection_with(const AbstractSimpleSetPtr_t &other) override {
         const auto derived_other = (SimpleInterval<Orderable_T> *) other.get();
 
         // get the new lower and upper bounds
@@ -234,28 +236,6 @@ public:
         return lower < other.lower;
     };
 
-
-    bool operator<=(const AbstractSimpleSet &other) override {
-        const auto derived_other = (SimpleInterval<Orderable_T> *) &other;
-        return *this <= *derived_other;
-    };
-
-    /**
-    * Compare two simple intervals. Simple intervals are ordered by lower bound. If the lower bound is equal, they are
-    * ordered by upper bound.
-    *
-    * Note that border types are ignored in ordering.
-    *
-    * @param other The other interval
-    * @return True if this interval is less or equal to the other interval.
-    */
-    bool operator<=(const SimpleInterval &other) {
-        if (lower == other.lower) {
-            return upper <= other.upper;
-        }
-        return lower <= other.lower;
-    };
-
     template<typename... Args>
     static SimpleIntervalPtr_t<Orderable_T> make_shared(Args &&... args) {
         return std::make_shared<SimpleInterval<Orderable_T>>(std::forward<Args>(args)...);
@@ -293,16 +273,18 @@ public:
     }
 
 
-    explicit Interval(const SimpleInterval<Orderable_T> &simple_interval) {
-        simple_sets->insert(std::make_shared<SimpleInterval<Orderable_T>>(simple_interval));
-    }
-
-    explicit Interval(SimpleSetSetPtr_t &simple_sets_) {
-        this->simple_sets = simple_sets_;
+    explicit Interval(const SimpleIntervalPtr_t<Orderable_T> &simple_interval) {
+        this->simple_sets = make_shared_simple_set_set();
+        this->simple_sets->insert(simple_interval);
     }
 
     ~Interval() override {
         simple_sets->clear();
+    };
+
+    bool operator <(const AbstractCompositeSet &other) {
+        const auto derived_other = static_cast<Interval<Orderable_T> *>(&other);
+        return *this < *derived_other;
     };
 
     AbstractCompositeSetPtr_t simplify() override {
@@ -321,16 +303,16 @@ public:
 
             auto last_simple_interval = std::dynamic_pointer_cast<SimpleInterval<Orderable_T>>(*result->rbegin());
 
-            if (last_simple_interval->upper == current_simple_interval->lower &&
-                !(last_simple_interval->right == BorderType::OPEN and
-                  current_simple_interval->left == BorderType::OPEN)) {
+            if (last_simple_interval->upper > current_simple_interval->lower or (
+                last_simple_interval->upper == current_simple_interval->lower and not (
+                  last_simple_interval->right == BorderType::OPEN and
+                  current_simple_interval->left == BorderType::OPEN))) {
                 last_simple_interval->upper = current_simple_interval->upper;
                 last_simple_interval->right = current_simple_interval->right;
-            } else {
-                result->insert(current_simple_interval);
-            }
+                  } else {
+                      result->insert(current_simple_interval);
+                  }
         }
-
         return Interval::make_shared(result);
     };
 
