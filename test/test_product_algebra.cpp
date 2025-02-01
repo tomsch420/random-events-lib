@@ -6,7 +6,7 @@
 #include "variable.h"
 #include <memory>
 
-auto all_elements_int = make_shared_all_elements(std::set{0, 1, 2});
+auto all_elements_int = make_shared_all_elements(std::set<long long>{0, 1, 2});
 
 auto s0 = make_shared_set_element(0, all_elements_int);
 auto s1 = make_shared_set_element(1, all_elements_int);

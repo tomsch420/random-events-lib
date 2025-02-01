@@ -10,13 +10,13 @@ class Set;
 
 
 // TYPEDEFS
-using AllSetElementsPtr_t = std::shared_ptr<std::set<int>>;
+using AllSetElementsPtr_t = std::shared_ptr<std::set<long long>>;
 using SetElementPtr_t = std::shared_ptr<SetElement>;
 using SetPtr_t = std::shared_ptr<Set>;
 
 template<typename... Args>
 AllSetElementsPtr_t make_shared_all_elements(Args &&... args) {
-    return std::make_shared<std::set<int>>(std::forward<Args>(args)...);
+    return std::make_shared<std::set<long long>>(std::forward<Args>(args)...);
 }
 
 

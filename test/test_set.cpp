@@ -4,7 +4,7 @@
 
 
 TEST(CPPSetElement, Constructor) {
-    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set{0, 1, 2});
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<long long>{0, 1, 2});
     SetElement set_element(1, all_elements);
     EXPECT_EQ(set_element.element_index, 1);
     EXPECT_EQ(set_element.all_elements, all_elements);
@@ -19,7 +19,7 @@ TEST(CPPSetElement, Constructor) {
 }
 
 TEST(SetElement, IntersectionWith) {
-    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set{0, 1, 2});
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<long long>{0, 1, 2});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto set_element3 = make_shared_set_element(1, all_elements);
@@ -34,7 +34,7 @@ TEST(SetElement, IntersectionWith) {
 }
 
 TEST(SetElement, Complement) {
-    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set{0, 1, 2});
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<long long>{0, 1, 2});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
 
@@ -45,7 +45,7 @@ TEST(SetElement, Complement) {
 }
 
 TEST(Set, Simplify){
-    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set{0, 1, 2});
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<long long>{0, 1, 2});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto sets = make_shared_simple_set_set();
@@ -56,7 +56,7 @@ TEST(Set, Simplify){
 }
 
 TEST(Set, MakeNewEmpty) {
-    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set{0, 1, 2});
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<long long>{0, 1, 2});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto sets = make_shared_simple_set_set();
@@ -69,7 +69,7 @@ TEST(Set, MakeNewEmpty) {
 
 
 TEST(Set, Constructor) {
-    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set{0, 1, 2});
+    AllSetElementsPtr_t all_elements = make_shared_all_elements(std::set<long long>{0, 1, 2});
     auto set_element1 = make_shared_set_element(1, all_elements);
     auto set_element2 = make_shared_set_element(2, all_elements);
     auto sets = make_shared_simple_set_set();
@@ -88,7 +88,7 @@ TEST(Set, Constructor) {
 }
 
 TEST(Set, UnionWith){
-    auto all_elements = make_shared_all_elements(std::set{0, 1, 2});
+    auto all_elements = make_shared_all_elements(std::set<long long>{0, 1, 2});
     auto a = std::static_pointer_cast<AbstractCompositeSet>(make_shared_set(all_elements));
     auto element = make_shared_set_element(0, all_elements);
     auto a_ = a->union_with(element);
