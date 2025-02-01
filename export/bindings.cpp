@@ -89,42 +89,39 @@ PYBIND11_MODULE(random_events_lib, handle) {
 
 
     py::class_<SetElement, AbstractSimpleSet, std::shared_ptr<SetElement>>(handle, "SetElement")
-        .def(py::init([](std::list<std::string> const &x) {
-            auto set = std::set(x.begin(), x.end());
-            auto const p = make_shared_all_elements(set);
+        .def(py::init([](std::set<int> const &x) {
+            auto const p = make_shared_all_elements(x);
             const auto set_element = SetElement(p);
             return make_shared_set_element(set_element);
         }))
-        .def(py::init([](int const &x, std::list<std::string> const &y) {
-            auto set = std::set(y.begin(), y.end());
-            auto const p = make_shared_all_elements(set);
+        .def(py::init([](int const &x, std::set<int> const &y) {
+            auto const p = make_shared_all_elements(y);
             const auto set_element = SetElement(x, p);
             return make_shared_set_element(set_element);
         }))
         .def_property("element_index", [](SetElement const &x){return x.element_index;},
             [](SetElement &x, int const &v){x.element_index = v;})
         .def_property("all_elements", [](SetElement const &x){return *x.all_elements;},
-            [](SetElement &x, std::set<std::string> const &v){x.all_elements = make_shared_all_elements(v);});
+            [](SetElement &x, std::set<int> const &v){x.all_elements = make_shared_all_elements(v);});
 
 
     py::class_<Set, AbstractCompositeSet, std::shared_ptr<Set>>(handle, "Set")
-        .def(py::init([] (std::set<std::string> const &x) {
+        .def(py::init([] (std::set<int> const &x) {
             auto const p = make_shared_all_elements(x);
             return std::make_shared<Set>(p);
         }))
-        .def(py::init([](SimpleSetSet_t const &x, std::set<std::string> const &y) {
+        .def(py::init([](SimpleSetSet_t const &x, std::set<int> const &y) {
             auto const p = make_shared_simple_set_set(x);
             auto const q = make_shared_all_elements(y);
             return std::make_shared<Set>(p, q);
         }))
-        .def(py::init([](SetElement const &x, std::set<std::string> const &y) {
+        .def(py::init([](SetElement const &x, std::set<int> const &y) {
             auto const q = std::make_shared<SetElement>(x);
             auto const p = make_shared_all_elements(y);
             return std::make_shared<Set>(q, p);
         }))
         .def_property("all_elements", [](Set const &x){return *x.all_elements;},
-            [](Set &x, std::set<std::string> const &v){x.all_elements = make_shared_all_elements(v);});
-
+            [](Set &x, std::set<int> const &v){x.all_elements = make_shared_all_elements(v);});
 
     py::class_<SimpleEvent, AbstractSimpleSet, std::shared_ptr<SimpleEvent>>(handle, "SimpleEvent")
         .def(py::init<>())

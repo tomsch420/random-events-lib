@@ -6,17 +6,19 @@ print("simple interval 1: ", si)
 si2 = re.SimpleInterval(1, 7, re.BorderType.CLOSED, re.BorderType.CLOSED)
 print("simple interval 2: ", si2)
 
-a = re.SetElement(0, 3)
-b = re.SetElement(1, 3)
-c = re.SetElement(2, 3)
-print("set element: ", a)
-print("set element element index", a.element_index)
-print("set element all elements", a.all_elements_length)
+int_set = {1, 2, 3}
 
-se = re.Set({a, b, c}, 3)
+a = re.SetElement(0, int_set)
+b = re.SetElement(1, int_set)
+print("set element: ", a)
+print("set element: ", b)
+print("set element element index", a.element_index)
+print("set element all elements", b.all_elements)
+
+se = re.Set(a, int_set)
 print("set simple sets", se.simple_sets)
 print("set elements size", len(se.simple_sets))
-print("set elements length", se.all_elements_length)
+print("set elements length", se.all_elements)
 
 print("intersect two simple intervals", si.intersection_with(si2))
 print("complement of closed interval %s" % si.complement())
@@ -40,11 +42,11 @@ print("continuous variable: ", x)
 y = re.Continuous("y")
 z = re.Continuous("z")
 
-sa = re.SetElement(0, 3)
-sb = re.SetElement(1, 3)
-sc = re.SetElement(2, 3)
+s0 = re.SetElement(0, int_set)
+s1 = re.SetElement(1, int_set)
+s2 = re.SetElement(2, int_set)
 
-s = re.Set({sa, sb, sc}, 3)
+s = re.Set({s0, s1, s2}, int_set)
 
 a = re.Symbolic("a", s)
 print("symbolic variable: ", a)
