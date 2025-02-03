@@ -1,5 +1,6 @@
 #include "set.h"
 #include <algorithm>
+#include <stdexcept>
 
 
 SetElement::SetElement(const AllSetElementsPtr_t &all_elements_) {

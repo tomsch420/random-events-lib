@@ -1,5 +1,13 @@
 from setuptools import setup, Extension
-from pybind11.setup_helpers import Pybind11Extension
+import subprocess
+import sys
+try:
+    import pybind11
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pybind11"])
+finally:
+    from pybind11.setup_helpers import Pybind11Extension
+
 
 ext_modules = [
     Pybind11Extension(
