@@ -149,13 +149,13 @@ TEST(ProductAlgebra, Complement){
     auto y = make_shared_continuous("y");
 
 
-    auto interval1 = SimpleInterval<>::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
+    auto interval1 = SimpleInterval::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
     auto simple_interval = make_shared_simple_set_set();
     simple_interval->insert(interval1);
 
     auto variables = std::make_shared<VariableMap>();
     variables->insert({a_ab, a_ab->domain});
-    variables->insert({x, Interval<>::make_shared(simple_interval)});
+    variables->insert({x, Interval::make_shared(simple_interval)});
     variables->insert({y, y->domain});
 
     auto event = make_shared_simple_event(variables);
@@ -204,19 +204,19 @@ TEST(ProductAlgebra, Simplify){
     auto x = make_shared_continuous("x");
     auto y = make_shared_continuous("y");
 
-    auto interval1 = SimpleInterval<>::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
+    auto interval1 = SimpleInterval::make_shared(0.0, 1.0, BorderType::CLOSED, BorderType::OPEN);
     auto simple_interval = make_shared_simple_set_set();
     simple_interval->insert(interval1);
 
     auto variables = std::make_shared<VariableMap>();
     variables->insert({a_ab, a_ab->domain});
-    variables->insert({x, Interval<>::make_shared(simple_interval)});
-    variables->insert({y, Interval<>::make_shared(simple_interval)});
+    variables->insert({x, Interval::make_shared(simple_interval)});
+    variables->insert({y, Interval::make_shared(simple_interval)});
 
     auto variables2 = std::make_shared<VariableMap>();
     variables2->insert({c, c->domain});
-    variables2->insert({x, Interval<>::make_shared(simple_interval)});
-    variables2->insert({y, Interval<>::make_shared(simple_interval)});
+    variables2->insert({x, Interval::make_shared(simple_interval)});
+    variables2->insert({y, Interval::make_shared(simple_interval)});
 
     auto event1 = make_shared_simple_event(variables);
     // (*event1->variable_map)[x] = closed(0, 1);
@@ -253,9 +253,7 @@ TEST(ProductAlgebra, UnionDifferentVariables) {
     const auto simple_event_y = make_shared_simple_event(var_map2);
 
     auto e1 = make_shared_event(simple_event_x);
-    std::cout << *e1->to_string() << std::endl;
     auto e2 = make_shared_event(simple_event_y);
-    std::cout << *e2->to_string() << std::endl;
 
     auto x = make_shared_variable_set(e2->get_variables_from_simple_events());
     e1->fill_missing_variables(x);
@@ -266,10 +264,10 @@ TEST(ProductAlgebra, UnionDifferentVariables) {
 
     auto expected_var_map1 = std::make_shared<VariableMap>();
     expected_var_map1->insert({continuous1, closed(0, 1)});
-    expected_var_map1->insert({continuous2, open(-std::numeric_limits<DefaultOrderable_T>::infinity(), std::numeric_limits<DefaultOrderable_T>::infinity())});
+    expected_var_map1->insert({continuous2, open(-std::numeric_limits<Defaultdouble>::infinity(), std::numeric_limits<Defaultdouble>::infinity())});
 
     auto expected_var_map2 = std::make_shared<VariableMap>();
-    expected_var_map1->insert({continuous1, open(-std::numeric_limits<DefaultOrderable_T>::infinity(), std::numeric_limits<DefaultOrderable_T>::infinity())});
+    expected_var_map2->insert({continuous1, open(-std::numeric_limits<Defaultdouble>::infinity(), std::numeric_limits<Defaultdouble>::infinity())});
     expected_var_map2->insert({continuous2, closed(3, 4)});
 
     const auto expected_simple_event1 = make_shared_simple_event(expected_var_map1);
@@ -279,7 +277,7 @@ TEST(ProductAlgebra, UnionDifferentVariables) {
     simple_set_set->insert(expected_simple_event1);
     simple_set_set->insert(expected_simple_event2);
 
-    const auto expected_result = make_shared_event(simple_set_set);
+    const auto expected_result = make_shared_event(simple_set_set)->make_disjoint();
 
     ASSERT_TRUE(*union_event == *expected_result);
 }
