@@ -32,6 +32,14 @@ AbstractSimpleSetPtr_t SimpleEvent::intersection_with(const AbstractSimpleSetPtr
     return result;
 }
 
+void SimpleEvent::fill_missing_variables(const VariableSetPtr_t &variables) const {
+    for (auto const &variable: *variables) {
+        if (variable_map->find(variable) == variable_map->end()) {
+            variable_map->insert({variable, variable->get_domain()});
+        }
+    }
+}
+
 VariableSetPtr_t SimpleEvent::get_variables() const {
     VariableSetPtr_t variables = make_shared_variable_set();
     for (auto const &pair: *variable_map) {
@@ -193,19 +201,29 @@ Event::Event() {
 
 Event::Event(const SimpleSetSetPtr_t &simple_events) {
     simple_sets = simple_events;
-    all_variables = make_shared_variable_set(get_variables_from_simple_events());
+    fill_missing_variables();
 }
 
 Event::Event(const SimpleEventPtr_t &simple_event) {
     simple_sets = make_shared_simple_set_set();
     simple_sets->insert(simple_event);
-    all_variables = simple_event->get_variables();
+    fill_missing_variables();
 }
 
+void Event::fill_missing_variables(const VariableSetPtr_t &variable_set) const {
+    for (auto const &simple_event: *simple_sets) {
+        auto casted = (SimpleEvent *) simple_event.get();
+        casted->fill_missing_variables(variable_set);
+    }
+}
+
+void Event::fill_missing_variables() const {
+    const auto all_variables = make_shared_variable_set(get_variables_from_simple_events());
+    fill_missing_variables(all_variables);
+}
 
 AbstractCompositeSetPtr_t Event::make_new_empty() const {
-    auto result = make_shared_event(all_variables);
-    return result;
+    return make_shared_event();
 }
 
 VariableSet Event::get_variables_from_simple_events() const {
@@ -218,11 +236,6 @@ VariableSet Event::get_variables_from_simple_events() const {
         }
     }
     return result;
-}
-
-Event::Event(const VariableSetPtr_t &variables) {
-    simple_sets = make_shared_simple_set_set();
-    this->all_variables = variables;
 }
 
 std::tuple<EventPtr_t, bool> Event::simplify_once() {

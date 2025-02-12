@@ -75,6 +75,18 @@ TEST(SimpleEventTest, IntersectionWith) {
     ASSERT_TRUE(second_intersection->is_empty());
 }
 
+TEST(ProductAlgebra, EmptyUnion) {
+    const auto empty_event = make_shared_event();
+    const auto empty_event2 = make_shared_event();
+    const auto union_event = empty_event->union_with(empty_event2);
+
+    ASSERT_TRUE(union_event->is_empty());
+
+    const auto intersection_event = empty_event->intersection_with(empty_event2);
+
+    ASSERT_TRUE(intersection_event->is_empty());
+}
+
 TEST(ProductAlgebra, VariableGetting) {
     // Define the sets and intervals
     auto sabc = make_shared_simple_set_set();
@@ -225,4 +237,49 @@ TEST(ProductAlgebra, Simplify){
     auto simplified = composite_event->simplify();
     ASSERT_EQ(*simplified, *result);
 
+}
+
+TEST(ProductAlgebra, UnionDifferentVariables) {
+    const auto continuous1 = make_shared_continuous("x");
+    const auto continuous2 = make_shared_continuous("y");
+
+    auto var_map1 = std::make_shared<VariableMap>();
+    var_map1->insert({continuous1, closed(0, 1)});
+
+    auto var_map2 = std::make_shared<VariableMap>();
+    var_map2->insert({continuous2, closed(3, 4)});
+
+    const auto simple_event_x = make_shared_simple_event(var_map1);
+    const auto simple_event_y = make_shared_simple_event(var_map2);
+
+    auto e1 = make_shared_event(simple_event_x);
+    std::cout << *e1->to_string() << std::endl;
+    auto e2 = make_shared_event(simple_event_y);
+    std::cout << *e2->to_string() << std::endl;
+
+    auto x = make_shared_variable_set(e2->get_variables_from_simple_events());
+    e1->fill_missing_variables(x);
+    auto y = make_shared_variable_set(e1->get_variables_from_simple_events());
+    e2->fill_missing_variables(y);
+
+    auto union_event = e1->union_with(e2);
+
+    auto expected_var_map1 = std::make_shared<VariableMap>();
+    expected_var_map1->insert({continuous1, closed(0, 1)});
+    expected_var_map1->insert({continuous2, open(-std::numeric_limits<DefaultOrderable_T>::infinity(), std::numeric_limits<DefaultOrderable_T>::infinity())});
+
+    auto expected_var_map2 = std::make_shared<VariableMap>();
+    expected_var_map1->insert({continuous1, open(-std::numeric_limits<DefaultOrderable_T>::infinity(), std::numeric_limits<DefaultOrderable_T>::infinity())});
+    expected_var_map2->insert({continuous2, closed(3, 4)});
+
+    const auto expected_simple_event1 = make_shared_simple_event(expected_var_map1);
+    const auto expected_simple_event2 = make_shared_simple_event(expected_var_map2);
+
+    const auto simple_set_set = make_shared_simple_set_set();
+    simple_set_set->insert(expected_simple_event1);
+    simple_set_set->insert(expected_simple_event2);
+
+    const auto expected_result = make_shared_event(simple_set_set);
+
+    ASSERT_TRUE(*union_event == *expected_result);
 }
