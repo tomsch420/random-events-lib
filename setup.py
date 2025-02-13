@@ -2,6 +2,7 @@ from setuptools import setup, Extension
 import subprocess
 import sys
 
+subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "pip"])
 # Ensure pybind11 is installed before importing it
 subprocess.check_call([sys.executable, "-m", "pip", "install", "pybind11"])
 
