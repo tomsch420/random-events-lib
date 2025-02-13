@@ -62,4 +62,8 @@ print("simple event: ", simple_event)
 print("simple event complement: ", simple_event.complement())
 
 event = re.Event(simple_event)
-print("event: ", event)
+for v in event.simple_sets:
+    print("event variable: ", v)
+event.fill_missing_variables({z, y})
+for v in event.simple_sets:
+    print("event variable: ", v)

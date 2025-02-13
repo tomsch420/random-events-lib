@@ -44,7 +44,7 @@ PYBIND11_MODULE(random_events_lib, handle) {
         .value("CLOSED", BorderType::CLOSED);
 
 
-    py::class_<SimpleInterval<>, AbstractSimpleSet, std::shared_ptr<SimpleInterval<>>>(handle, "SimpleInterval")
+    py::class_<SimpleInterval, AbstractSimpleSet, std::shared_ptr<SimpleInterval>>(handle, "SimpleInterval")
         .def(py::init([](float const &lower, float const &upper, int const &left, int const &right) {
             auto x = BorderType::OPEN;
             if(left == 1) {
@@ -59,33 +59,33 @@ PYBIND11_MODULE(random_events_lib, handle) {
                 y = BorderType::CLOSED;
             }
 
-            return std::make_shared<SimpleInterval<>>(lower, upper, x, y);
+            return std::make_shared<SimpleInterval>(lower, upper, x, y);
         }))
-        .def_readwrite<>("lower", &SimpleInterval<>::lower)
-        .def_readwrite<>("upper", &SimpleInterval<>::upper)
-        .def_readwrite<>("left", &SimpleInterval<>::left)
-        .def_readwrite<>("right", &SimpleInterval<>::right);
+        .def_readwrite("lower", &SimpleInterval::lower)
+        .def_readwrite("upper", &SimpleInterval::upper)
+        .def_readwrite("left", &SimpleInterval::left)
+        .def_readwrite("right", &SimpleInterval::right);
 
 
-    py::class_<Interval<>, AbstractCompositeSet, std::shared_ptr<Interval<>>>(handle, "Interval")
-        .def(py::init<>())
-        .def(py::init([](SimpleInterval<> const &x) {
-            auto p = std::make_shared<SimpleInterval<>>(x);
-            return std::make_shared<Interval<>>(p);
+    py::class_<Interval, AbstractCompositeSet, std::shared_ptr<Interval>>(handle, "Interval")
+        .def(py::init())
+        .def(py::init([](SimpleInterval const &x) {
+            auto p = std::make_shared<SimpleInterval>(x);
+            return std::make_shared<Interval>(p);
         }))
         .def(py::init([](SimpleSetSet_t const &x) {
             auto p = std::make_shared<SimpleSetSet_t>(x);
-            return std::make_shared<Interval<>>(p);
+            return std::make_shared<Interval>(p);
         }));
 
 
-    handle.def("closed", &closed<DefaultOrderable_T>, "Create a closed interval");
-    handle.def("open", &open<DefaultOrderable_T>, "Create an open interval");
-    handle.def("closed_open", &closed_open<DefaultOrderable_T>, "Create a closed-open interval");
-    handle.def("open_closed", &open_closed<DefaultOrderable_T>, "Create an open-closed interval");
-    handle.def("singleton", &singleton<DefaultOrderable_T>, "Create a singleton interval");
-    handle.def("empty", &empty<DefaultOrderable_T>, "Create an empty interval");
-    handle.def("reals", &reals<DefaultOrderable_T>, "Create the real line interval");
+    handle.def("closed", &closed, "Create a closed interval");
+    handle.def("open", &open, "Create an open interval");
+    handle.def("closed_open", &closed_open, "Create a closed-open interval");
+    handle.def("open_closed", &open_closed, "Create an open-closed interval");
+    handle.def("singleton", &singleton, "Create a singleton interval");
+    handle.def("empty", &empty, "Create an empty interval");
+    handle.def("reals", &reals, "Create the real line interval");
 
 
     py::class_<SetElement, AbstractSimpleSet, std::shared_ptr<SetElement>>(handle, "SetElement")
@@ -124,7 +124,7 @@ PYBIND11_MODULE(random_events_lib, handle) {
             [](Set &x, std::set<long long> const &v){x.all_elements = make_shared_all_elements(v);});
 
     py::class_<SimpleEvent, AbstractSimpleSet, std::shared_ptr<SimpleEvent>>(handle, "SimpleEvent")
-        .def(py::init<>())
+        .def(py::init())
         .def(py::init([](VariableMap const &x) {
             auto p = std::make_shared<VariableMap>(x);
             return std::make_shared<SimpleEvent>(p);
@@ -138,26 +138,27 @@ PYBIND11_MODULE(random_events_lib, handle) {
         .def("marginal", [](const SimpleEvent &x, VariableSet const &y) {
             auto const p = make_shared_variable_set(y);
             return x.marginal(p);
-        });
+        })
+        .def("fill_missing_variables", [](const SimpleEvent &e, const VariableSet &v) {
+            auto const p = make_shared_variable_set(v);
+            e.fill_missing_variables(p);});
 
 
     py::class_<Event, AbstractCompositeSet, std::shared_ptr<Event>>(handle, "Event")
-        .def(py::init<>())
+        .def(py::init())
         .def(py::init([](SimpleSetSet_t const &x) {
             auto p = std::make_shared<SimpleSetSet_t>(x);
-            return std::make_shared<Event>(p);
+            return make_shared_event(p);
         }))
         .def(py::init([](SimpleEvent const &x) {
             auto p = std::make_shared<SimpleEvent>(x);
-            return std::make_shared<Event>(p);
+            return make_shared_event(p);
         }))
-        .def(py::init([](VariableSet const &x) {
-            auto const p = make_shared_variable_set(x);
-            return std::make_shared<Event>(p);
-        }))
-        .def_property("all_variables", [](Event const &x){return *x.all_variables;},
-            [](Event &x, VariableSet const &v){x.all_variables = make_shared_variable_set(v);})
         .def("simplify_once", &Event::simplify_once)
+        .def("fill_missing_variables", [](const Event &e, const VariableSet &v) {
+            auto const p = make_shared_variable_set(v);
+            e.fill_missing_variables(p);
+        })
         .def("marginal", [](const Event &x, VariableSet const &y) {
             auto const p = make_shared_variable_set(y);
             return x.marginal(p);

@@ -70,7 +70,7 @@ public:
 
 class Continuous : public AbstractVariable {
 public:
-    const IntervalPtr_t<double> domain = reals<double>();
+    const IntervalPtr_t domain = reals();
 
     explicit Continuous(const NamePtr_t &name) {
         this->name = name;
@@ -87,7 +87,7 @@ public:
 
 class Integer : public AbstractVariable {
 public:
-    const IntervalPtr_t<int> domain = reals<int>();
+    const IntervalPtr_t domain = reals();
 
     explicit Integer(const NamePtr_t &name) {
         this->name = name;

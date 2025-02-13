@@ -50,6 +50,8 @@ public:
 
     VariableMapPtr_t variable_map;
 
+    void fill_missing_variables(const VariableSetPtr_t &variables) const;
+
     VariableSetPtr_t get_variables() const;
 
     VariableSetPtr_t merge_variables(const VariableSetPtr_t &other) const;
@@ -75,15 +77,13 @@ public:
 class Event: public AbstractCompositeSet {
 public:
 
-    /**
-     * The set of all variables used in the events.
-     */
-    VariableSetPtr_t all_variables;
-
     Event();
     explicit Event(const SimpleSetSetPtr_t &simple_events);
     explicit Event(const SimpleEventPtr_t &simple_event);
-    explicit Event(const VariableSetPtr_t &variables);
+
+    void fill_missing_variables(const VariableSetPtr_t &variable_set) const;
+
+    void fill_missing_variables() const;
 
     VariableSet get_variables_from_simple_events() const;
 
