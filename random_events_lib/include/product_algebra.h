@@ -35,6 +35,15 @@ VariableSetPtr_t make_shared_variable_set(Args &&... args) {
     return std::make_shared<VariableSet>(std::forward<Args>(args)...);
 }
 
+struct VariableMapHash {
+    std::size_t operator()(const VariableMap &vm) const {
+        std::size_t seed = 0;
+        for (const auto &pair : vm) {
+            seed ^= std::hash<std::shared_ptr<AbstractVariable>>{}(pair.first) ^ std::hash<std::shared_ptr<AbstractCompositeSet>>{}(pair.second);
+        }
+        return seed;
+    }
+};
 
 class SimpleEvent : public AbstractSimpleSet {
 public:
