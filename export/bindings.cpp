@@ -18,7 +18,9 @@ PYBIND11_MODULE(random_events_lib, handle) {
             auto const p = AbstractSimpleSetPtr_t(&y);
             return *x.difference_with(p);
         })
-        .def ("__repr__", &AbstractSimpleSet::to_string);
+        .def ("__repr__", &AbstractSimpleSet::to_string)
+        .def("__eq__", &AbstractSimpleSet::operator==)
+        .def("__lt__", &AbstractSimpleSet::operator<);
 
 
     py::class_<AbstractCompositeSet, std::shared_ptr<AbstractCompositeSet>>(handle, "AbstractCompositeSet")
@@ -36,7 +38,9 @@ PYBIND11_MODULE(random_events_lib, handle) {
         .def("union_with", pybind11::overload_cast<const AbstractSimpleSetPtr_t&>(&AbstractCompositeSet::union_with), "Union this with a simple set.")
         .def("difference_with", pybind11::overload_cast<const AbstractCompositeSetPtr_t&>(&AbstractCompositeSet::difference_with), "Difference this with another composite set.")
         .def("difference_with", pybind11::overload_cast<const AbstractSimpleSetPtr_t&>(&AbstractCompositeSet::difference_with), "Difference this with a simple set.")
-        .def("add_new_simple_set", &AbstractCompositeSet::add_new_simple_set);
+        .def("add_new_simple_set", &AbstractCompositeSet::add_new_simple_set)
+        .def("__eq__", &AbstractCompositeSet::operator==)
+        .def("__lt__", &AbstractCompositeSet::operator<);
 
 
     py::enum_<BorderType>(handle, "BorderType")
@@ -64,7 +68,11 @@ PYBIND11_MODULE(random_events_lib, handle) {
         .def_readwrite("lower", &SimpleInterval::lower)
         .def_readwrite("upper", &SimpleInterval::upper)
         .def_readwrite("left", &SimpleInterval::left)
-        .def_readwrite("right", &SimpleInterval::right);
+        .def_readwrite("right", &SimpleInterval::right)
+        .def("__hash__", [](const SimpleInterval &interval) {
+            return std::hash<double>()(interval.lower) ^ std::hash<double>()(interval.upper) ^
+                   std::hash<int>()(static_cast<int>(interval.left)) ^ std::hash<int>()(static_cast<int>(interval.right));
+        });
 
 
     py::class_<Interval, AbstractCompositeSet, std::shared_ptr<Interval>>(handle, "Interval")
@@ -102,7 +110,10 @@ PYBIND11_MODULE(random_events_lib, handle) {
         .def_property("element_index", [](SetElement const &x){return x.element_index;},
             [](SetElement &x, int const &v){x.element_index = v;})
         .def_property("all_elements", [](SetElement const &x){return *x.all_elements;},
-            [](SetElement &x, std::set<long long> const &v){x.all_elements = make_shared_all_elements(v);});
+            [](SetElement &x, std::set<long long> const &v){x.all_elements = make_shared_all_elements(v);})
+        .def("__hash__", [](SetElement const &x) {
+            return std::hash<int>{}(x.element_index);
+        });
 
 
     py::class_<Set, AbstractCompositeSet, std::shared_ptr<Set>>(handle, "Set")
@@ -141,8 +152,10 @@ PYBIND11_MODULE(random_events_lib, handle) {
         })
         .def("fill_missing_variables", [](const SimpleEvent &e, const VariableSet &v) {
             auto const p = make_shared_variable_set(v);
-            e.fill_missing_variables(p);});
-
+            e.fill_missing_variables(p);})
+        .def("__hash__", [](SimpleEvent const &x) {
+            return VariableMapHash{}(*x.variable_map);
+        });
 
     py::class_<Event, AbstractCompositeSet, std::shared_ptr<Event>>(handle, "Event")
         .def(py::init())
@@ -166,7 +179,12 @@ PYBIND11_MODULE(random_events_lib, handle) {
 
 
     py::class_<AbstractVariable, std::shared_ptr<AbstractVariable>>(handle, "AbstractVariable")
-        .def("get_domain", &AbstractVariable::get_domain);
+        .def("get_domain", &AbstractVariable::get_domain)
+        .def("__eq__", &AbstractVariable::operator==)
+        .def("__lt__", &AbstractVariable::operator<)
+        .def("__hash__", [](AbstractVariable const &x) {
+            return std::hash<std::string>{}(*x.name);
+        });
 
     py::class_<Symbolic, AbstractVariable, std::shared_ptr<Symbolic>>(handle, "Symbolic")
         .def(py::init([](std::string const &x, Set const &y) {

@@ -6,10 +6,18 @@ print("simple interval 1: ", si)
 si2 = re.SimpleInterval(1, 7, re.BorderType.CLOSED, re.BorderType.CLOSED)
 print("simple interval 2: ", si2)
 
+si_equiv = re.SimpleInterval(3, 5, re.BorderType.CLOSED, re.BorderType.OPEN)
+
+print("simple interval 1 equals simple interval 3: ", si == si_equiv)
+print("simple interval 1 less than simple interval 3: ", si < si_equiv)
+
 int_set = {1, 2, 3}
 
 a = re.SetElement(0, int_set)
 b = re.SetElement(1, int_set)
+
+set_element_equiv = re.SetElement(0, int_set)
+print("set element 1 equals set element 2: ", a == set_element_equiv)
 print("set element: ", a)
 print("set element: ", b)
 print("set element element index", a.element_index)
