@@ -179,7 +179,7 @@ PYBIND11_MODULE(random_events_lib, handle) {
 
 
     py::class_<AbstractVariable, std::shared_ptr<AbstractVariable>>(handle, "AbstractVariable")
-        .def("get_domain", &AbstractVariable::get_domain)
+        // .def("get_domain", &AbstractVariable::get_domain)
         .def("__eq__", &AbstractVariable::operator==)
         .def("__lt__", &AbstractVariable::operator<)
         .def("__hash__", [](AbstractVariable const &x) {
@@ -198,7 +198,9 @@ PYBIND11_MODULE(random_events_lib, handle) {
             return std::make_shared<Symbolic>(p, q);
         }))
         .def_property("name", [](Symbolic const &x){return *x.name;},
-            [](Symbolic &x, std::string const &v){x.name = std::make_shared<std::string>(v);});
+            [](Symbolic &x, std::string const &v){x.name = std::make_shared<std::string>(v);})
+        .def_property("domain", [](Symbolic const &x){return *x.domain;},
+            [](Symbolic &x, Set const &v){x.domain = std::make_shared<Set>(v);});
 
 
     py::class_<Continuous, AbstractVariable, std::shared_ptr<Continuous>>(handle, "Continuous")
