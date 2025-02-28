@@ -264,10 +264,10 @@ TEST(ProductAlgebra, UnionDifferentVariables) {
 
     auto expected_var_map1 = std::make_shared<VariableMap>();
     expected_var_map1->insert({continuous1, closed(0, 1)});
-    expected_var_map1->insert({continuous2, open(-std::numeric_limits<Defaultdouble>::infinity(), std::numeric_limits<Defaultdouble>::infinity())});
+    expected_var_map1->insert({continuous2, open(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity())});
 
     auto expected_var_map2 = std::make_shared<VariableMap>();
-    expected_var_map2->insert({continuous1, open(-std::numeric_limits<Defaultdouble>::infinity(), std::numeric_limits<Defaultdouble>::infinity())});
+    expected_var_map2->insert({continuous1, open(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity())});
     expected_var_map2->insert({continuous2, closed(3, 4)});
 
     const auto expected_simple_event1 = make_shared_simple_event(expected_var_map1);
