@@ -4,6 +4,10 @@
 #include <iterator>
 #include <vector>
 #include <sstream>     // For string‐length estimation in to_string()
+#include <thread>
+#include <future>
+#include <mutex>
+#include <atomic>
 
 //
 // We assume the following factory functions and typedefs still come from sigma_algebra.h:
@@ -97,19 +101,93 @@ bool AbstractCompositeSet::is_disjoint() {
         vec.push_back(p);
     }
 
-    // For each unique pair (i<j), test intersection.  Early‐exit on first non‐empty
-    // (If n is small, this is fine; if n is large, this is the inherent O(n^2) check.)
-    for (size_t i = 0; i + 1 < vec.size(); ++i) {
-        for (size_t j = i + 1; j < vec.size(); ++j) {
-            auto &A = vec[i];
-            auto &B = vec[j];
-            auto I = A->intersection_with(B);  // cost = T_cap
-            if (!I->is_empty()) {
-                return false;  // found overlap
+    // Determine the number of threads to use (hardware concurrency or a reasonable default)
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4; // Default to 4 threads if hardware_concurrency is not available
+
+    // Calculate the total number of pairs to check
+    size_t n = vec.size();
+    size_t total_pairs = n * (n - 1) / 2;
+
+    // If we have very few pairs or only 1 thread available, use sequential processing
+    if (num_threads <= 1 || total_pairs < 8) {
+        // For each unique pair (i<j), test intersection.  Early‐exit on first non‐empty
+        // (If n is small, this is fine; if n is large, this is the inherent O(n^2) check.)
+        for (size_t i = 0; i + 1 < vec.size(); ++i) {
+            for (size_t j = i + 1; j < vec.size(); ++j) {
+                auto &A = vec[i];
+                auto &B = vec[j];
+                auto I = A->intersection_with(B);  // cost = T_cap
+                if (!I->is_empty()) {
+                    return false;  // found overlap
+                }
             }
         }
+        return true;
+    } else {
+        // Parallel implementation
+
+        // Create a structure to hold pair indices
+        struct PairIndices {
+            size_t i;
+            size_t j;
+        };
+
+        // Generate all pairs to check
+        std::vector<PairIndices> all_pairs;
+        all_pairs.reserve(total_pairs);
+        for (size_t i = 0; i < n; ++i) {
+            for (size_t j = i + 1; j < n; ++j) {
+                all_pairs.push_back({i, j});
+            }
+        }
+
+        // Determine pairs per thread
+        size_t pairs_per_thread = total_pairs / num_threads;
+        size_t remainder = total_pairs % num_threads;
+
+        // Use a shared flag to indicate if an overlap was found
+        std::atomic<bool> overlap_found(false);
+
+        // Launch threads to process pairs
+        std::vector<std::future<void>> futures;
+
+        size_t start_idx = 0;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            size_t thread_pairs = pairs_per_thread + (t < remainder ? 1 : 0);
+            size_t end_idx = start_idx + thread_pairs;
+
+            // Create a lambda to process a range of pairs
+            auto process_range = [&vec, &all_pairs, start_idx, end_idx, &overlap_found]() {
+                for (size_t idx = start_idx; idx < end_idx && !overlap_found.load(); ++idx) {
+                    size_t i = all_pairs[idx].i;
+                    size_t j = all_pairs[idx].j;
+
+                    auto &A = vec[i];
+                    auto &B = vec[j];
+                    auto I = A->intersection_with(B);  // cost = T_cap
+
+                    if (!I->is_empty()) {
+                        overlap_found.store(true);
+                        return;  // found overlap, exit early
+                    }
+                }
+            };
+
+            // Launch the thread and store its future
+            futures.push_back(std::async(std::launch::async, process_range));
+
+            start_idx = end_idx;
+        }
+
+        // Wait for all threads to complete
+        for (auto &future : futures) {
+            future.wait();
+        }
+
+        // Return true if no overlap was found
+        return !overlap_found.load();
     }
-    return true;
 }
 
 bool AbstractCompositeSet::is_empty() {
@@ -228,14 +306,11 @@ AbstractCompositeSet::split_into_disjoint_and_non_disjoint() const {
 
     auto disjoint = make_new_empty();  // will collect pieces that never overlap
     auto non_disjoint = make_new_empty();  // will collect all pairwise intersections
+    std::mutex non_disjoint_mutex; // Mutex to protect concurrent insertions into non_disjoint
 
     // Pre-allocate vectors to avoid reallocations
     std::vector<AbstractSimpleSetPtr_t> vec;
     vec.reserve(simple_sets->size());
-
-    // Use a vector of pairs to track which elements need to be processed
-    // This avoids unnecessary comparisons
-    std::vector<std::pair<size_t, size_t>> pairs_to_check;
 
     // 1) Turn the current std::set into a vector for indexed loops (O(n))
     for (auto const &p : *simple_sets) {
@@ -245,57 +320,165 @@ AbstractCompositeSet::split_into_disjoint_and_non_disjoint() const {
     // Generate all pairs (i,j) where i < j
     // This avoids redundant comparisons (comparing A with B and then B with A)
     size_t n = vec.size();
-    pairs_to_check.reserve(n * (n - 1) / 2);
+    size_t total_pairs = n * (n - 1) / 2;
+
+    // Create a structure to hold pair indices
+    struct PairIndices {
+        size_t i;
+        size_t j;
+    };
+
+    std::vector<PairIndices> pairs_to_check;
+    pairs_to_check.reserve(total_pairs);
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = i + 1; j < n; ++j) {
-            pairs_to_check.emplace_back(i, j);
+            pairs_to_check.emplace_back(PairIndices{i, j});
         }
     }
 
     // Track which elements have been completely removed
     std::vector<bool> completely_removed(n, false);
+    std::mutex completely_removed_mutex; // Mutex to protect concurrent updates to completely_removed
 
     // Vector to store remaining parts for each element
     std::vector<AbstractCompositeSetPtr_t> remaining_parts(n);
+    std::vector<std::mutex> remaining_parts_mutexes(n); // One mutex per element
+
     for (size_t i = 0; i < n; ++i) {
         remaining_parts[i] = make_new_empty();
         remaining_parts[i]->simple_sets->insert(vec[i]);
     }
 
-    // Process all pairs
-    for (const auto& [i, j] : pairs_to_check) {
-        // Skip if either element has been completely removed
-        if (completely_removed[i] || completely_removed[j]) continue;
+    // Determine the number of threads to use (hardware concurrency or a reasonable default)
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4; // Default to 4 threads if hardware_concurrency is not available
 
-        auto &A = vec[i];
-        auto &B = vec[j];
+    // If we have very few pairs or only 1 thread available, use sequential processing
+    if (num_threads <= 1 || total_pairs < 8) {
+        // Process all pairs sequentially
+        for (const auto& pair : pairs_to_check) {
+            size_t i = pair.i;
+            size_t j = pair.j;
 
-        // Compute intersection I = A ∩ B
-        auto I = A->intersection_with(B);
+            // Skip if either element has been completely removed
+            if (completely_removed[i] || completely_removed[j]) continue;
 
-        if (!I->is_empty()) {
-            // Collect I into "non_disjoint" once
-            non_disjoint->simple_sets->insert(I);
+            auto &A = vec[i];
+            auto &B = vec[j];
 
-            // Process element A
-            if (!completely_removed[i]) {
-                auto newRemaining = remaining_parts[i]->difference_with(I);
-                if (newRemaining->is_empty()) {
-                    completely_removed[i] = true;
-                } else {
-                    remaining_parts[i] = newRemaining;
+            // Compute intersection I = A ∩ B
+            auto I = A->intersection_with(B);
+
+            if (!I->is_empty()) {
+                // Collect I into "non_disjoint" once
+                non_disjoint->simple_sets->insert(I);
+
+                // Process element A
+                if (!completely_removed[i]) {
+                    auto newRemaining = remaining_parts[i]->difference_with(I);
+                    if (newRemaining->is_empty()) {
+                        completely_removed[i] = true;
+                    } else {
+                        remaining_parts[i] = newRemaining;
+                    }
+                }
+
+                // Process element B
+                if (!completely_removed[j]) {
+                    auto newRemaining = remaining_parts[j]->difference_with(I);
+                    if (newRemaining->is_empty()) {
+                        completely_removed[j] = true;
+                    } else {
+                        remaining_parts[j] = newRemaining;
+                    }
                 }
             }
+        }
+    } else {
+        // Parallel implementation
 
-            // Process element B
-            if (!completely_removed[j]) {
-                auto newRemaining = remaining_parts[j]->difference_with(I);
-                if (newRemaining->is_empty()) {
-                    completely_removed[j] = true;
-                } else {
-                    remaining_parts[j] = newRemaining;
+        // Limit threads to a reasonable number based on the number of pairs
+        num_threads = std::min(num_threads, static_cast<unsigned int>(total_pairs));
+
+        // Calculate pairs per thread
+        size_t pairs_per_thread = total_pairs / num_threads;
+        size_t remainder = total_pairs % num_threads;
+
+        // Launch threads to process pairs
+        std::vector<std::future<void>> futures;
+
+        size_t start_idx = 0;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            size_t thread_pairs = pairs_per_thread + (t < remainder ? 1 : 0);
+            size_t end_idx = start_idx + thread_pairs;
+
+            // Create a lambda to process a range of pairs
+            auto process_range = [&]() {
+                for (size_t idx = start_idx; idx < end_idx; ++idx) {
+                    size_t i = pairs_to_check[idx].i;
+                    size_t j = pairs_to_check[idx].j;
+
+                    // Check if either element has been completely removed
+                    {
+                        std::lock_guard<std::mutex> lock(completely_removed_mutex);
+                        if (completely_removed[i] || completely_removed[j]) continue;
+                    }
+
+                    auto &A = vec[i];
+                    auto &B = vec[j];
+
+                    // Compute intersection I = A ∩ B
+                    auto I = A->intersection_with(B);
+
+                    if (!I->is_empty()) {
+                        // Collect I into "non_disjoint" once
+                        {
+                            std::lock_guard<std::mutex> lock(non_disjoint_mutex);
+                            non_disjoint->simple_sets->insert(I);
+                        }
+
+                        // Process element A
+                        {
+                            std::lock_guard<std::mutex> lock(remaining_parts_mutexes[i]);
+                            std::lock_guard<std::mutex> lock_removed(completely_removed_mutex);
+
+                            if (!completely_removed[i]) {
+                                auto newRemaining = remaining_parts[i]->difference_with(I);
+                                if (newRemaining->is_empty()) {
+                                    completely_removed[i] = true;
+                                } else {
+                                    remaining_parts[i] = newRemaining;
+                                }
+                            }
+                        }
+
+                        // Process element B
+                        {
+                            std::lock_guard<std::mutex> lock(remaining_parts_mutexes[j]);
+                            std::lock_guard<std::mutex> lock_removed(completely_removed_mutex);
+
+                            if (!completely_removed[j]) {
+                                auto newRemaining = remaining_parts[j]->difference_with(I);
+                                if (newRemaining->is_empty()) {
+                                    completely_removed[j] = true;
+                                } else {
+                                    remaining_parts[j] = newRemaining;
+                                }
+                            }
+                        }
+                    }
                 }
-            }
+            };
+
+            // Launch the thread and store its future
+            futures.push_back(std::async(std::launch::async, process_range));
+
+            start_idx = end_idx;
+        }
+
+        // Wait for all threads to complete
+        for (auto &future : futures) {
+            future.wait();
         }
     }
 

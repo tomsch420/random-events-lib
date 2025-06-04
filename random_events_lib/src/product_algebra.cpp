@@ -2,6 +2,9 @@
 #include <iterator>
 #include <vector>
 #include <sstream>
+#include <thread>
+#include <future>
+#include <mutex>
 #include "product_algebra.h"
 
 //
@@ -158,38 +161,114 @@ SimpleSetSetPtr_t SimpleEvent::complement() {
     //   4) Append to result only if non‐empty
     //
     // This eliminates repeated calls to get_variables() inside the loop.
+    //
+    // With multithreading, we can process multiple variables in parallel.
 
     auto result = make_shared_simple_set_set();
+    std::mutex result_mutex; // Mutex to protect concurrent insertions into result
 
     // 1) Get all keys in variable_map once, sorted
     auto all_keys = map_keys_to_vector(variable_map);
     size_t vcount = all_keys.size();
 
-    // 2) For each index i = 0..vcount−1, build a complement event
-    for (size_t idx = 0; idx < vcount; ++idx) {
-        auto const &var_i = all_keys[idx];
-        auto const &assign_i = variable_map->at(var_i);
+    // Determine the number of threads to use (hardware concurrency or a reasonable default)
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4; // Default to 4 threads if hardware_concurrency is not available
 
-        // 2a) Build current_complement event
-        auto current_complement = make_shared_simple_event();
-        auto &cur_map = current_complement->variable_map;
+    // Limit threads to the number of variables to avoid overhead for small tasks
+    num_threads = std::min(num_threads, static_cast<unsigned int>(vcount));
 
-        // 2b) v_i gets assignment->complement()
-        auto compl_i = assign_i->complement();
-        cur_map->insert({var_i, compl_i});
+    if (num_threads <= 1 || vcount <= 1) {
+        // Sequential execution for small tasks
+        for (size_t idx = 0; idx < vcount; ++idx) {
+            auto const &var_i = all_keys[idx];
+            auto const &assign_i = variable_map->at(var_i);
 
-        // 2c) For every variable before var_i (0..idx−1), assign original
-        for (size_t k = 0; k < idx; ++k) {
-            cur_map->insert({ all_keys[k], variable_map->at(all_keys[k]) });
+            // Build current_complement event
+            auto current_complement = make_shared_simple_event();
+            auto &cur_map = current_complement->variable_map;
+
+            // v_i gets assignment->complement()
+            auto compl_i = assign_i->complement();
+            cur_map->insert({var_i, compl_i});
+
+            // For every variable before var_i (0..idx−1), assign original
+            for (size_t k = 0; k < idx; ++k) {
+                cur_map->insert({ all_keys[k], variable_map->at(all_keys[k]) });
+            }
+            // For every variable after var_i (idx+1..vcount−1), assign full domain
+            for (size_t k = idx + 1; k < vcount; ++k) {
+                cur_map->insert({ all_keys[k], all_keys[k]->get_domain() });
+            }
+
+            // If this new SimpleEvent is not empty, add it to result
+            if (!current_complement->is_empty()) {
+                result->insert(current_complement);
+            }
         }
-        // 2d) For every variable after var_i (idx+1..vcount−1), assign full domain
-        for (size_t k = idx + 1; k < vcount; ++k) {
-            cur_map->insert({ all_keys[k], all_keys[k]->get_domain() });
+    } else {
+        // Parallel execution
+        std::vector<std::future<std::vector<SimpleEventPtr_t>>> futures;
+
+        // Calculate variables per thread
+        size_t vars_per_thread = vcount / num_threads;
+        size_t remainder = vcount % num_threads;
+
+        // Launch threads
+        size_t start_idx = 0;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            size_t thread_vars = vars_per_thread + (t < remainder ? 1 : 0);
+            size_t end_idx = start_idx + thread_vars;
+
+            // Create a lambda to process a range of variables
+            auto process_range = [this, all_keys, start_idx, end_idx]() {
+                std::vector<SimpleEventPtr_t> thread_results;
+
+                for (size_t idx = start_idx; idx < end_idx; ++idx) {
+                    auto const &var_i = all_keys[idx];
+                    auto const &assign_i = variable_map->at(var_i);
+
+                    // Build current_complement event
+                    auto current_complement = make_shared_simple_event();
+                    auto &cur_map = current_complement->variable_map;
+
+                    // v_i gets assignment->complement()
+                    auto compl_i = assign_i->complement();
+                    cur_map->insert({var_i, compl_i});
+
+                    // For every variable before var_i (0..idx−1), assign original
+                    for (size_t k = 0; k < idx; ++k) {
+                        cur_map->insert({ all_keys[k], variable_map->at(all_keys[k]) });
+                    }
+                    // For every variable after var_i (idx+1..vcount−1), assign full domain
+                    for (size_t k = idx + 1; k < all_keys.size(); ++k) {
+                        cur_map->insert({ all_keys[k], all_keys[k]->get_domain() });
+                    }
+
+                    // If this new SimpleEvent is not empty, add it to thread results
+                    if (!current_complement->is_empty()) {
+                        thread_results.push_back(current_complement);
+                    }
+                }
+
+                return thread_results;
+            };
+
+            // Launch the thread and store its future
+            futures.push_back(std::async(std::launch::async, process_range));
+
+            start_idx = end_idx;
         }
 
-        // 2e) If this new SimpleEvent is not empty, add it to result
-        if (!current_complement->is_empty()) {
-            result->insert(current_complement);
+        // Collect results from all threads
+        for (auto &future : futures) {
+            auto thread_results = future.get();
+
+            // Lock the mutex when inserting into the shared result set
+            std::lock_guard<std::mutex> lock(result_mutex);
+            for (auto &event : thread_results) {
+                result->insert(event);
+            }
         }
     }
 
@@ -202,7 +281,7 @@ bool SimpleEvent::contains(const ElementaryVariant * /*element*/) {
 }
 
 bool SimpleEvent::is_empty() {
-    // If there are no variables, it’s empty
+    // If there are no variables, it's empty
     if (variable_map->empty()) {
         return true;
     }
@@ -217,16 +296,16 @@ bool SimpleEvent::is_empty() {
 
 std::string *SimpleEvent::non_empty_to_string() {
     // We want a single heap allocation at the end, so:
-    // 1) Gather all “var: assignment” substrings into a vector of std::string
+    // 1) Gather all "var: assignment" substrings into a vector of std::string
     // 2) Compute total length (including commas, braces)
     // 3) Reserve once, then append everything
     if (is_empty()) {
-        // If empty, return “{ }” or however you want to display it; original never handled empty specially,
+        // If empty, return "{ }" or however you want to display it; original never handled empty specially,
         // but to preserve semantics, we just produce "{}".
         return new std::string("{}");
     }
 
-    // 1) Gather “var: assignment” for each kv
+    // 1) Gather "var: assignment" for each kv
     std::vector<std::string> fragments;
     fragments.reserve(variable_map->size());
 
@@ -322,7 +401,7 @@ bool SimpleEvent::operator<(const AbstractSimpleSet &other) {
         }
         ++it1; ++it2;
     }
-    // If we ran out of keys in ‘this’ first, we are smaller
+    // If we ran out of keys in 'this' first, we are smaller
     if (it1 == end1 && it2 != end2) {
         return true;
     }
@@ -347,7 +426,7 @@ AbstractSimpleSetPtr_t SimpleEvent::marginal(const VariableSetPtr_t &variables) 
     auto result = make_shared_simple_event();
     auto &res_map = result->variable_map;
 
-    // If ‘variables’ is small compared to variable_map, iterate over ‘variables’:
+    // If 'variables' is small compared to variable_map, iterate over 'variables':
     for (auto const &var : *variables) {
         auto it = variable_map->find(var);
         if (it != variable_map->end()) {
@@ -424,23 +503,96 @@ VariableSet Event::get_variables_from_simple_events() const {
     return result;
 }
 
+// Helper function to check if two SimpleEvents can be merged
+// Returns a tuple with: (can_merge, mismatch_var)
+static std::tuple<bool, AbstractVariablePtr_t> can_merge_events(const SimpleEventPtr_t& event1, const SimpleEventPtr_t& event2) {
+    auto &A = event1->variable_map;
+    auto &B = event2->variable_map;
+
+    // Both A and B should have identical keys (because fill_missing_variables() was run),
+    // so we can walk them in lockstep. But to be robust, we do a two‐iterator sweep on both maps:
+    auto itA = A->begin(), endA = A->end();
+    auto itB = B->begin(), endB = B->end();
+
+    size_t mismatch_count = 0;
+    AbstractVariablePtr_t mismatch_var = nullptr;
+
+    while (itA != endA && itB != endB) {
+        // Compare variable pointers
+        if (*(itA->first) < *(itB->first)) {
+            // A has a key not in B → mismatch
+            mismatch_count++;
+            mismatch_var = itA->first;
+            ++itA;
+        }
+        else if (*(itB->first) < *(itA->first)) {
+            // B has a key not in A → mismatch
+            mismatch_count++;
+            mismatch_var = itB->first;
+            ++itB;
+        }
+        else {
+            // Same key
+            if (!(*(itA->second) == *(itB->second))) {
+                mismatch_count++;
+                mismatch_var = itA->first;
+            }
+            ++itA; 
+            ++itB;
+        }
+        if (mismatch_count > 1) {
+            break;
+        }
+    }
+
+    // If one map has leftover keys, each is a mismatch:
+    if (mismatch_count <= 1) {
+        while (itA != endA) {
+            mismatch_count++;
+            mismatch_var = itA->first;
+            ++itA;
+            if (mismatch_count > 1) break;
+        }
+        while (itB != endB && mismatch_count <= 1) {
+            mismatch_count++;
+            mismatch_var = itB->first;
+            ++itB;
+        }
+    }
+
+    return std::make_tuple(mismatch_count == 1, mismatch_var);
+}
+
+// Helper function to merge two SimpleEvents that differ in exactly one variable
+static SimpleEventPtr_t merge_events(const SimpleEventPtr_t& event1, const SimpleEventPtr_t& event2, AbstractVariablePtr_t mismatch_var) {
+    auto &A = event1->variable_map;
+    auto &B = event2->variable_map;
+
+    // Build a brand‐new SimpleEvent "merged"
+    auto merged_event = make_shared_simple_event();
+    auto &mmap = merged_event->variable_map;
+
+    // Copy all keys from A (or B) since they now have approximately the same key set.
+    // We can just walk A's map in order.
+    for (auto const &kv : *A) {
+        auto var = kv.first;
+        if (var == mismatch_var) {
+            // union A[var] ∪ B[var]
+            auto unioned = kv.second->union_with(B->at(var));
+            mmap->insert({var, unioned});
+        } else {
+            mmap->insert({var, kv.second});
+        }
+    }
+
+    return merged_event;
+}
+
 std::tuple<EventPtr_t, bool> Event::simplify_once() {
     // We want to find any two SimpleEvents that differ in exactly one variable,
     // merge their assignments on that variable, and rebuild the composite.
     //
-    // The original made a vector of size n, then used unique_combinations, then on each pair:
-    //   - Called get_variables() twice (O(v log v) each)
-    //   - Looped over variables, did map lookups, etc.
-    //   - If mergeable, built a brand‐new composite in O(n + v) time and returned.
-    //   - Otherwise, continued all n(n−1)/2 checks (cost ~O(n^2 (v log v + n))).
-    //
-    // We optimize by:
-    //   1) Building one single vector<AbstractSimpleSetPtr_t> of size n (no change)
-    //   2) For each i<j, directly inspect the two ordered maps (they have the same key‐sets because every Event should have fill_missing_variables first)
-    //   3) Compare the two maps in one sweep (walk the two variable_map containers in lockstep), counting mismatches.  That costs O(v) instead of O(v log v).  
-    //   4) If exactly one mismatch, we build the new merged SimpleEvent by copying variable_map once (O(v log v)), and then unioning the two composite‐sets at that variable (O(T_union)).  
-    //   5) Assemble the new Event by inserting n−2 other SimpleEvents in one shot (range‐insert).
-    // This reduces each pair’s comparison to O(v) rather than O(v log v), and each merge to O(v log v + (n−2) log n).
+    // With multithreading, we can process multiple pairs of SimpleEvents in parallel.
 
     // 1) Copy pointers into a vector
     std::vector<SimpleEventPtr_t> vec;
@@ -449,6 +601,31 @@ std::tuple<EventPtr_t, bool> Event::simplify_once() {
         vec.push_back(std::static_pointer_cast<SimpleEvent>(ptr));
     }
     size_t n = vec.size();
+
+    // If we have fewer than 2 elements, no simplification is possible
+    if (n < 2) {
+        auto self_copy = make_shared_event();
+        self_copy->simple_sets = make_shared_simple_set_set(*simple_sets);
+        return std::make_tuple(self_copy, false);
+    }
+
+    // Determine the number of threads to use (hardware concurrency or a reasonable default)
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4; // Default to 4 threads if hardware_concurrency is not available
+
+    // Calculate the total number of pairs to check
+    size_t total_pairs = n * (n - 1) / 2;
+
+    // If we have very few pairs or only 1 thread available, use sequential processing
+    if (num_threads <= 1 || total_pairs < 8) {
+        // Original sequential implementation
+        // We optimize by:
+        //   1) Building one single vector<AbstractSimpleSetPtr_t> of size n (no change)
+        //   2) For each i<j, directly inspect the two ordered maps (they have the same key‐sets because every Event should have fill_missing_variables first)
+        //   3) Compare the two maps in one sweep (walk the two variable_map containers in lockstep), counting mismatches.  That costs O(v) instead of O(v log v).  
+        //   4) If exactly one mismatch, we build the new merged SimpleEvent by copying variable_map once (O(v log v)), and then unioning the two composite‐sets at that variable (O(T_union)).  
+        //   5) Assemble the new Event by inserting n−2 other SimpleEvents in one shot (range‐insert).
+        // This reduces each pair's comparison to O(v) rather than O(v log v), and each merge to O(v log v + (n−2) log n).
 
     // 2) For i<j pairs:
     for (size_t i = 0; i < n; ++i) {
@@ -507,12 +684,12 @@ std::tuple<EventPtr_t, bool> Event::simplify_once() {
 
             // 3) If exactly one mismatch, we can merge
             if (mismatch_count == 1) {
-                // Build a brand‐new SimpleEvent “merged”
+                // Build a brand‐new SimpleEvent "merged"
                 auto merged_event = make_shared_simple_event();
                 auto &mmap = merged_event->variable_map;
 
                 // Copy all keys from A (or B) since they now have approximately the same key set.
-                // We can just walk A’s map in order.
+                // We can just walk A's map in order.
                 for (auto const &kv : *A) {
                     auto var = kv.first;
                     if (var == mismatch_var) {
@@ -552,6 +729,100 @@ std::tuple<EventPtr_t, bool> Event::simplify_once() {
         self_copy->simple_sets = make_shared_simple_set_set(*simple_sets);
         return std::make_tuple(self_copy, false);
     }
+    }
+    else {
+        // Parallel implementation
+        
+        // Create a structure to hold pair indices
+        struct PairIndices {
+            size_t i;
+            size_t j;
+        };
+        
+        // Generate all pairs to check
+        std::vector<PairIndices> all_pairs;
+        all_pairs.reserve(total_pairs);
+        for (size_t i = 0; i < n; ++i) {
+            for (size_t j = i + 1; j < n; ++j) {
+                all_pairs.push_back({i, j});
+            }
+        }
+        
+        // Use a shared flag to indicate if a match was found
+        std::atomic<bool> match_found(false);
+        std::mutex result_mutex;
+        EventPtr_t final_result;
+        
+        // Launch threads to process pairs
+        std::vector<std::future<void>> futures;
+        
+        size_t start_idx = 0;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            size_t thread_pairs = total_pairs / num_threads + (t < total_pairs % num_threads ? 1 : 0);
+            size_t end_idx = std::min(start_idx + thread_pairs, all_pairs.size());
+            
+            // Create a lambda to process a range of pairs
+            auto process_range = [this, &vec, &all_pairs, start_idx, end_idx, n, &match_found, &result_mutex, &final_result]() {
+                for (size_t idx = start_idx; idx < end_idx && !match_found.load(); ++idx) {
+                    size_t i = all_pairs[idx].i;
+                    size_t j = all_pairs[idx].j;
+                    
+                    auto [can_merge, mismatch_var] = can_merge_events(vec[i], vec[j]);
+                    
+                    if (can_merge) {
+                        // Try to set the match_found flag
+                        bool expected = false;
+                        if (match_found.compare_exchange_strong(expected, true)) {
+                            // We're the first to find a match
+                            
+                            // Merge the events
+                            auto merged_event = merge_events(vec[i], vec[j], mismatch_var);
+                            
+                            // Build the new Event composite:
+                            auto result = make_shared_event();
+                            // Insert the merged event first
+                            result->simple_sets->insert(merged_event);
+
+                            // Now insert all others except i,j
+                            std::vector<AbstractSimpleSetPtr_t> to_insert;
+                            to_insert.reserve(n - 2);
+                            for (size_t k = 0; k < n; ++k) {
+                                if (k == i || k == j) continue;
+                                to_insert.push_back(vec[k]);
+                            }
+                            result->simple_sets->insert(to_insert.begin(), to_insert.end());
+                            
+                            // Store the result
+                            std::lock_guard<std::mutex> lock(result_mutex);
+                            final_result = result;
+                        }
+                        // If we weren't the first to find a match, just exit
+                        return;
+                    }
+                }
+            };
+            
+            // Launch the thread and store its future
+            futures.push_back(std::async(std::launch::async, process_range));
+            
+            start_idx = end_idx;
+        }
+        
+        // Wait for all threads to complete
+        for (auto &future : futures) {
+            future.wait();
+        }
+        
+        // Check if a match was found
+        if (match_found.load()) {
+            return std::make_tuple(final_result, true);
+        } else {
+            // No simplification found—return a copy of this Event
+            auto self_copy = make_shared_event();
+            self_copy->simple_sets = make_shared_simple_set_set(*simple_sets);
+            return std::make_tuple(self_copy, false);
+        }
+    }
 }
 
 AbstractCompositeSetPtr_t Event::simplify() {
@@ -571,19 +842,88 @@ AbstractCompositeSetPtr_t Event::make_new_empty() const {
 AbstractCompositeSetPtr_t Event::marginal(const VariableSetPtr_t &variables) const {
     // Build { E_i.marginal(variables) : for each E_i in simple_sets }, then make_disjoint()
     // Instead of inserting one‐by‐one, we gather them first and do a single bulk‐insert.
+    
+    // Determine the number of threads to use (hardware concurrency or a reasonable default)
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4; // Default to 4 threads if hardware_concurrency is not available
+    
+    // Get the number of simple sets
+    size_t n = simple_sets->size();
+    
+    // If we have very few elements or only 1 thread available, use sequential processing
+    if (num_threads <= 1 || n < 8) {
+        std::vector<AbstractSimpleSetPtr_t> scratch;
+        scratch.reserve(simple_sets->size());
 
-    std::vector<AbstractSimpleSetPtr_t> scratch;
-    scratch.reserve(simple_sets->size());
+        for (auto const &ptr : *simple_sets) {
+            auto casted = static_cast<SimpleEvent *>(ptr.get());
+            auto marg = casted->marginal(variables);
+            scratch.push_back(marg);
+        }
 
-    for (auto const &ptr : *simple_sets) {
-        auto casted = static_cast<SimpleEvent *>(ptr.get());
-        auto marg = casted->marginal(variables);
-        scratch.push_back(marg);
+        auto result = make_shared_event();
+        if (!scratch.empty()) {
+            result->simple_sets->insert(scratch.begin(), scratch.end());
+        }
+        return result->make_disjoint();
+    } else {
+        // Parallel implementation
+        
+        // Limit threads to the number of simple sets
+        num_threads = std::min(num_threads, static_cast<unsigned int>(n));
+        
+        // Calculate elements per thread
+        size_t elems_per_thread = n / num_threads;
+        size_t remainder = n % num_threads;
+        
+        // Copy pointers into a vector for easier indexing
+        std::vector<AbstractSimpleSetPtr_t> vec;
+        vec.reserve(n);
+        for (auto const &ptr : *simple_sets) {
+            vec.push_back(ptr);
+        }
+        
+        // Launch threads to process elements
+        std::vector<std::future<std::vector<AbstractSimpleSetPtr_t>>> futures;
+        
+        size_t start_idx = 0;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            size_t thread_elems = elems_per_thread + (t < remainder ? 1 : 0);
+            size_t end_idx = start_idx + thread_elems;
+            
+            // Create a lambda to process a range of elements
+            auto process_range = [&vec, variables, start_idx, end_idx]() {
+                std::vector<AbstractSimpleSetPtr_t> thread_results;
+                thread_results.reserve(end_idx - start_idx);
+                
+                for (size_t idx = start_idx; idx < end_idx; ++idx) {
+                    auto casted = static_cast<SimpleEvent *>(vec[idx].get());
+                    auto marg = casted->marginal(variables);
+                    thread_results.push_back(marg);
+                }
+                
+                return thread_results;
+            };
+            
+            // Launch the thread and store its future
+            futures.push_back(std::async(std::launch::async, process_range));
+            
+            start_idx = end_idx;
+        }
+        
+        // Collect results from all threads
+        std::vector<AbstractSimpleSetPtr_t> all_results;
+        all_results.reserve(n);
+        
+        for (auto &future : futures) {
+            auto thread_results = future.get();
+            all_results.insert(all_results.end(), thread_results.begin(), thread_results.end());
+        }
+        
+        auto result = make_shared_event();
+        if (!all_results.empty()) {
+            result->simple_sets->insert(all_results.begin(), all_results.end());
+        }
+        return result->make_disjoint();
     }
-
-    auto result = make_shared_event();
-    if (!scratch.empty()) {
-        result->simple_sets->insert(scratch.begin(), scratch.end());
-    }
-    return result->make_disjoint();
 }
