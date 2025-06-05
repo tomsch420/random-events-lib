@@ -14,10 +14,9 @@ class AbstractCompositeSet;
 // TYPE DEFINITIONS
 template<typename T>
 struct PointerLess {
-    bool operator()(const T lhs, const T rhs) const {
+    bool operator()(T const &lhs, T const &rhs) const {
         return *lhs < *rhs;
     }
-
 };
 
 typedef std::shared_ptr<AbstractSimpleSet> AbstractSimpleSetPtr_t;
@@ -129,22 +128,14 @@ public:
  */
 template<typename T>
 std::vector<std::tuple<T, T>> unique_combinations(const std::vector<T> &elements) {
-
-    // initialize result
-    std::vector<std::tuple<T, T>> combinations;
-
-    // for every pair of elements
-    for (std::size_t i = 0; i < elements.size(); ++i) {
-
-        // get element_index from first vector
-        T current_element1 = elements[i];
-        for (std::size_t j = 0; j < i; ++j) {
-            T current_element2 = elements[j];
-            std::tuple<T, T> combination = std::make_tuple(current_element1, current_element2);
-            combinations.push_back(combination);
-        }
-    }
-    return combinations;
+    size_t n = elements.size();
+    size_t total = n > 1 ? n*(n-1)/2 : 0;
+    std::vector<std::tuple<T, T>> result;
+    result.reserve(total);
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = i + 1; j < n; ++j)
+            result.emplace_back(elements[i], elements[j]);
+    return result;
 }
 
 
